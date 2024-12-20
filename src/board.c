@@ -5,14 +5,14 @@
 
 const wchar_t piece_chars[] = {
     // Comment: the chars are too "big" for a normal char type
-    [EMPTY] = ' ',         [WHITE_PAWN] = L'♙', [WHITE_KNIGHT] = L'♘',
-    [WHITE_BISHOP] = L'♗', [WHITE_ROOK] = L'♖', [WHITE_QUEEN] = L'♕',
-    [WHITE_KING] = L'♔',   [BLACK_PAWN] = L'♟', [BLACK_KNIGHT] = L'♞',
-    [BLACK_BISHOP] = L'♝', [BLACK_ROOK] = L'♜', [BLACK_QUEEN] = L'♛',
-    [BLACK_KING] = L'♚',
+    [EMPTY] = L' ',        [WHITE_PAWN] = L'♟', [WHITE_KNIGHT] = L'♞',
+    [WHITE_BISHOP] = L'♝', [WHITE_ROOK] = L'♜', [WHITE_QUEEN] = L'♛',
+    [WHITE_KING] = L'♚',   [BLACK_PAWN] = L'♙', [BLACK_KNIGHT] = L'♘',
+    [BLACK_BISHOP] = L'♗', [BLACK_ROOK] = L'♖', [BLACK_QUEEN] = L'♕',
+    [BLACK_KING] = L'♔',
 };
 
-Board *board_init() {
+Board *board_init(void) {
   // Returns a board in the default position
   Board *board = (Board *)malloc(sizeof(Board));
   if (board == NULL) {
@@ -34,12 +34,12 @@ Board *board_init() {
   tab[1] = WHITE_KNIGHT;
   tab[6] = WHITE_KNIGHT;
   tab[1 + 8 * 7] = BLACK_KNIGHT;
-  tab[7 + 8 * 7] = BLACK_KNIGHT;
+  tab[6 + 8 * 7] = BLACK_KNIGHT;
 
   tab[2] = WHITE_BISHOP;
   tab[5] = WHITE_BISHOP;
   tab[2 + 8 * 7] = BLACK_BISHOP;
-  tab[6 + 8 * 7] = BLACK_BISHOP;
+  tab[5 + 8 * 7] = BLACK_BISHOP;
 
   tab[3] = WHITE_KING;
   tab[4] = WHITE_QUEEN;
@@ -62,8 +62,13 @@ void board_print(Board *board) {
   // Prints the board to stdout using chess using chars from U+2654 to U+265F
   for (int li = 0; li < 8; li++) {
     for (int col = 0; col < 8; col++) {
-      wprintf(L"%c", piece_chars[board->squares[col + 8 * li]]);
+      wchar_t pchar = piece_chars[board->squares[col + 8 * li]];
+      if ((li + col) % 2 == 0) {
+        wprintf(L"\033[48;5;230m %lc \033[0m", pchar);
+      } else {
+        wprintf(L"\033[48;5;94m %lc \033[0m", pchar);
+      }
     }
-    printf("\n");
+    wprintf(L"\n");
   }
 }

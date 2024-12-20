@@ -1,5 +1,5 @@
 #########################
-CFILES := main.c
+CFILES := main.c board.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic

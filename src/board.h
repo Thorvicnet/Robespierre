@@ -30,7 +30,7 @@ typedef struct {
   int squares[64];
 } Board;
 
-Board *board_init();
+Board *board_init(void);
 void board_print(Board *board);
 void board_set(Board *board, int sq, int piece);
 int board_get(Board *board, int sq);
