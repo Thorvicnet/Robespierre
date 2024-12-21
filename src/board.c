@@ -97,7 +97,7 @@ void board_list_moves(Board *board) {
   Stack *history = board->history;
   for (int i = 0; i < history->last_move; i++) {
     Move move = history->list_of_move[i];
-    wprintf(L"%d: %d %d -> %d %d ( %lc )\n", i, move.orig[0], move.orig[1], move.dest[0],
-            move.dest[1], piece_chars[move.piece]);
+    wprintf(L"%d: %d %d -> %d %d ( %lc )\n", i, move.orig[0], move.orig[1],
+            move.dest[0], move.dest[1], piece_chars[move.piece]);
   }
 }

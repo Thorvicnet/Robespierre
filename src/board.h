@@ -1,11 +1,11 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "types.h"
 #include "history.h"
+#include "types.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <wchar.h>
 
 #define WHITE 0x00

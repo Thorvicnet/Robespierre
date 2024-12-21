@@ -114,70 +114,69 @@ void test_move_check_validity_pawn(void) {
   Move last_move = {BLACK_PAWN, {5, 6}, {5, 4}};
   board_add_move(board, last_move);
 
-  assert(move_check_validity(board, (int[]){4, 4},
-                             (int[]){5, 5}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){5, 5}));
   assert(!move_check_validity(board, (int[]){4, 4}, (int[]){3, 5}));
   assert(!move_check_validity(board, (int[]){4, 4}, (int[]){5, 3}));
 }
 
 void test_move_basic(void) {
-    wprintf(L"- move_basic\n");
-    Board *board = board_init();
-    board_empty(board);
+  wprintf(L"- move_basic\n");
+  Board *board = board_init();
+  board_empty(board);
 
-    board_set(board, 4 + 4 * 8, WHITE_ROOK);
-    Move move_data = {WHITE_ROOK, {4, 4}, {4, 6}};
-    move(board, move_data);
-    assert(board_get(board, 4 + 4 * 8) == EMPTY);
-    assert(board_get(board, 4 + 6 * 8) == WHITE_ROOK);
-    assert(board->color == BLACK);
+  board_set(board, 4 + 4 * 8, WHITE_ROOK);
+  Move move_data = {WHITE_ROOK, {4, 4}, {4, 6}};
+  move(board, move_data);
+  assert(board_get(board, 4 + 4 * 8) == EMPTY);
+  assert(board_get(board, 4 + 6 * 8) == WHITE_ROOK);
+  assert(board->color == BLACK);
 }
 
 void test_move_capture(void) {
-    wprintf(L"- move_capture\n");
-    Board *board = board_init();
-    board_empty(board);
+  wprintf(L"- move_capture\n");
+  Board *board = board_init();
+  board_empty(board);
 
-    board_set(board, 3 + 3 * 8, WHITE_BISHOP);
-    board_set(board, 5 + 5 * 8, BLACK_PAWN);
-    Move move_data = {WHITE_BISHOP, {3, 3}, {5, 5}};
-    move(board, move_data);
-    assert(board_get(board, 3 + 3 * 8) == EMPTY);
-    assert(board_get(board, 5 + 5 * 8) == WHITE_BISHOP);
+  board_set(board, 3 + 3 * 8, WHITE_BISHOP);
+  board_set(board, 5 + 5 * 8, BLACK_PAWN);
+  Move move_data = {WHITE_BISHOP, {3, 3}, {5, 5}};
+  move(board, move_data);
+  assert(board_get(board, 3 + 3 * 8) == EMPTY);
+  assert(board_get(board, 5 + 5 * 8) == WHITE_BISHOP);
 }
 
 void test_move_enpassant(void) {
-    wprintf(L"- move_enpassant\n");
-    Board *board = board_init();
-    board_empty(board);
+  wprintf(L"- move_enpassant\n");
+  Board *board = board_init();
+  board_empty(board);
 
-    board_set(board, 4 + 4 * 8, WHITE_PAWN);
-    board_set(board, 5 + 4 * 8, BLACK_PAWN);
-    Move last_move = {BLACK_PAWN, {5, 6}, {5, 4}};
-    board_add_move(board, last_move);
+  board_set(board, 4 + 4 * 8, WHITE_PAWN);
+  board_set(board, 5 + 4 * 8, BLACK_PAWN);
+  Move last_move = {BLACK_PAWN, {5, 6}, {5, 4}};
+  board_add_move(board, last_move);
 
-    Move move_data = {WHITE_PAWN, {4, 4}, {5, 5}};
-    move(board, move_data);
-    assert(board_get(board, 4 + 4 * 8) == EMPTY);
-    assert(board_get(board, 5 + 4 * 8) == EMPTY);
-    assert(board_get(board, 5 + 5 * 8) == WHITE_PAWN);
+  Move move_data = {WHITE_PAWN, {4, 4}, {5, 5}};
+  move(board, move_data);
+  assert(board_get(board, 4 + 4 * 8) == EMPTY);
+  assert(board_get(board, 5 + 4 * 8) == EMPTY);
+  assert(board_get(board, 5 + 5 * 8) == WHITE_PAWN);
 }
 
 void test_move_promotion(void) {
-    wprintf(L"- move_promotion\n");
-    Board *board = board_init();
-    board_empty(board);
+  wprintf(L"- move_promotion\n");
+  Board *board = board_init();
+  board_empty(board);
 
-    board_set(board, 3 + 6 * 8, WHITE_PAWN);
-    Move move_data = {WHITE_PAWN, {3, 6}, {3, 7}};
-    move(board, move_data);
-    assert(board_get(board, 3 + 7 * 8) == WHITE_QUEEN);
+  board_set(board, 3 + 6 * 8, WHITE_PAWN);
+  Move move_data = {WHITE_PAWN, {3, 6}, {3, 7}};
+  move(board, move_data);
+  assert(board_get(board, 3 + 7 * 8) == WHITE_QUEEN);
 
-    board->color = BLACK;
-    board_set(board, 4 + 1 * 8, BLACK_PAWN);
-    move_data = (Move){BLACK_PAWN, {4, 1}, {4, 0}};
-    move(board, move_data);
-    assert(board_get(board, 4 + 0 * 8) == BLACK_QUEEN);
+  board->color = BLACK;
+  board_set(board, 4 + 1 * 8, BLACK_PAWN);
+  move_data = (Move){BLACK_PAWN, {4, 1}, {4, 0}};
+  move(board, move_data);
+  assert(board_get(board, 4 + 0 * 8) == BLACK_QUEEN);
 }
 
 void test_move(void) {
