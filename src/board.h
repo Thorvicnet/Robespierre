@@ -1,6 +1,10 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <wchar.h>
+
 #define WHITE 0x00
 #define BLACK 0x10
 
@@ -28,10 +32,14 @@
 
 typedef struct {
   int squares[64];
+  int moves;
+  int color;
 } Board;
 
 Board *board_init(void);
+void board_empty(Board *board);
 void board_print(Board *board);
+void board_info(Board *board);
 void board_set(Board *board, int sq, int piece);
 int board_get(Board *board, int sq);
 void board_free(Board *board);

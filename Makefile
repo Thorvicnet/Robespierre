@@ -1,5 +1,5 @@
 #########################
-CFILES := main.c board.c
+CFILES := main.c board.c move.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic
@@ -9,6 +9,7 @@ SRC_DIR := src
 OBJ_DIR := obj
 BIN_DIR := bin
 DEBUG_DIR := debug
+TEST_FILE := tests.c
 ########################
 
 # -MMD generates dependencies while compiling
@@ -41,3 +42,8 @@ clean:
 	rm -rf $(BIN_DIR) $(DEBUG_DIR) $(OBJ_DIR) *.d
 
 -include $(DEPFILES)
+
+tests: $(SRC_DIR)/$(TEST_FILE) $(filter-out $(OBJ_DIR)/main.o, $(OBJFILES))
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/tests $^
+

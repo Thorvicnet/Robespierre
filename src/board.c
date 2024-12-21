@@ -1,7 +1,4 @@
 #include "board.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <wchar.h>
 
 const wchar_t piece_chars[] = {
     // Comment: the chars are too "big" for a normal char type
@@ -19,6 +16,9 @@ Board *board_init(void) {
     printf("Your memory is doomed...");
     exit(EXIT_FAILURE);
   }
+
+  board->color = WHITE;
+  board->moves = 0;
   int *tab = board->squares;
 
   for (int i = 0; i < 8; i++) {
@@ -49,6 +49,13 @@ Board *board_init(void) {
   return board;
 }
 
+void board_empty(Board *board) {
+  // Empties the board (for testing purposes)
+  for (int i = 0; i < 64; i++) {
+    board_set(board, i, EMPTY);
+  }
+}
+
 void board_free(Board *board) {
   // Frees the board from memory (very simple ATM)
   free(board);
@@ -71,4 +78,10 @@ void board_print(Board *board) {
     }
     wprintf(L"\n");
   }
+}
+
+void board_info(Board *board) {
+  board_print(board);
+  wprintf(L"%s to play, Moves: %d\n", board->color == WHITE ? "WHITE" : "BLACK",
+          board->moves);
 }
