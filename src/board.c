@@ -1,4 +1,5 @@
 #include "board.h"
+#include <signal.h>
 
 const wchar_t piece_chars[] = {
     // Comment: the chars are too "big" for a normal char type
@@ -8,6 +9,30 @@ const wchar_t piece_chars[] = {
     [BLACK_BISHOP] = L'♗', [BLACK_ROOK] = L'♖', [BLACK_QUEEN] = L'♕',
     [BLACK_KING] = L'♔',
 };
+
+Stack* create_stack(){
+  Stack* historic = (Stack*)malloc(sizeof(Stack));
+  historic->list_of_move = (int*)malloc(sizeof(int)*200);
+  historic->last_move = 0;
+  return historic;
+}
+
+void push(Stack* stack, int value){
+  stack->list_of_move[stack->last_move] = value;
+  stack->last_move++; 
+  if (stack->last_move >= 500){
+    raise (5);
+  }
+}
+
+
+void pop(Stack* stack){
+  stack->last_move--; 
+  if (stack->last_move < 0){
+    raise (5);
+  }
+}
+
 
 Board *board_init(void) {
   // Returns a board in the default position
@@ -19,6 +44,7 @@ Board *board_init(void) {
 
   board->color = WHITE;
   board->moves = 0;
+  board->historic = create_stack();
   int *tab = board->squares;
 
   for (int i = 0; i < 8; i++) {

@@ -30,10 +30,20 @@
 #define BLACK_QUEEN 0x15
 #define BLACK_KING 0x16
 
+
+
+typedef struct {
+  int last_move;
+  int* list_of_move;  
+} Stack;
+
+
+
 typedef struct {
   int squares[64];
   int moves;
   int color;
+  Stack* historic;
 } Board;
 
 Board *board_init(void);
