@@ -54,6 +54,8 @@ void board_empty(Board *board) {
   for (int i = 0; i < 64; i++) {
     board_set(board, i, EMPTY);
   }
+  board->color = WHITE;
+  board->history->last_move = 0;
 }
 
 void board_free(Board *board) {

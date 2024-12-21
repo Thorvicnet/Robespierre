@@ -1,6 +1,2 @@
-#ifndef BB_H
-#define BB_H
+#include "bb.h"
 
-typedef unsigned long long bb;
-
-#endif // BB_H

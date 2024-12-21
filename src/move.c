@@ -144,6 +144,80 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
   return false;
 }
 
+bool king_moved(Board *board, int color) {
+  // Returns true if the king of the given color has moved
+  for (int i = 0; i < board->history->last_move; i++) {
+    int piece = board->history->list_of_move[i].piece;
+    if ((piece & 0x0F) == KING && (piece & 0xF0) == color) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool rook_moved(Board *board, int color, int orig[2]) {
+  // Returns true if the king of the given color has moved
+  for (int i = 0; i < board->history->last_move; i++) {
+    Move move = board->history->list_of_move[i];
+    int piece = move.piece;
+    if ((piece & 0x0F) == ROOK && (piece & 0xF0) == color &&
+        move.orig[0] == orig[0] && move.orig[1] == orig[1]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool check_king(Board *board, int orig[2], int dest[2]) {
+  if (abs(orig[0] - dest[0]) <= 1 && abs(orig[1] - dest[1]) <= 1 &&
+      (abs(orig[0] - dest[0]) != 0 || abs(orig[1] - dest[1]) != 0)) {
+    return check_piece_color(board, dest[0] + dest[1] * 8);
+  }
+
+  // Castling
+  if (orig[1] != dest[1] || (dest[0] != 2 && dest[0] != 6) ||
+      abs(orig[0] - dest[0]) != 2) {
+    return false;
+  }
+
+  // Set rook positions
+  int rook_orig[2], rook_dest[2];
+  if (dest[0] == 2) { // Queen-side
+    rook_orig[0] = 0;
+    rook_orig[1] = orig[1];
+    rook_dest[0] = 3;
+    rook_dest[1] = orig[1];
+  } else { // King-side
+    rook_orig[0] = 7;
+    rook_orig[1] = orig[1];
+    rook_dest[0] = 5;
+    rook_dest[1] = orig[1];
+  }
+
+  // Check if path is clear between king and rook
+  int start = min(orig[0], rook_orig[0]);
+  int end = max(orig[0], rook_orig[0]);
+  for (int col = start + 1; col < end; col++) {
+    if (board_get(board, col + orig[1] * 8) != EMPTY) {
+      return false;
+    }
+  }
+
+  // Verify rook presence and color
+  int rook_piece = board_get(board, rook_orig[0] + rook_orig[1] * 8);
+  if ((rook_piece & 0x0F) != ROOK || (rook_piece & 0xF0) != board->color) {
+    return false;
+  }
+
+  // Check if pieces haven't moved
+  if (king_moved(board, board->color) ||
+      rook_moved(board, board->color, rook_orig)) {
+    return false;
+  }
+
+  return true;
+}
+
 bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   if (dest[0] >= 8 || dest[1] >= 8 || dest[0] < 0 || dest[1] < 0) {
     return false;
@@ -163,6 +237,8 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
     return check_queen(board, orig, dest);
   case PAWN:
     return check_pawn(board, orig, dest);
+  case KING:
+    return check_king(board, orig, dest);
   default:
     return false;
   }
@@ -181,8 +257,24 @@ void move(Board *board, Move move) {
       move.orig[0] != move.dest[0]) {
     int captured_rank = move.orig[1];
     board_set(board, move.dest[0] + captured_rank * 8, EMPTY);
-  }
+  } else if ((piece & 0x0F) == KING && abs(move.orig[0] - move.dest[0]) == 2) {
+    int rook_orig[2], rook_dest[2];
+    if (move.dest[0] == 2) { // Queen-side castling
+      rook_orig[0] = 0;
+      rook_orig[1] = move.orig[1];
+      rook_dest[0] = 3;
+      rook_dest[1] = move.orig[1];
+    } else if (move.dest[0] == 6) { // King-side castling
+      rook_orig[0] = 7;
+      rook_orig[1] = move.orig[1];
+      rook_dest[0] = 5;
+      rook_dest[1] = move.orig[1];
+    }
 
+    board_set(board, rook_dest[0] + rook_dest[1] * 8,
+              board_get(board, rook_orig[0] + rook_orig[1] * 8));
+    board_set(board, rook_orig[0] + rook_orig[1] * 8, EMPTY);
+  }
   board_set(board, dest_pos, piece);
   board_set(board, orig_pos, EMPTY);
 
