@@ -46,6 +46,8 @@ Board *board_init(void) {
   tab[3 + 8 * 7] = BLACK_KING;
   tab[4 + 8 * 7] = BLACK_QUEEN;
 
+  bb_board_init(board);
+
   return board;
 }
 

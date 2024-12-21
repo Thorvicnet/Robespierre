@@ -10,8 +10,7 @@ static inline int max(int a, int b) { return a > b ? a : b; }
 bool check_piece_color(Board *board, int pos) {
   int piece = board_get(board, pos);
   if ((piece != EMPTY) &&
-      ((piece & 0xF0) ==
-       board->color)) { // You are trying to eat your own piece
+      (COLOR(piece) == board->color)) { // You are trying to eat your own piece
     return false;
   }
   return true;
@@ -85,7 +84,7 @@ bool can_enpassant(Board *board, int orig_pos, int dest_pos) {
   int orig_rank = orig_pos / 8;
   int dest_file = dest_pos % 8;
 
-  if ((last_move.piece & 0x0F) != PAWN)
+  if (PIECE(last_move.piece) != PAWN)
     return false;
   if (abs(last_move.orig[1] - last_move.dest[1]) != 2)
     return false;
@@ -107,7 +106,7 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
   int dest_pos = dest[0] + dest[1] * 8;
 
   int piece = board_get(board, orig_pos);
-  int color = piece & 0xF0;
+  int color = COLOR(piece);
   int direction = (color == WHITE) ? 1 : -1;
 
   int file_diff = dest[0] - orig[0];
@@ -132,7 +131,7 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
   if (abs(file_diff) == 1 && rank_diff == direction) {
     // normal
     int dest_piece = board_get(board, dest_pos);
-    if (dest_piece != EMPTY && (dest_piece & 0xF0) != color) {
+    if (dest_piece != EMPTY && COLOR(dest_piece) != color) {
       return true;
     }
     // en passant
@@ -148,7 +147,7 @@ bool king_moved(Board *board, int color) {
   // Returns true if the king of the given color has moved
   for (int i = 0; i < board->history->last_move; i++) {
     int piece = board->history->list_of_move[i].piece;
-    if ((piece & 0x0F) == KING && (piece & 0xF0) == color) {
+    if (PIECE(piece) == KING && COLOR(piece) == color) {
       return true;
     }
   }
@@ -160,7 +159,7 @@ bool rook_moved(Board *board, int color, int orig[2]) {
   for (int i = 0; i < board->history->last_move; i++) {
     Move move = board->history->list_of_move[i];
     int piece = move.piece;
-    if ((piece & 0x0F) == ROOK && (piece & 0xF0) == color &&
+    if (PIECE(piece) == ROOK && COLOR(piece) == color &&
         move.orig[0] == orig[0] && move.orig[1] == orig[1]) {
       return true;
     }
@@ -205,7 +204,7 @@ bool check_king(Board *board, int orig[2], int dest[2]) {
 
   // Verify rook presence and color
   int rook_piece = board_get(board, rook_orig[0] + rook_orig[1] * 8);
-  if ((rook_piece & 0x0F) != ROOK || (rook_piece & 0xF0) != board->color) {
+  if (PIECE(rook_piece) != ROOK || COLOR(rook_piece) != board->color) {
     return false;
   }
 
@@ -223,10 +222,10 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
     return false;
   }
   int piece = board_get(board, orig[0] + orig[1] * 8);
-  if ((piece & 0xF0) != board->color) {
+  if (COLOR(piece) != board->color) {
     return false;
   }
-  switch (piece & 0x0F) {
+  switch (PIECE(piece)) {
   case BISHOP:
     return check_bishop(board, orig, dest);
   case ROOK:
@@ -253,11 +252,11 @@ void move(Board *board, Move move) {
   int dest_pos = move.dest[0] + move.dest[1] * 8;
   int piece = move.piece;
 
-  if ((piece & 0x0F) == PAWN && board_get(board, dest_pos) == EMPTY &&
+  if (PIECE(piece) == PAWN && board_get(board, dest_pos) == EMPTY &&
       move.orig[0] != move.dest[0]) {
     int captured_rank = move.orig[1];
     board_set(board, move.dest[0] + captured_rank * 8, EMPTY);
-  } else if ((piece & 0x0F) == KING && abs(move.orig[0] - move.dest[0]) == 2) {
+  } else if (PIECE(piece) == KING && abs(move.orig[0] - move.dest[0]) == 2) {
     int rook_orig[2], rook_dest[2];
     if (move.dest[0] == 2) { // Queen-side castling
       rook_orig[0] = 0;
@@ -278,10 +277,10 @@ void move(Board *board, Move move) {
   board_set(board, dest_pos, piece);
   board_set(board, orig_pos, EMPTY);
 
-  if ((piece & 0x0F) == PAWN) {
-    if ((piece & 0xF0) == WHITE && move.dest[1] == 7) {
+  if (PIECE(piece) == PAWN) {
+    if (COLOR(piece) == WHITE && move.dest[1] == 7) {
       board_set(board, dest_pos, WHITE_QUEEN);
-    } else if ((piece & 0xF0) == BLACK && move.dest[1] == 0) {
+    } else if (COLOR(piece) == BLACK && move.dest[1] == 0) {
       board_set(board, dest_pos, BLACK_QUEEN);
     }
   }

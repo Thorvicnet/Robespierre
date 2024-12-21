@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "bb.h"
 #include "history.h"
 #include "types.h"
 #include <stdbool.h>
