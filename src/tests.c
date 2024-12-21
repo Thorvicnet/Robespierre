@@ -41,6 +41,23 @@ void test_move_check_validity_rook(void) {
   assert(!move_check_validity(board, (int[]){3, 5}, (int[]){3, 7}));
 }
 
+void test_move_check_validity_pawn(void) {
+  wprintf(L"- move_check_validity_pawn\n");
+  Board *board = board_init();
+  board_empty(board);
+
+  // Rook checks
+  board_set(board, 1 + 1 * 8, WHITE_PAWN);
+  board_set(board, 2 + 1 * 8, WHITE_PAWN);
+  board_set(board, 2 + 2 * 8, BLACK_KNIGHT);
+
+  assert(move_check_validity(board, (int[]){1, 1}, (int[]){1, 2}));
+  assert(move_check_validity(board, (int[]){1, 1}, (int[]){1, 3}));
+  assert(move_check_validity(board, (int[]){1, 1}, (int[]){2, 2}));
+  assert(!move_check_validity(board, (int[]){2, 1}, (int[]){2, 2}));
+  assert(!move_check_validity(board, (int[]){2, 1}, (int[]){2, 3}));
+}
+
 void test_move_check_validity_knight(void) {
   wprintf(L"- move_check_validity_knight\n");
   Board *board = board_init();
@@ -69,6 +86,7 @@ void test_move(void) {
   test_move_check_validity_bishop();
   test_move_check_validity_rook();
   test_move_check_validity_knight();
+  test_move_check_validity_pawn();
 }
 
 int main(void) {

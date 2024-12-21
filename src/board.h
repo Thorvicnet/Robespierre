@@ -48,6 +48,7 @@ void board_print(Board *board);
 void board_info(Board *board);
 void board_set(Board *board, int sq, int piece);
 int board_get(Board *board, int sq);
+int get_last_move(Board *board);
 void board_free(Board *board);
 
 #endif // BOARD_H

@@ -18,18 +18,24 @@ Stack *stack_create() {
 }
 
 void stack_push(Stack *stack, int value) {
-  stack->list_of_move[stack->last_move] = value;
-  stack->last_move++;
+  stack->list_of_move[stack->last_move++] = value;
   if (stack->last_move >= 500) {
     raise(5);
   }
 }
 
-void stack_pop(Stack *stack) {
-  stack->last_move--;
-  if (stack->last_move < 0) {
+int stack_pop(Stack *stack) {
+  if (stack->last_move <= 0) {
     raise(5);
   }
+  return (stack->list_of_move[--stack->last_move]);
+}
+
+int stack_peek(Stack *stack) {
+  if (stack->last_move <= 0) {
+    raise(5);
+  }
+  return (stack->list_of_move[stack->last_move - 1]);
 }
 
 Board *board_init(void) {
@@ -88,6 +94,8 @@ void board_free(Board *board) {
 void board_set(Board *board, int sq, int piece) { board->squares[sq] = piece; }
 
 int board_get(Board *board, int sq) { return board->squares[sq]; }
+
+int board_last_move(Board *board) { return stack_peek(board->history); }
 
 void board_print(Board *board) {
   // Prints the board to stdout using chess using chars from U+2654 to U+265F
