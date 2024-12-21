@@ -1,5 +1,4 @@
 #include "board.h"
-#include <signal.h>
 
 const wchar_t piece_chars[] = {
     // Comment: the chars are too "big" for a normal char type
@@ -9,34 +8,6 @@ const wchar_t piece_chars[] = {
     [BLACK_BISHOP] = L'♗', [BLACK_ROOK] = L'♖', [BLACK_QUEEN] = L'♕',
     [BLACK_KING] = L'♔',
 };
-
-Stack *stack_create() {
-  Stack *history = (Stack *)malloc(sizeof(Stack));
-  history->list_of_move = (int *)malloc(sizeof(int) * 200);
-  history->last_move = 0;
-  return history;
-}
-
-void stack_push(Stack *stack, int value) {
-  stack->list_of_move[stack->last_move++] = value;
-  if (stack->last_move >= 500) {
-    raise(5);
-  }
-}
-
-int stack_pop(Stack *stack) {
-  if (stack->last_move <= 0) {
-    raise(5);
-  }
-  return (stack->list_of_move[--stack->last_move]);
-}
-
-int stack_peek(Stack *stack) {
-  if (stack->last_move <= 0) {
-    raise(5);
-  }
-  return (stack->list_of_move[stack->last_move - 1]);
-}
 
 Board *board_init(void) {
   // Returns a board in the default position
@@ -95,7 +66,11 @@ void board_set(Board *board, int sq, int piece) { board->squares[sq] = piece; }
 
 int board_get(Board *board, int sq) { return board->squares[sq]; }
 
-int board_last_move(Board *board) { return stack_peek(board->history); }
+Move board_last_move(Board *board) { return stack_peek(board->history); }
+
+void board_add_move(Board *board, Move move) {
+  stack_push(board->history, move);
+}
 
 void board_print(Board *board) {
   // Prints the board to stdout using chess using chars from U+2654 to U+265F
@@ -116,4 +91,14 @@ void board_info(Board *board) {
   board_print(board);
   wprintf(L"%s to play, Moves: %d\n", board->color == WHITE ? "WHITE" : "BLACK",
           board->moves);
+}
+
+void board_list_moves(Board *board) {
+  // Lists all the moves in the history stack
+  Stack *history = board->history;
+  for (int i = 0; i < history->last_move; i++) {
+    Move move = history->list_of_move[i];
+    wprintf(L"%d: %d %d -> %d %d ( %lc )\n", i, move.orig[0], move.orig[1], move.dest[0],
+            move.dest[1], piece_chars[move.piece]);
+  }
 }

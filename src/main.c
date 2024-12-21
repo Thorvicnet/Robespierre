@@ -1,5 +1,6 @@
 #include "board.h"
 #include "move.h"
+#include "types.h"
 #include <locale.h>
 #include <stdbool.h>
 #include <stdlib.h>

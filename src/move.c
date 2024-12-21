@@ -1,5 +1,4 @@
 #include "move.h"
-#include "board.h"
 
 // TODO: Check Discovered Check
 
@@ -77,33 +76,59 @@ bool check_queen(Board *board, int orig[2], int dest[2]) {
   return check_bishop(board, orig, dest) || check_rook(board, orig, dest);
 }
 
-bool can_enppassant(Board *board, int pos){
-  int last_move = get_last_move(board);
-  return ((last_move-8) == pos);
+bool can_enpassant(Board *board, int pos) {
+  Move last_move = board_last_move(board);
+  if (last_move.piece != PAWN) {
+    return false;
+  }
+  int color = board_get(board, pos) & 0xF0;
+
+  if (abs(last_move.orig[1] - last_move.dest[1]) == 2) {
+    if (last_move.dest[0] == pos % 8) {
+            if ((color == WHITE && last_move.dest[1] == 4) ||
+                (color == BLACK && last_move.dest[1] == 3)) {
+                return true;
+            }
+    }
+  }
+  return false;
 }
 
 bool check_pawn(Board *board, int orig[2], int dest[2]) {
-  int piece = board_get(board, orig[0]+orig[1]*8);
+  int piece = board_get(board, orig[0] + orig[1] * 8);
   int color = piece & 0xF0;
-  int piece_dest =  board_get(board, dest[0]+dest[1]*8);
-  if (color == WHITE){
-    if (piece_dest == EMPTY ){
-      return (orig[0] == dest[0] && (orig[1] - dest[1] == - 1 || (orig[1] - dest[1] == - 2 && orig[1] == 1 && board_get(board, dest[0]+(dest[1]-1)*8) == EMPTY)));
-    }
-    else{
-      return (abs(orig[0] - dest[0]) == 1 && orig[1] - dest[1] == - 1);
-    } 
-  }
-  else{
-    if (piece_dest == EMPTY){
-      return (orig[0] == dest[0] && (orig[1] - dest[1] ==  1 || (orig[1] - dest[1] ==  2 && orig[1] == 7)));
-    }
-    else{
-      return (abs(orig[0] - dest[0]) == 6 && orig[1] - dest[1] ==  1 );
-    } 
-  }
-}
+  int piece_dest = board_get(board, dest[0] + dest[1] * 8);
+  int direction = (color == WHITE) ? 1 : -1;
+  int start_rank = (color == WHITE) ? 1 : 6;
 
+  if (piece_dest == EMPTY) {
+    // en passant
+    if (abs(orig[0] - dest[0]) == 1 && (dest[1] - orig[1]) == direction) {
+            if (can_enpassant(board, orig[0] + orig[1] * 8)) {
+                return true;
+            }
+    }
+    // one square
+    if (orig[0] == dest[0] && (dest[1] - orig[1]) == direction) {
+      return true;
+    }
+    // two squares
+    if (orig[0] == dest[0] && orig[1] == start_rank &&
+        (dest[1] - orig[1]) == 2 * direction) {
+      int mid_square = orig[0] + (orig[1] + direction) * 8;
+      int dest_square = dest[0] + dest[1] * 8;
+      if (board_get(board, mid_square) == EMPTY && 
+          board_get(board, dest_square) == EMPTY) {
+        return true;
+      }
+    }
+  }
+  // capture
+  else if ((piece_dest & 0xF0) != color) {
+    return (abs(orig[0] - dest[0]) == 1 && (dest[1] - orig[1]) == direction);
+  }
+  return false;
+}
 
 bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   if (dest[0] >= 8 || dest[1] >= 8 || dest[0] < 0 || dest[1] < 0) {
@@ -127,4 +152,14 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   default:
     return false;
   }
+}
+
+void move(Board *board, Move move) {
+  if (!move_check_validity(board, move.orig, move.dest)) {
+    return;
+  }
+  board->moves++;
+  board->color ^= BLACK;
+  board_set(board, move.dest[0] + move.dest[1] * 8, move.piece);
+  board_set(board, move.orig[0] + move.orig[1] * 8, EMPTY);
 }

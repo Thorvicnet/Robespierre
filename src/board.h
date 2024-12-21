@@ -1,8 +1,11 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "types.h"
+#include "history.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <wchar.h>
 
 #define WHITE 0x00
@@ -30,25 +33,15 @@
 #define BLACK_QUEEN 0x15
 #define BLACK_KING 0x16
 
-typedef struct {
-  int last_move;
-  int *list_of_move;
-} Stack;
-
-typedef struct {
-  int squares[64];
-  int moves;
-  int color;
-  Stack *history;
-} Board;
-
 Board *board_init(void);
 void board_empty(Board *board);
 void board_print(Board *board);
 void board_info(Board *board);
 void board_set(Board *board, int sq, int piece);
 int board_get(Board *board, int sq);
-int get_last_move(Board *board);
+Move board_last_move(Board *board);
+void board_add_move(Board *board, Move move);
+void board_list_moves(Board *board);
 void board_free(Board *board);
 
 #endif // BOARD_H
