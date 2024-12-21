@@ -115,9 +115,12 @@ void test_move_check_validity_pawn(void) {
   board_add_move(board, last_move);
 
   board_list_moves(board);
+  board_info(board);
 
   assert(move_check_validity(board, (int[]){4, 4},
-                             (int[]){5, 5})); // En passant capture
+                             (int[]){5, 5}));
+  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){3, 5}));
+  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){5, 3}));
 }
 
 void test_move(void) {

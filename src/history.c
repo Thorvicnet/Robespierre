@@ -1,8 +1,10 @@
 #include "history.h"
 
+const int MAX_MOVES = 200;
+
 Stack *stack_create(void) {
   Stack *history = (Stack *)malloc(sizeof(Stack));
-  history->list_of_move = (Move *)malloc(sizeof(int) * 200);
+  history->list_of_move = (Move *)malloc(sizeof(Move) * MAX_MOVES);
   history->last_move = 0;
   return history;
 }

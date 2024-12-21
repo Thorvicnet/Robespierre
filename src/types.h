@@ -14,7 +14,6 @@ typedef struct {
 
 typedef struct {
   int squares[64];
-  int moves;
   int color;
   Stack *history;
 } Board;

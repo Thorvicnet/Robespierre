@@ -18,7 +18,6 @@ Board *board_init(void) {
   }
 
   board->color = WHITE;
-  board->moves = 0;
   board->history = stack_create();
   int *tab = board->squares;
 
@@ -90,7 +89,7 @@ void board_print(Board *board) {
 void board_info(Board *board) {
   board_print(board);
   wprintf(L"%s to play, Moves: %d\n", board->color == WHITE ? "WHITE" : "BLACK",
-          board->moves);
+          board->history->last_move);
 }
 
 void board_list_moves(Board *board) {
