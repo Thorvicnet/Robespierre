@@ -20,8 +20,8 @@ bool check_piece_color(Board *board, int pos) {
 
 bool check_knight(Board *board, int orig[2], int dest[2]) {
   return check_piece_color(board, dest[0] + dest[1] * 8) &&
-         ((abs(orig[0] - dest[0]) == 3 && abs(orig[1] - dest[1]) == 2) ||
-          (abs(orig[0] - dest[0]) == 2 && abs(orig[1] - dest[1]) == 2));
+         ((abs(orig[0] - dest[0]) == 2 && abs(orig[1] - dest[1]) == 1) ||
+          (abs(orig[0] - dest[0]) == 1 && abs(orig[1] - dest[1]) == 2));
 }
 
 // Rook: Validate vertical or horizontal moves and check for obstructions
@@ -73,6 +73,10 @@ bool check_bishop(Board *board, int orig[2], int dest[2]) {
   return check_piece_color(board, dest[0] + dest[1] * 8);
 }
 
+bool check_queen(Board *board, int orig[2], int dest[2]) {
+  return check_bishop(board, orig, dest) || check_rook(board, orig, dest);
+}
+
 bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   if (dest[0] >= 8 || dest[1] >= 8 || dest[0] < 0 || dest[1] < 0) {
     return false;
@@ -88,6 +92,8 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
     return check_rook(board, orig, dest);
   case KNIGHT:
     return check_knight(board, orig, dest);
+  case QUEEN:
+    return check_queen(board, orig, dest);
   default:
     return false;
   }

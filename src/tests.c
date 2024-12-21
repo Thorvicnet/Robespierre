@@ -41,12 +41,37 @@ void test_move_check_validity_rook(void) {
   assert(!move_check_validity(board, (int[]){3, 5}, (int[]){3, 7}));
 }
 
-void test_move(void) {
-  test_move_check_validity_bishop();
-  test_move_check_validity_rook();
+void test_move_check_validity_knight(void) {
+  wprintf(L"- move_check_validity_knight\n");
+  Board *board = board_init();
+  board_empty(board);
+
+  // Knight checks
+  board_set(board, 4 + 4 * 8, WHITE_KNIGHT);
+  board_set(board, 2 + 5 * 8, BLACK_PAWN);
+  board_set(board, 6 + 3 * 8, BLACK_KING);
+
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){2, 5}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){6, 3}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){5, 6}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){3, 6}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){2, 3}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){3, 2}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){5, 2}));
+  assert(move_check_validity(board, (int[]){4, 4}, (int[]){6, 5}));
+  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){4, 5}));
+  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){4, 4}));
+  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){7, 7}));
 }
 
-int main(int argc, char *argv[]) {
+void test_move(void) {
+  // The queen does not have to be tested because it is a rook/bishop
+  test_move_check_validity_bishop();
+  test_move_check_validity_rook();
+  test_move_check_validity_knight();
+}
+
+int main(void) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
 
   test_move();
