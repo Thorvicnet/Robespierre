@@ -164,10 +164,33 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
 }
 
 void move(Board *board, Move move) {
-  if (!move_check_validity(board, move.orig, move.dest)) {
-    return;
-  }
-  board->color ^= BLACK;
-  board_set(board, move.dest[0] + move.dest[1] * 8, move.piece);
-  board_set(board, move.orig[0] + move.orig[1] * 8, EMPTY);
+    if (!move_check_validity(board, move.orig, move.dest)) {
+        return;
+    }
+
+    int orig_pos = move.orig[0] + move.orig[1] * 8;
+    int dest_pos = move.dest[0] + move.dest[1] * 8;
+    int piece = move.piece;
+
+    if ((piece & 0x0F) == PAWN && 
+        board_get(board, dest_pos) == EMPTY && 
+        move.orig[0] != move.dest[0]) {
+        int captured_rank = move.orig[1];
+        board_set(board, move.dest[0] + captured_rank * 8, EMPTY);
+    }
+
+    board_set(board, dest_pos, piece);
+    board_set(board, orig_pos, EMPTY);
+
+    if ((piece & 0x0F) == PAWN) {
+        if ((piece & 0xF0) == WHITE && move.dest[1] == 7) {
+            board_set(board, dest_pos, WHITE_QUEEN);
+        } else if ((piece & 0xF0) == BLACK && move.dest[1] == 0) {
+            board_set(board, dest_pos, BLACK_QUEEN);
+        }
+    }
+
+    board_add_move(board, move);
+
+    board->color ^= BLACK;
 }
