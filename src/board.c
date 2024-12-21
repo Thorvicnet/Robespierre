@@ -26,13 +26,20 @@ void push(Stack* stack, int value){
 }
 
 
-void pop(Stack* stack){
+int pop(Stack* stack){
   stack->last_move--; 
-  if (stack->last_move < 0){
+  if (stack->last_move <= 0){
     raise (5);
   }
+  return (stack->list_of_move[stack->last_move]);
 }
 
+int get(Stack* stack){  
+  if (stack->last_move <= 0){
+    raise (5);
+  }
+  return (stack->list_of_move[stack->last_move-1]);
+}
 
 Board *board_init(void) {
   // Returns a board in the default position
@@ -90,6 +97,10 @@ void board_free(Board *board) {
 void board_set(Board *board, int sq, int piece) { board->squares[sq] = piece; }
 
 int board_get(Board *board, int sq) { return board->squares[sq]; }
+
+int get_last_move(Board *board){
+  return get(board->historic);
+}
 
 void board_print(Board *board) {
   // Prints the board to stdout using chess using chars from U+2654 to U+265F

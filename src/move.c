@@ -77,6 +77,34 @@ bool check_queen(Board *board, int orig[2], int dest[2]) {
   return check_bishop(board, orig, dest) || check_rook(board, orig, dest);
 }
 
+bool can_enppassant(Board *board, int pos){
+  int last_move = get_last_move(board);
+  return ((last_move-8) == pos);
+}
+
+bool check_pawn(Board *board, int orig[2], int dest[2]) {
+  int piece = board_get(board, orig[0]+orig[1]*8);
+  int color = piece & 0xF0;
+  int piece_dest =  board_get(board, dest[0]+dest[1]*8);
+  if (color == WHITE){
+    if (piece_dest == EMPTY ){
+      return (orig[0] == dest[0] && (orig[1] - dest[1] == - 1 || (orig[1] - dest[1] == - 2 && orig[1] == 1 && board_get(board, dest[0]+(dest[1]-1)*8) == EMPTY)));
+    }
+    else{
+      return (abs(orig[0] - dest[0]) == 1 && orig[1] - dest[1] == - 1);
+    } 
+  }
+  else{
+    if (piece_dest == EMPTY){
+      return (orig[0] == dest[0] && (orig[1] - dest[1] ==  1 || (orig[1] - dest[1] ==  2 && orig[1] == 7)));
+    }
+    else{
+      return (abs(orig[0] - dest[0]) == 6 && orig[1] - dest[1] ==  1 );
+    } 
+  }
+}
+
+
 bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   if (dest[0] >= 8 || dest[1] >= 8 || dest[0] < 0 || dest[1] < 0) {
     return false;
@@ -94,6 +122,8 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
     return check_knight(board, orig, dest);
   case QUEEN:
     return check_queen(board, orig, dest);
+  case PAWN:
+    return check_pawn(board, orig, dest);
   default:
     return false;
   }
