@@ -302,7 +302,7 @@ List_of_move knight_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] + offset[i][0], pos[1] + offset[i][1]};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -319,7 +319,7 @@ List_of_move rook_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] + i, pos[1]};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -330,7 +330,7 @@ List_of_move rook_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] - i, pos[1]};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -341,7 +341,7 @@ List_of_move rook_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] , pos[1]+i};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -352,7 +352,7 @@ List_of_move rook_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] , pos[1]-i};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -373,7 +373,7 @@ List_of_move bishop_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] + i, pos[1]+i};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -384,7 +384,7 @@ List_of_move bishop_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] - i, pos[1]-i};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -395,7 +395,7 @@ List_of_move bishop_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0]-i , pos[1]+i};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -406,7 +406,7 @@ List_of_move bishop_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] +i, pos[1]-i};
     if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 && check_piece_color(board, dest[0] + 8*dest[1])){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
@@ -443,7 +443,7 @@ List_of_move pawn_possible_move(Board* board, int pos[2]){
   for (int i = 0; i < 8; i++){
     int dest[2] = {pos[0] + offset[i][0], pos[1] + offset[i][1]};
     if (check_pawn(board, pos, dest)){
-      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  pos[0], pos[1], dest[0], dest[1], board_get(board, dest[0] + 8*dest[1]) != EMPTY};
+      Move move = {.piece = board_get(board, pos[0] + 8*dest[0]),  {pos[0], pos[1]}, {dest[0], dest[1]}, board_get(board, dest[0] + 8*dest[1]) != EMPTY};
       result_move[nb] = move;
       nb++;
     }
