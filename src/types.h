@@ -1,10 +1,14 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define PIECE(x) ((x) & 0x0F)
-#define COLOR(x) ((x) & 0xF0)
+#define PIECE(x) (x & 0x0F)
+#define COLOR(x) (x & 0xF0)
 
-typedef unsigned long long bb;
+#define SET_BIT(bb, square) (bb |= (1ULL << (square)))
+#define CLEAR_BIT(bb, square) (bb &= ~(1ULL << (square)))
+#define IS_BIT_SET(bb, square) (bb & (1ULL << (square)))
+
+typedef unsigned long long Bb;
 
 typedef struct {
   int piece;
@@ -21,21 +25,21 @@ typedef struct {
   int squares[64];
   int color;
   Stack *history;
-  bb all;
-  bb white;
-  bb black;
-  bb white_pawns;
-  bb black_pawns;
-  bb white_knights;
-  bb black_knights;
-  bb white_bishops;
-  bb black_bishops;
-  bb white_rooks;
-  bb black_rooks;
-  bb white_queens;
-  bb black_queens;
-  bb white_kings;
-  bb black_kings;
+  Bb all;
+  Bb white;
+  Bb black;
+  Bb white_pawns;
+  Bb black_pawns;
+  Bb white_knights;
+  Bb black_knights;
+  Bb white_bishops;
+  Bb black_bishops;
+  Bb white_rooks;
+  Bb black_rooks;
+  Bb white_queens;
+  Bb black_queens;
+  Bb white_kings;
+  Bb black_kings;
 } Board;
 
 #endif // TYPES_H
