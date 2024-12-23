@@ -46,6 +46,8 @@ Board *board_init(void) {
   tab[3 + 8 * 7] = BLACK_KING;
   tab[4 + 8 * 7] = BLACK_QUEEN;
 
+  bb_board_init(board);
+
   return board;
 }
 
@@ -63,7 +65,49 @@ void board_free(Board *board) {
   free(board);
 }
 
-void board_set(Board *board, int sq, int piece) { board->squares[sq] = piece; }
+void board_set(Board *board, int sq, int piece) {
+  // TODO: Is it really performant to clear all the bitboards, is it possible to do better ?
+  Bb bit = 1ULL << sq;
+  board->all &= ~bit;
+  board->white &= ~bit;
+  board->black &= ~bit;
+  board->white_pawns &= ~bit;
+  board->white_knights &= ~bit;
+  board->white_bishops &= ~bit;
+  board->white_rooks &= ~bit;
+  board->white_queens &= ~bit;
+  board->white_kings &= ~bit;
+  board->black_pawns &= ~bit;
+  board->black_knights &= ~bit;
+  board->black_bishops &= ~bit;
+  board->black_rooks &= ~bit;
+  board->black_queens &= ~bit;
+  board->black_kings &= ~bit;
+
+  board->squares[sq] = piece; 
+  board->all |= bit;
+  if (COLOR(piece) == WHITE) {
+    board->white |= bit;
+    switch (piece) {
+      case WHITE_PAWN: board->white_pawns |= bit; break;
+      case WHITE_KNIGHT: board->white_knights |= bit; break;
+      case WHITE_BISHOP: board->white_bishops |= bit; break;
+      case WHITE_ROOK: board->white_rooks |= bit; break;
+      case WHITE_QUEEN: board->white_queens |= bit; break;
+      case WHITE_KING: board->white_kings |= bit; break;
+    }
+  } else if (COLOR(piece) == BLACK) {
+    board->black |= bit;
+    switch (piece) {
+      case BLACK_PAWN: board->black_pawns |= bit; break;
+      case BLACK_KNIGHT: board->black_knights |= bit; break;
+      case BLACK_BISHOP: board->black_bishops |= bit; break;
+      case BLACK_ROOK: board->black_rooks |= bit; break;
+      case BLACK_QUEEN: board->black_queens |= bit; break;
+      case BLACK_KING: board->black_kings |= bit; break;
+    }
+  }
+ }
 
 int board_get(Board *board, int sq) { return board->squares[sq]; }
 

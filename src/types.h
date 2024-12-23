@@ -1,7 +1,17 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#define PIECE(x) (x & 0x0F)
+#define COLOR(x) (x & 0xF0)
+
+#define SET_BIT(bb, square) (bb |= (1ULL << (square)))
+#define CLEAR_BIT(bb, square) (bb &= ~(1ULL << (square)))
+#define IS_BIT_SET(bb, square) (bb & (1ULL << (square)))
+
 #include <stdbool.h>
+
+typedef unsigned long long Bb;
+
 typedef struct {
   int piece;
   int orig[2];
@@ -10,9 +20,9 @@ typedef struct {
 } Move;
 
 typedef struct {
-  Move* list;
+  Move *list;
   int nb;
-} List_of_move ;
+} List_of_move;
 
 typedef struct {
   int last_move;
@@ -23,6 +33,21 @@ typedef struct {
   int squares[64];
   int color;
   Stack *history;
+  Bb all;
+  Bb white;
+  Bb black;
+  Bb white_pawns;
+  Bb black_pawns;
+  Bb white_knights;
+  Bb black_knights;
+  Bb white_bishops;
+  Bb black_bishops;
+  Bb white_rooks;
+  Bb black_rooks;
+  Bb white_queens;
+  Bb black_queens;
+  Bb white_kings;
+  Bb black_kings;
 } Board;
 
 #endif // TYPES_H
