@@ -312,7 +312,7 @@ Bb bb_bishop_attacks(Bb occ, int sq) {
 }
 
 void bb_print(Bb bb) {
-  for (int rank = 7; rank >= 0; rank--) {
+  for (int rank = 0; rank < 8; rank++) {
     for (int file = 0; file < 8; file++) {
       int square = rank * 8 + file; // Map rank/file to square index
       wprintf(L"%c ", (bb & (1ULL << square)) ? '1' : '.');

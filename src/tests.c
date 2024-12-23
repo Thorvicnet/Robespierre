@@ -214,7 +214,6 @@ void test_move_promotion(void) {
 
 void test_rook_attacks(void) {
   wprintf(L"- rook_attacks\n");
-  bb_magic_init();
   Bb occ = 0x0000000000000000;
   Bb attacks = bb_rook_attacks(occ, 0);
   assert(attacks == 0x1010101010101fe);
@@ -226,7 +225,6 @@ void test_rook_attacks(void) {
 
 void test_bishop_attacks(void) {
   wprintf(L"- bishop_attacks\n");
-  bb_magic_init();
   Bb occ = 0x0000000000000000;
   Bb attacks = bb_bishop_attacks(occ, 0);
   assert(attacks == 0x8040201008040200);
@@ -258,8 +256,11 @@ void test_bb(void) {
   test_bishop_attacks();
 }
 
+
 int main(void) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
+
+  bb_magic_init();
 
   test_move();
   test_bb();
