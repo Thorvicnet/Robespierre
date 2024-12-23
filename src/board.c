@@ -58,21 +58,6 @@ void board_empty(Board *board) {
   }
   board->color = WHITE;
   board->history->last_move = 0;
-  board->all = 0;
-  board->white = 0;
-  board->black = 0;
-  board->white_pawns = 0;
-  board->white_knights = 0;
-  board->white_bishops = 0;
-  board->white_rooks = 0;
-  board->white_queens = 0;
-  board->white_kings = 0;
-  board->black_pawns = 0;
-  board->black_knights = 0;
-  board->black_bishops = 0;
-  board->black_rooks = 0;
-  board->black_queens = 0;
-  board->black_kings = 0;
 }
 
 void board_free(Board *board) {

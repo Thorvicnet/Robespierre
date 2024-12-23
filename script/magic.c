@@ -1,4 +1,5 @@
 // From https://www.chessprogramming.org/Looking_for_Magics by Tord Romstad
+// Computes magics for rooks and bishops
 
 #include "../src/types.h"
 #include <stdio.h>

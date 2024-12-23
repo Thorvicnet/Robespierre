@@ -297,7 +297,6 @@ void bb_magic_init(void) {
 
 Bb bb_rook_attacks(Bb occ, int sq) {
   Bb mask = ROOK_MASKS[sq];
-  int n = __builtin_popcountll(mask);
   int bits = RBits[sq];
   int index = ((occ & mask) * ROOK_MAGIC[sq]) >> (64 - bits);
   return ROOK_ATTACKS[sq][index];
@@ -305,7 +304,6 @@ Bb bb_rook_attacks(Bb occ, int sq) {
 
 Bb bb_bishop_attacks(Bb occ, int sq) {
   Bb mask = BISHOP_MASKS[sq];
-  int n = __builtin_popcountll(mask);
   int bits = BBits[sq];
   int index = ((occ & mask) * BISHOP_MAGIC[sq]) >> (64 - bits);
   return BISHOP_ATTACKS[sq][index];

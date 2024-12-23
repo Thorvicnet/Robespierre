@@ -8,12 +8,15 @@
 #define CLEAR_BIT(bb, square) (bb &= ~(1ULL << (square)))
 #define IS_BIT_SET(bb, square) (bb & (1ULL << (square)))
 
+#include <stdbool.h>
+
 typedef unsigned long long Bb;
 
 typedef struct {
   int piece;
   int orig[2];
   int dest[2];
+  bool capture;
 } Move;
 
 typedef struct {
