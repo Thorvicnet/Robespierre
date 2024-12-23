@@ -1,6 +1,7 @@
 #include "board.h"
 #include "move.h"
 #include "types.h"
+#include "bb.h"
 #include <assert.h>
 #include <locale.h>
 #include <stdbool.h>
@@ -211,6 +212,34 @@ void test_move_promotion(void) {
   assert(board_get(board, 4 + 0 * 8) == BLACK_QUEEN);
 }
 
+void test_rook_attacks(void) {
+  wprintf(L"- rook_attacks\n");
+  bb_magic_init();
+  Bb occ = 0x0000000000000000;
+  Bb attacks = bb_rook_attacks(occ, 0);
+  assert(attacks == 0x1010101010101fe);
+
+  occ = 0x00000FE4000000FF0;
+  attacks = bb_rook_attacks(occ, 34);
+  assert(attacks == 0x47b04040400);
+}
+
+void test_bishop_attacks(void) {
+  wprintf(L"- bishop_attacks\n");
+  bb_magic_init();
+  Bb occ = 0x0000000000000000;
+  Bb attacks = bb_bishop_attacks(occ, 0);
+  assert(attacks == 0x8040201008040200);
+
+  occ = 0x0000000000000000;
+  attacks = bb_bishop_attacks(occ, 34);
+  assert(attacks == 0x20110a000a112040);
+
+  occ = 0x00000FE4000000FF0;
+  attacks = bb_bishop_attacks(occ, 36);
+  assert(attacks == 0x280028448200);
+}
+
 void test_move(void) {
   // The queen does not have to be tested because it is a rook/bishop
   test_move_check_validity_bishop();
@@ -224,10 +253,16 @@ void test_move(void) {
   test_move_promotion();
 }
 
+void test_bb(void) {
+  test_rook_attacks();
+  test_bishop_attacks();
+}
+
 int main(void) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
 
   test_move();
+  test_bb();
 
   wprintf(L"Everything looks good\n");
   return EXIT_SUCCESS;
