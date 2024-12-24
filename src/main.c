@@ -11,12 +11,12 @@ int main(int argc, char *argv[]) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
   bb_magic_init();
 
-  bb_print(PAWN_ATTACK_MASKS_WHITE[2]);
-
   Board *board = board_init();
   int orig[2], dest[2];
   while (true) {
     board_info(board);
+    board_bb_info(board);
+    bb_print(board->white | board->white_threat);
     scanf("%d %d, %d %d", &orig[0], &orig[1], &dest[0], &dest[1]);
     move(board, (Move){board_get(board, orig[0] + orig[1] * 8),
                        {orig[0], orig[1]},

@@ -62,7 +62,8 @@ void board_empty(Board *board) {
 }
 
 void board_sync_bb(Board *board) {
-  // Synchronizes the bitboards with the squares (for testing purposes, the move function should already keep them in sync)
+  // Synchronizes the bitboards with the squares (for testing purposes, the move
+  // function should already keep them in sync)
   for (int i = 0; i < 64; i++) {
     switch (board->squares[i]) {
     case WHITE_PAWN:
@@ -108,12 +109,12 @@ void board_sync_bb(Board *board) {
 Board *board_copy(Board *board) {
   // Copy a board but keeps the same history pointer
   Board *new_board = malloc(sizeof(Board));
-  
+
   new_board->all = board->all;
   new_board->white = board->white;
   new_board->black = board->black;
   new_board->white_pawns = board->white_pawns;
-  new_board->white_knights = board->white_knights; 
+  new_board->white_knights = board->white_knights;
   new_board->white_bishops = board->white_bishops;
   new_board->white_rooks = board->white_rooks;
   new_board->white_queens = board->white_queens;
@@ -161,6 +162,9 @@ void board_set(Board *board, int sq, int piece) {
   board->black_kings &= ~bit;
 
   board->squares[sq] = piece;
+  if (piece == EMPTY) {
+    return;
+  }
   board->all |= bit;
   if (COLOR(piece) == WHITE) {
     board->white |= bit;
@@ -236,6 +240,113 @@ void board_info(Board *board) {
   board_print(board);
   wprintf(L"%s to play, Moves: %d\n", board->color == WHITE ? "WHITE" : "BLACK",
           board->history->last_move);
+}
+
+void board_bb_info(Board *board) {
+  // Prints all bitboards in a table
+  wprintf(L"Bitboards:\n");
+
+  wprintf(L"All       White     Black     WThreat   BThreat\n");
+
+  for (int rank = 0; rank < 8; rank++) {
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->all & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_threat & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_threat & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"\n");
+  }
+
+  wprintf(L"\nWhite Pieces:\n");
+  wprintf(L"Pawns     Knights   Bishops   Rooks     Queens    Kings\n");
+
+  for (int rank = 0; rank < 8; rank++) {
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_pawns & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_knights & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_bishops & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_rooks & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_queens & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->white_kings & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"\n");
+  }
+
+  wprintf(L"\nBlack Pieces:\n");
+  wprintf(L"Pawns     Knights   Bishops   Rooks     Queens    Kings\n");
+
+  for (int rank = 0; rank < 8; rank++) {
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_pawns & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_knights & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_bishops & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_rooks & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_queens & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"  ");
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->black_kings & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"\n");
+  }
 }
 
 void board_list_moves(Board *board) {

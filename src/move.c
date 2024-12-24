@@ -9,32 +9,45 @@
 static inline int min(int a, int b) { return a > b ? b : a; }
 static inline int max(int a, int b) { return a > b ? a : b; }
 
-bool check_piece_color(Board *board, int pos) {
-  int piece = board_get(board, pos);
-  if ((piece != EMPTY) &&
-      (COLOR(piece) == board->color)) { // You are trying to eat your own piece
-    return false;
-  }
-  return true;
-}
-
 bool check_knight(Board *board, int orig[2], int dest[2]) {
-  return check_piece_color(board, dest[0] + dest[1] * 8) &&
+#ifdef MENACE
+  return IS_BIT_SET(~(board->color == WHITE
+                          ? board->white & ~(board->black_threat)
+                          : board->black & ~(board->white_threat)),
+                    dest[0] + dest[1] * 8) &&
          ((abs(orig[0] - dest[0]) == 2 && abs(orig[1] - dest[1]) == 1) ||
           (abs(orig[0] - dest[0]) == 1 && abs(orig[1] - dest[1]) == 2));
+#else
+  return IS_BIT_SET(~(board->color == WHITE ? board->white : board->black),
+                    dest[0] + dest[1] * 8) &&
+         ((abs(orig[0] - dest[0]) == 2 && abs(orig[1] - dest[1]) == 1) ||
+          (abs(orig[0] - dest[0]) == 1 && abs(orig[1] - dest[1]) == 2));
+#endif
 }
 
 // Rook: Validate vertical or horizontal moves and check for obstructions
 bool check_rook(Board *board, int orig[2], int dest[2]) {
+#ifdef MENACE
+  Bb valid = bb_rook_attacks(board->all, orig[0] + orig[1] * 8) &
+             ~(board->color == WHITE ? board->white & ~(board->black_threat)
+                                     : board->black & ~(board->white_threat));
+#else
   Bb valid = bb_rook_attacks(board->all, orig[0] + orig[1] * 8) &
              ~(board->color == WHITE ? board->white : board->black);
+#endif
   return IS_BIT_SET(valid, dest[0] + dest[1] * 8);
 }
 
 // Bishop: Validate diagonal moves and check for obstructions
 bool check_bishop(Board *board, int orig[2], int dest[2]) {
+#ifdef MENACE
+  Bb valid = bb_bishop_attacks(board->all, orig[0] + orig[1] * 8) &
+             ~(board->color == WHITE ? board->white & ~(board->black_threat)
+                                     : board->black & ~(board->white_threat));
+#else
   Bb valid = bb_bishop_attacks(board->all, orig[0] + orig[1] * 8) &
              ~(board->color == WHITE ? board->white : board->black);
+#endif
   return IS_BIT_SET(valid, dest[0] + dest[1] * 8);
 }
 
@@ -73,8 +86,7 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
   int dest_pos = dest[0] + dest[1] * 8;
 
   int piece = board_get(board, orig_pos);
-  int color = COLOR(piece);
-  int direction = (color == WHITE) ? 1 : -1;
+  int direction = (COLOR(piece) == WHITE) ? 1 : -1;
 
   int file_diff = dest[0] - orig[0];
   int rank_diff = dest[1] - orig[1];
@@ -86,27 +98,35 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
       return true;
     }
     // 2 squares
-    if (orig[1] == (color == WHITE ? 1 : 6) && rank_diff == 2 * direction &&
-        board_get(board, dest_pos) == EMPTY &&
+    if (orig[1] == (COLOR(piece) == WHITE ? 1 : 6) &&
+        rank_diff == 2 * direction && board_get(board, dest_pos) == EMPTY &&
         board_get(board, orig[0] + (orig[1] + direction) * 8) == EMPTY) {
       return true;
     }
     return false;
   }
+  wprintf(L"soon\n");
 
   // captures
   if (abs(file_diff) == 1 && rank_diff == direction) {
     // normal
-    int dest_piece = board_get(board, dest_pos);
-    if (dest_piece != EMPTY && COLOR(dest_piece) != color) {
+#ifdef MENACE
+    if (IS_BIT_SET(board->color == WHITE ? board->black | board->black_threat
+                                         : board->white | board->white_threat,
+                   dest_pos)) {
       return true;
     }
+#else
+    int dest_piece = board_get(board, dest_pos);
+    if (COLOR(dest_piece) != board->color && dest_piece != EMPTY) {
+      return true;
+    }
+#endif
     // en passant
     if (can_enpassant(board, orig_pos, dest_pos)) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -137,7 +157,9 @@ bool rook_moved(Board *board, int color, int orig[2]) {
 bool check_king(Board *board, int orig[2], int dest[2]) {
   if (abs(orig[0] - dest[0]) <= 1 && abs(orig[1] - dest[1]) <= 1 &&
       (abs(orig[0] - dest[0]) != 0 || abs(orig[1] - dest[1]) != 0)) {
-    return check_piece_color(board, dest[0] + dest[1] * 8);
+    // No need to check for threatened to eat because the king could not eat a threatened piece
+    return IS_BIT_SET(~(board->color == WHITE ? board->white : board->black),
+                      dest[0] + dest[1] * 8);
   }
 
   // Castling
@@ -220,7 +242,8 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
 }
 
 void move(Board *orig_board, Move move) {
-  Board *board = board_copy(orig_board); // TODO: there HAS to be a better way but ATM it works
+  Board *board = board_copy(
+      orig_board); // TODO: there HAS to be a better way but ATM it works
   if (!move_check_validity(board, move.orig, move.dest)) {
     return;
   }

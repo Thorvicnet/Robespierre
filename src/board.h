@@ -47,5 +47,6 @@ void board_list_moves(Board *board);
 void board_free(Board *board);
 Board *board_copy(Board *board);
 void board_sync_bb(Board *board);
+void board_bb_info(Board *board);
 
 #endif // BOARD_H

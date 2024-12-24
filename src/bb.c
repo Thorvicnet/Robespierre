@@ -206,24 +206,22 @@ void bb_board_init(Board *board) {
   board->white_rooks = 0x0000000000000081ULL;
   board->white_knights = 0x0000000000000042ULL;
   board->white_bishops = 0x0000000000000024ULL;
-  board->white_queens = 0x0000000000000008ULL;
-  board->white_kings = 0x0000000000000010ULL;
+  board->white_queens = 0x0000000000000010ULL;
+  board->white_kings = 0x0000000000000008ULL;
 
   board->black_pawns = 0x00FF000000000000ULL;
   board->black_rooks = 0x8100000000000000ULL;
   board->black_knights = 0x4200000000000000ULL;
   board->black_bishops = 0x2400000000000000ULL;
-  board->black_queens = 0x0800000000000000ULL;
-  board->black_kings = 0x1000000000000000ULL;
+  board->black_queens = 0x1000000000000000ULL;
+  board->black_kings = 0x0800000000000000ULL;
 
   board->white = board->white_pawns | board->white_rooks |
-                 board->white_knights | board->white_knights |
-                 board->white_bishops | board->white_queens |
-                 board->white_kings;
+                 board->white_knights | board->white_bishops |
+                 board->white_queens | board->white_kings;
   board->black = board->black_pawns | board->black_rooks |
-                 board->black_knights | board->black_knights |
-                 board->black_bishops | board->black_queens |
-                 board->black_kings;
+                 board->black_knights | board->black_bishops |
+                 board->black_queens | board->black_kings;
 
   board->all = board->white | board->black;
 }

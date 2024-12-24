@@ -4,9 +4,9 @@
 #define PIECE(x) (x & 0x0F)
 #define COLOR(x) (x & 0xF0)
 
-#define SET_BIT(bb, square) (bb |= (1ULL << (square)))
-#define CLEAR_BIT(bb, square) (bb &= ~(1ULL << (square)))
-#define IS_BIT_SET(bb, square) (bb & (1ULL << (square)))
+#define SET_BIT(bb, square) ((bb) |= (1ULL << (square)))
+#define CLEAR_BIT(bb, square) ((bb) &= ~(1ULL << (square)))
+#define IS_BIT_SET(bb, square) ((bb) & (1ULL << (square)))
 
 #include <stdbool.h>
 

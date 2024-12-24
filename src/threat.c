@@ -109,7 +109,7 @@ bool check_threatened(Board *board, int cell[2], int color, int depth) {
 
 void threat_board_update(Board *board) {
   // White threat
-  board->white_threat = 0;
+  board->white_threat = 0ULL;
   Bb bb = board->white_pawns;
   while (bb) {
     int sq = __builtin_ctzll(bb); // Counts the number of trailing zeros
@@ -147,7 +147,7 @@ void threat_board_update(Board *board) {
   board->white_threat &= board->black;
 
   // Black threat
-  board->black_threat = 0;
+  board->black_threat = 0ULL;
   bb = board->black_pawns;
   while (bb) {
     int sq = __builtin_ctzll(bb); // Counts the number of trailing zeros
