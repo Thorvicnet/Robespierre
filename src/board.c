@@ -129,8 +129,8 @@ Board *board_copy(Board *board) {
   memcpy(new_board->squares, board->squares, 64 * sizeof(int));
   new_board->color = board->color;
 
-  new_board->white_threat = 0;
-  new_board->black_threat = 0;
+  new_board->white_threat = board->white_threat;
+  new_board->black_threat = board->black_threat;
   new_board->history = board->history;
 
   return new_board;
