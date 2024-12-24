@@ -1,6 +1,7 @@
 #include "bb.h"
 #include "board.h"
 #include "move.h"
+#include "threat.h"
 #include "types.h"
 #include <assert.h>
 #include <locale.h>
@@ -15,7 +16,6 @@ void test_move_check_validity_bishop(void) {
   // Bishop checks
   board_set(board, 3 + 3 * 8, WHITE_BISHOP);
   board_set(board, 2 + 2 * 8, BLACK_PAWN);
-  threat_board_update(board);
 
   assert(!move_check_validity(board, (int[]){3, 3}, (int[]){0, 0}));
   assert(move_check_validity(board, (int[]){3, 3}, (int[]){2, 4}));
@@ -240,6 +240,99 @@ void test_bishop_attacks(void) {
   assert(attacks == 0x280028448200);
 }
 
+void test_threat_check() {
+  wprintf(L"- threat_check\n");
+  #ifdef MENACE
+  Board *board = board_init();
+  board_empty(board);
+
+  board_set(board, 3 + 3 * 8, WHITE_KING);
+  board_set(board, 2 + 2 * 8, BLACK_PAWN);
+  board_set(board, 4 + 4 * 8, WHITE_BISHOP);
+  board_set(board, 5 + 5 * 8, BLACK_PAWN);
+  board_set(board, 3 + 5 * 8, BLACK_KNIGHT);
+
+  board->color = BLACK;
+
+  threat_board_update(board);
+  assert(threat_check(board));
+
+  board_set(board, 5 + 5 * 8, EMPTY);
+
+  threat_board_update(board);
+  assert(!threat_check(board));
+
+  board_empty(board);
+  board_set(board, 4 + 4 * 8, WHITE_KING);
+  board_set(board, 5 + 5 * 8, BLACK_PAWN);
+  board_set(board, 3 + 5 * 8, BLACK_KNIGHT);
+  board_set(board, 3 + 3 * 8, BLACK_KING);
+
+  board_info(board);
+
+  threat_board_update(board);
+  assert(threat_check(board));
+
+  board_set(board, 4 + 4 * 8, EMPTY);
+  board_set(board, 4 + 4 * 8, WHITE_ROOK);
+  board_set(board, 1 + 4 * 8, WHITE_KING);
+
+  board_info(board);
+
+  threat_board_update(board);
+  assert(!threat_check(board));
+
+  board->color = BLACK;
+  threat_board_update(board);
+  assert(threat_check(board));
+  #else
+  Board *board = board_init();
+  board_empty(board);
+
+  board_set(board, 4 + 4 * 8, WHITE_KING);
+  board_set(board, 4 + 6 * 8, BLACK_ROOK);
+  board_set(board, 2 + 2 * 8, BLACK_BISHOP);
+  board_set(board, 5 + 5 * 8, BLACK_KNIGHT);
+
+  threat_board_update(board);
+  assert(!threat_check(board));
+
+  board->color = BLACK;
+
+  assert(threat_check(board));
+
+  board->color = WHITE;
+
+  board_empty(board);
+  board_set(board, 4 + 4 * 8, WHITE_KING);
+  board_set(board, 5 + 5 * 8, BLACK_ROOK);
+  board_set(board, 3 + 3 * 8, BLACK_BISHOP);
+  board_set(board, 2 + 2 * 8, BLACK_KNIGHT);
+
+  threat_board_update(board);
+  assert(!threat_check(board));
+
+  board->color = BLACK;
+
+  assert(threat_check(board));
+
+  board->color = WHITE;
+
+  board_set(board, 4 + 4 * 8, EMPTY);
+  board_set(board, 4 + 4 * 8, WHITE_ROOK);
+  board_set(board, 1 + 4 * 8, WHITE_KING);
+
+  threat_board_update(board);
+  assert(!threat_check(board));
+
+  board->color = BLACK;
+  threat_board_update(board);
+  assert(threat_check(board));
+  #endif
+}
+
+void test_threat(void) { test_threat_check(); }
+
 void test_move(void) {
   // The queen does not have to be tested because it is a rook/bishop
   test_move_check_validity_bishop();
@@ -265,6 +358,7 @@ int main(void) {
 
   test_move();
   test_bb();
+  test_threat();
 
   wprintf(L"Everything looks good\n");
   return EXIT_SUCCESS;

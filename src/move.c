@@ -3,7 +3,7 @@
 #include "types.h"
 #include <time.h>
 
-// TODO: Check Discovered Check
+// FIXME: Check Discovered Check
 
 // Each pieces check if the destination is allowed and if they moved correctly
 

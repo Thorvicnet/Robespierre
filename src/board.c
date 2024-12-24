@@ -61,6 +61,50 @@ void board_empty(Board *board) {
   bb_board_empty(board);
 }
 
+void board_sync_bb(Board *board) {
+  // Synchronizes the bitboards with the squares (for testing purposes, the move function should already keep them in sync)
+  for (int i = 0; i < 64; i++) {
+    switch (board->squares[i]) {
+    case WHITE_PAWN:
+      board->white_pawns |= 1ULL << i;
+      break;
+    case WHITE_KNIGHT:
+      board->white_knights |= 1ULL << i;
+      break;
+    case WHITE_BISHOP:
+      board->white_bishops |= 1ULL << i;
+      break;
+    case WHITE_ROOK:
+      board->white_rooks |= 1ULL << i;
+      break;
+    case WHITE_QUEEN:
+      board->white_queens |= 1ULL << i;
+      break;
+    case WHITE_KING:
+      board->white_kings |= 1ULL << i;
+      break;
+    case BLACK_PAWN:
+      board->black_pawns |= 1ULL << i;
+      break;
+    case BLACK_KNIGHT:
+      board->black_knights |= 1ULL << i;
+      break;
+    case BLACK_BISHOP:
+      board->black_bishops |= 1ULL << i;
+      break;
+    case BLACK_ROOK:
+      board->black_rooks |= 1ULL << i;
+      break;
+    case BLACK_QUEEN:
+      board->black_queens |= 1ULL << i;
+      break;
+    case BLACK_KING:
+      board->black_kings |= 1ULL << i;
+      break;
+    }
+  }
+}
+
 void board_free(Board *board) {
   // Frees the board from memory (very simple ATM)
   free(board);
