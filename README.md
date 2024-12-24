@@ -16,16 +16,17 @@ If the functions just takes a pos then pos = col + line * 8 (to get the correct 
 
 ## TODO
 
-- [] debug MENACE Victor
-- [] promotion (long)
-- [] draw (long)
-- [] still incorrect castle (vachement dur pour ce que c'est)
-- [] UCI (ça passe)
-- [] Alpha-beta (dur)
-- [] eval (dur)
-  - [] by position on board ?
-  - [] threat
-  - [] mate -inf
-  - [] check
+- [x] debug MENACE
+- [ ] promotion (long)
+- [ ] draw (long)
+- [ ] still incorrect castle (vachement dur pour ce que c'est)
+- [ ] UCI (ça passe)
+- [ ] Alpha-beta (dur)
+- [ ] IA génétique deep learning Nono
+- [ ] eval (dur)
+  - [ ] by position on board ?
+  - [ ] threat
+  - [ ] mate -inf
+  - [ ] check
 
-- [] book (avec alpha beta)
+- [ ] book (avec alpha beta)

@@ -87,7 +87,6 @@ void test_move_check_validity_pawn(void) {
 
   // Invalid moves
   assert(!move_check_validity(board, (int[]){4, 1}, (int[]){4, 0})); // Backward
-  board_info(board);
   assert(!move_check_validity(board, (int[]){4, 1},
                               (int[]){3, 2})); // Empty diagonal
   assert(!move_check_validity(board, (int[]){4, 1}, (int[]){4, 4})); // Too far

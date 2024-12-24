@@ -4,7 +4,8 @@
 #include "types.h"
 #include <time.h>
 
-// Each piece checks whether the destination is allowed and whether it has moved correctly
+// Each piece checks whether the destination is allowed and whether it has moved
+// correctly
 
 static inline int min(int a, int b) { return a > b ? b : a; }
 static inline int max(int a, int b) { return a > b ? a : b; }
@@ -105,7 +106,6 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
     }
     return false;
   }
-  wprintf(L"soon\n");
 
   // captures
   if (abs(file_diff) == 1 && rank_diff == direction) {
@@ -157,7 +157,8 @@ bool rook_moved(Board *board, int color, int orig[2]) {
 bool check_king(Board *board, int orig[2], int dest[2]) {
   if (abs(orig[0] - dest[0]) <= 1 && abs(orig[1] - dest[1]) <= 1 &&
       (abs(orig[0] - dest[0]) != 0 || abs(orig[1] - dest[1]) != 0)) {
-    // No need to check for threatened to eat because the king could not eat a threatened piece
+    // No need to check for threatened to eat because the king could not eat a
+    // threatened piece
     return IS_BIT_SET(~(board->color == WHITE ? board->white : board->black),
                       dest[0] + dest[1] * 8);
   }
