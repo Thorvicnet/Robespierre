@@ -192,6 +192,27 @@ void bb_board_init(Board *board) {
   board->all = board->white | board->black;
 }
 
+void bb_board_empty(Board *board) {
+  // Empties the bitboards inside the board (for testing purposes)
+  board->white_pawns = 0ULL;
+  board->white_rooks = 0ULL;
+  board->white_knights = 0ULL;
+  board->white_bishops = 0ULL;
+  board->white_queens = 0ULL;
+  board->white_kings = 0ULL;
+
+  board->black_pawns = 0ULL;
+  board->black_rooks = 0ULL;
+  board->black_knights = 0ULL;
+  board->black_bishops = 0ULL;
+  board->black_queens = 0ULL;
+  board->black_kings = 0ULL;
+
+  board->white = 0ULL;
+  board->black = 0ULL;
+  board->all = 0ULL;
+}
+
 Bb ROOK_ATTACKS[64][4096];
 Bb BISHOP_ATTACKS[64][4096];
 

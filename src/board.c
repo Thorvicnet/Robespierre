@@ -13,7 +13,7 @@ Board *board_init(void) {
   // Returns a board in the default position
   Board *board = (Board *)malloc(sizeof(Board));
   if (board == NULL) {
-    printf("Your memory is doomed...");
+    wprintf(L"Your memory is doomed...");
     exit(EXIT_FAILURE);
   }
 
@@ -52,12 +52,13 @@ Board *board_init(void) {
 }
 
 void board_empty(Board *board) {
-  // Empties the board (for testing purposes)
+  // Empties the board (for testing purposes) and sets the color to WHITE
   for (int i = 0; i < 64; i++) {
     board_set(board, i, EMPTY);
   }
   board->color = WHITE;
   board->history->last_move = 0;
+  bb_board_empty(board);
 }
 
 void board_free(Board *board) {
@@ -66,7 +67,8 @@ void board_free(Board *board) {
 }
 
 void board_set(Board *board, int sq, int piece) {
-  // TODO: Is it really performant to clear all the bitboards, is it possible to do better ?
+  // TODO: Is it really performant to clear all the bitboards, is it possible to
+  // do better ?
   Bb bit = 1ULL << sq;
   board->all &= ~bit;
   board->white &= ~bit;
@@ -84,30 +86,54 @@ void board_set(Board *board, int sq, int piece) {
   board->black_queens &= ~bit;
   board->black_kings &= ~bit;
 
-  board->squares[sq] = piece; 
+  board->squares[sq] = piece;
   board->all |= bit;
   if (COLOR(piece) == WHITE) {
     board->white |= bit;
     switch (piece) {
-      case WHITE_PAWN: board->white_pawns |= bit; break;
-      case WHITE_KNIGHT: board->white_knights |= bit; break;
-      case WHITE_BISHOP: board->white_bishops |= bit; break;
-      case WHITE_ROOK: board->white_rooks |= bit; break;
-      case WHITE_QUEEN: board->white_queens |= bit; break;
-      case WHITE_KING: board->white_kings |= bit; break;
+    case WHITE_PAWN:
+      board->white_pawns |= bit;
+      break;
+    case WHITE_KNIGHT:
+      board->white_knights |= bit;
+      break;
+    case WHITE_BISHOP:
+      board->white_bishops |= bit;
+      break;
+    case WHITE_ROOK:
+      board->white_rooks |= bit;
+      break;
+    case WHITE_QUEEN:
+      board->white_queens |= bit;
+      break;
+    case WHITE_KING:
+      board->white_kings |= bit;
+      break;
     }
   } else if (COLOR(piece) == BLACK) {
     board->black |= bit;
     switch (piece) {
-      case BLACK_PAWN: board->black_pawns |= bit; break;
-      case BLACK_KNIGHT: board->black_knights |= bit; break;
-      case BLACK_BISHOP: board->black_bishops |= bit; break;
-      case BLACK_ROOK: board->black_rooks |= bit; break;
-      case BLACK_QUEEN: board->black_queens |= bit; break;
-      case BLACK_KING: board->black_kings |= bit; break;
+    case BLACK_PAWN:
+      board->black_pawns |= bit;
+      break;
+    case BLACK_KNIGHT:
+      board->black_knights |= bit;
+      break;
+    case BLACK_BISHOP:
+      board->black_bishops |= bit;
+      break;
+    case BLACK_ROOK:
+      board->black_rooks |= bit;
+      break;
+    case BLACK_QUEEN:
+      board->black_queens |= bit;
+      break;
+    case BLACK_KING:
+      board->black_kings |= bit;
+      break;
     }
   }
- }
+}
 
 int board_get(Board *board, int sq) { return board->squares[sq]; }
 

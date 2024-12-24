@@ -1,3 +1,4 @@
+#include "bb.h"
 #include "board.h"
 #include "move.h"
 #include "types.h"
@@ -8,6 +9,9 @@
 
 int main(int argc, char *argv[]) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
+  bb_magic_init();
+
+  bb_print(PAWN_ATTACK_MASKS_WHITE[2]);
 
   Board *board = board_init();
   int orig[2], dest[2];

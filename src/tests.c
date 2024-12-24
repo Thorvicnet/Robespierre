@@ -1,7 +1,7 @@
+#include "bb.h"
 #include "board.h"
 #include "move.h"
 #include "types.h"
-#include "bb.h"
 #include <assert.h>
 #include <locale.h>
 #include <stdbool.h>
@@ -15,6 +15,7 @@ void test_move_check_validity_bishop(void) {
   // Bishop checks
   board_set(board, 3 + 3 * 8, WHITE_BISHOP);
   board_set(board, 2 + 2 * 8, BLACK_PAWN);
+  threat_board_update(board);
 
   assert(!move_check_validity(board, (int[]){3, 3}, (int[]){0, 0}));
   assert(move_check_validity(board, (int[]){3, 3}, (int[]){2, 4}));
@@ -69,6 +70,7 @@ void test_move_check_validity_knight(void) {
 void test_move_check_validity_pawn(void) {
   wprintf(L"- move_check_validity_pawn\n");
   Board *board = board_init();
+  board_empty(board);
 
   // Test white pawn moves
   board_set(board, 4 + 1 * 8, WHITE_PAWN);
@@ -255,7 +257,6 @@ void test_bb(void) {
   test_rook_attacks();
   test_bishop_attacks();
 }
-
 
 int main(void) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling

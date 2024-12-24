@@ -22,5 +22,6 @@ void bb_print(Bb b);
 Bb bb_rook_attacks(Bb occ, int sq);
 Bb bb_bishop_attacks(Bb occ, int sq);
 void bb_magic_init(void);
+void bb_board_empty(Board *board);
 
 #endif // BB_H

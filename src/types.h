@@ -33,6 +33,7 @@ typedef struct {
   int squares[64];
   int color;
   Stack *history;
+
   Bb all;
   Bb white;
   Bb black;
@@ -48,6 +49,9 @@ typedef struct {
   Bb black_queens;
   Bb white_kings;
   Bb black_kings;
+
+  Bb white_threat;
+  Bb black_threat;
 } Board;
 
 #endif // TYPES_H

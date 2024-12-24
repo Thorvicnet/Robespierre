@@ -190,9 +190,18 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
     return false;
   }
   int piece = board_get(board, orig[0] + orig[1] * 8);
+#ifdef MENACE
+  // You can play if you threaten or possess the piece
+  if (!IS_BIT_SET(board->color == WHITE ? board->white | board->white_threat
+                                        : board->black | board->black_threat,
+                  orig[0] + orig[1] * 8)) {
+    return false;
+  }
+#else
   if (COLOR(piece) != board->color) {
     return false;
   }
+#endif
   switch (PIECE(piece)) {
   case BISHOP:
     return check_bishop(board, orig, dest);
@@ -220,6 +229,7 @@ void move(Board *board, Move move) {
   int dest_pos = move.dest[0] + move.dest[1] * 8;
   int piece = move.piece;
 
+  // En passant and castling
   if (PIECE(piece) == PAWN && board_get(board, dest_pos) == EMPTY &&
       move.orig[0] != move.dest[0]) {
     int captured_rank = move.orig[1];
@@ -245,6 +255,7 @@ void move(Board *board, Move move) {
   board_set(board, dest_pos, piece);
   board_set(board, orig_pos, EMPTY);
 
+  // Promotion
   if (PIECE(piece) == PAWN) {
     if (COLOR(piece) == WHITE && move.dest[1] == 7) {
       board_set(board, dest_pos, WHITE_QUEEN);
@@ -256,25 +267,35 @@ void move(Board *board, Move move) {
   board_add_move(board, move);
 
   board->color ^= BLACK;
+
+  threat_board_update(board);
 }
 
 List_of_move knight_possible_move(Board *board, int pos[2]) {
-  int offset[8][2] = {{2, 1}, {2, -1}, {-2, -1}, {-2, 1},
-                      {1, 2}, {1, -2}, {-1, 2},  {-1, -2}};
   Move *result_move = (Move *)malloc(sizeof(Move) * 8);
   int nb = 0;
-  for (int i = 0; i < 8; i++) {
-    int dest[2] = {pos[0] + offset[i][0], pos[1] + offset[i][1]};
-    if (dest[0] >= 0 && dest[0] < 8 && dest[1] >= 0 && dest[1] < 8 &&
-        check_piece_color(board, dest[0] + 8 * dest[1])) {
-      Move move = {.piece = board_get(board, pos[0] + 8 * dest[0]),
-                   {pos[0], pos[1]},
-                   {dest[0], dest[1]},
-                   board_get(board, dest[0] + 8 * dest[1]) != EMPTY};
-      result_move[nb] = move;
-      nb++;
-    }
+#ifdef MENACE
+  Bb valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
+#else
+  Bb valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
+             ~(board->color == WHITE ? board->white : board->black);
+#endif
+  while (valid) {
+    int dest_sq = __builtin_ctzll(valid);
+    int dest_x = dest_sq & 7;
+    int dest_y = dest_sq >> 3;
+
+    Move move = {.piece = board_get(board, pos[0] + 8 * pos[1]),
+                 {pos[0], pos[1]},
+                 {dest_x, dest_y},
+                 board_get(board, dest_x + 8 * dest_y) != EMPTY};
+    result_move[nb++] = move;
+
+    valid &= valid - 1;
   }
+
   List_of_move list = {result_move, nb};
   return list;
 }
@@ -282,20 +303,26 @@ List_of_move knight_possible_move(Board *board, int pos[2]) {
 List_of_move rook_possible_move(Board *board, int pos[2]) {
   Move *result_move = (Move *)malloc(sizeof(Move) * 16);
   int nb = 0;
+#ifdef MENACE
+  Bb valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
+#else
   Bb valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
              ~(board->color == WHITE ? board->white : board->black);
-  for (int i = 0; i < 8; i++) {
-    int dest[2] = {pos[0] + i, pos[1]};
-    if (IS_BIT_SET(valid, dest[0] + dest[1] * 8)) {
-      Move move = {.piece = board_get(board, pos[0] + 8 * dest[0]),
-                   {pos[0], pos[1]},
-                   {dest[0], dest[1]},
-                   board_get(board, dest[0] + 8 * dest[1]) != EMPTY};
-      result_move[nb] = move;
-      nb++;
-    } else {
-      break;
-    }
+#endif
+  while (valid) {
+    int dest_sq = __builtin_ctzll(valid);
+    int dest_x = dest_sq & 7;
+    int dest_y = dest_sq >> 3;
+
+    Move move = {.piece = board_get(board, pos[0] + 8 * pos[1]),
+                 {pos[0], pos[1]},
+                 {dest_x, dest_y},
+                 board_get(board, dest_x + 8 * dest_y) != EMPTY};
+    result_move[nb++] = move;
+
+    valid &= valid - 1;
   }
   List_of_move list = {result_move, nb};
   return list;
@@ -304,20 +331,26 @@ List_of_move rook_possible_move(Board *board, int pos[2]) {
 List_of_move bishop_possible_move(Board *board, int pos[2]) {
   Move *result_move = (Move *)malloc(sizeof(Move) * 16);
   int nb = 0;
+#ifdef MENACE
+  Bb valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
+#else
   Bb valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
              ~(board->color == WHITE ? board->white : board->black);
-  for (int i = 0; i < 8; i++) {
-    int dest[2] = {pos[0] + i, pos[1] + i};
-    if (IS_BIT_SET(valid, dest[0] + dest[1] * 8)) {
-      Move move = {.piece = board_get(board, pos[0] + 8 * dest[0]),
-                   {pos[0], pos[1]},
-                   {dest[0], dest[1]},
-                   board_get(board, dest[0] + 8 * dest[1]) != EMPTY};
-      result_move[nb] = move;
-      nb++;
-    } else {
-      break;
-    }
+#endif
+  while (valid) {
+    int dest_sq = __builtin_ctzll(valid);
+    int dest_x = dest_sq & 7;
+    int dest_y = dest_sq >> 3;
+
+    Move move = {.piece = board_get(board, pos[0] + 8 * pos[1]),
+                 {pos[0], pos[1]},
+                 {dest_x, dest_y},
+                 board_get(board, dest_x + 8 * dest_y) != EMPTY};
+    result_move[nb++] = move;
+
+    valid &= valid - 1;
   }
   List_of_move list = {result_move, nb};
   return list;
@@ -338,8 +371,11 @@ List_of_move merge_list_of_move(List_of_move list1, List_of_move list2) {
 }
 
 List_of_move pawn_possible_move(Board *board, int pos[2]) {
-  int offset[8][2] = {{0, 1},  {0, 2},  {1, 1},   {1, -1},
-                      {0, -1}, {0, -2}, {-1, -1}, {-1, 1}};
+  int offset[8][2] = {
+      {0, 1},   {0, 2},
+      {1, 1},   {1, -1}, // TODO: you can reduce the search knowing the color
+      {0, -1},  {0, -2},
+      {-1, -1}, {-1, 1}};
   Move *result_move = (Move *)malloc(sizeof(Move) * 4);
   int nb = 0;
   for (int i = 0; i < 8; i++) {
