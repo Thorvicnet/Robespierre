@@ -240,9 +240,9 @@ void test_bishop_attacks(void) {
   assert(attacks == 0x280028448200);
 }
 
-void test_threat_check() {
+void test_threat_check(void) {
   wprintf(L"- threat_check\n");
-  #ifdef MENACE
+#ifdef MENACE
   Board *board = board_init();
   board_empty(board);
 
@@ -268,8 +268,6 @@ void test_threat_check() {
   board_set(board, 3 + 5 * 8, BLACK_KNIGHT);
   board_set(board, 3 + 3 * 8, BLACK_KING);
 
-  board_info(board);
-
   threat_board_update(board);
   assert(threat_check(board));
 
@@ -277,15 +275,13 @@ void test_threat_check() {
   board_set(board, 4 + 4 * 8, WHITE_ROOK);
   board_set(board, 1 + 4 * 8, WHITE_KING);
 
-  board_info(board);
-
   threat_board_update(board);
   assert(!threat_check(board));
 
   board->color = BLACK;
   threat_board_update(board);
   assert(threat_check(board));
-  #else
+#else
   Board *board = board_init();
   board_empty(board);
 
@@ -328,7 +324,7 @@ void test_threat_check() {
   board->color = BLACK;
   threat_board_update(board);
   assert(threat_check(board));
-  #endif
+#endif
 }
 
 void test_threat(void) { test_threat_check(); }

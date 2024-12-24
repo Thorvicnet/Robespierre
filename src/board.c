@@ -105,6 +105,36 @@ void board_sync_bb(Board *board) {
   }
 }
 
+Board *board_copy(Board *board) {
+  // Copy a board but keeps the same history pointer
+  Board *new_board = malloc(sizeof(Board));
+  
+  new_board->all = board->all;
+  new_board->white = board->white;
+  new_board->black = board->black;
+  new_board->white_pawns = board->white_pawns;
+  new_board->white_knights = board->white_knights; 
+  new_board->white_bishops = board->white_bishops;
+  new_board->white_rooks = board->white_rooks;
+  new_board->white_queens = board->white_queens;
+  new_board->white_kings = board->white_kings;
+  new_board->black_pawns = board->black_pawns;
+  new_board->black_knights = board->black_knights;
+  new_board->black_bishops = board->black_bishops;
+  new_board->black_rooks = board->black_rooks;
+  new_board->black_queens = board->black_queens;
+  new_board->black_kings = board->black_kings;
+
+  memcpy(new_board->squares, board->squares, 64 * sizeof(int));
+  new_board->color = board->color;
+
+  new_board->white_threat = 0;
+  new_board->black_threat = 0;
+  new_board->history = board->history;
+
+  return new_board;
+}
+
 void board_free(Board *board) {
   // Frees the board from memory (very simple ATM)
   free(board);

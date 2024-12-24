@@ -13,7 +13,7 @@ TEST_FILE := tests.c
 ########################
 
 # -MMD generates dependencies while compiling
-CFLAGS += -MMD # -DMENACE
+CFLAGS += -MMD -DMENACE
 CC := clang
 
 # Add paths after defining the variables

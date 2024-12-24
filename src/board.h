@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 
 #define WHITE 0x00
@@ -44,5 +45,7 @@ Move board_last_move(Board *board);
 void board_add_move(Board *board, Move move);
 void board_list_moves(Board *board);
 void board_free(Board *board);
+Board *board_copy(Board *board);
+void board_sync_bb(Board *board);
 
 #endif // BOARD_H

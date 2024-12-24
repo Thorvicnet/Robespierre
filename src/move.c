@@ -1,9 +1,8 @@
 #include "move.h"
 #include "board.h"
+#include "threat.h"
 #include "types.h"
 #include <time.h>
-
-// FIXME: Check Discovered Check
 
 // Each pieces check if the destination is allowed and if they moved correctly
 
@@ -220,7 +219,8 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   }
 }
 
-void move(Board *board, Move move) {
+void move(Board *orig_board, Move move) {
+  Board *board = board_copy(orig_board); // TODO: there HAS to be a better way but ATM it works
   if (!move_check_validity(board, move.orig, move.dest)) {
     return;
   }
@@ -264,11 +264,14 @@ void move(Board *board, Move move) {
     }
   }
 
-  board_add_move(board, move);
-
   board->color ^= BLACK;
 
   threat_board_update(board);
+  if (threat_check(board))
+    return;
+
+  board_add_move(orig_board, move);
+  *orig_board = *board; // this is plain disgusting
 }
 
 List_of_move knight_possible_move(Board *board, int pos[2]) {
