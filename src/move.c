@@ -4,7 +4,7 @@
 #include "types.h"
 #include <time.h>
 
-// Each pieces check if the destination is allowed and if they moved correctly
+// Each piece checks whether the destination is allowed and whether it has moved correctly
 
 static inline int min(int a, int b) { return a > b ? b : a; }
 static inline int max(int a, int b) { return a > b ? a : b; }
