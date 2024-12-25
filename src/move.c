@@ -7,9 +7,6 @@
 // Each piece checks whether the destination is allowed and whether it has moved
 // correctly
 
-static inline int min(int a, int b) { return a > b ? b : a; }
-static inline int max(int a, int b) { return a > b ? a : b; }
-
 bool check_knight(Board *board, int orig[2], int dest[2]) {
 #ifdef MENACE
   return IS_BIT_SET(~(board->color == WHITE
@@ -155,51 +152,51 @@ bool rook_moved(Board *board, int color, int orig[2]) {
 }
 
 bool check_king(Board *board, int orig[2], int dest[2]) {
-    int orig_sq = orig[0] + orig[1] * 8;
-    int dest_sq = dest[0] + dest[1] * 8;
-    
-    if (IS_BIT_SET(KING_MASKS[orig_sq], dest_sq)) {
-        Bb friendly_pieces = (board->color == WHITE) ? board->white : board->black;
-        return !IS_BIT_SET(friendly_pieces, dest_sq);
+  int orig_sq = orig[0] + orig[1] * 8;
+  int dest_sq = dest[0] + dest[1] * 8;
+
+  if (IS_BIT_SET(KING_MASKS[orig_sq], dest_sq)) {
+    Bb friendly_pieces = (board->color == WHITE) ? board->white : board->black;
+    return !IS_BIT_SET(friendly_pieces, dest_sq);
+  }
+
+  // Castling
+  if (abs(orig[0] - dest[0]) == 2 && orig[1] == dest[1]) {
+    if (orig[1] != (board->color == WHITE ? 0 : 7) || orig[0] != 3)
+      return false;
+
+    if (king_moved(board, board->color))
+      return false;
+
+    bool kingside = (dest[0] == 1);
+    int rook_file = kingside ? 0 : 7;
+    int rook_rank = board->color == WHITE ? 0 : 7;
+    int rook_sq = rook_file + rook_rank * 8;
+
+    int rook_piece = board_get(board, rook_sq);
+    if (PIECE(rook_piece) != ROOK || COLOR(rook_piece) != board->color ||
+        rook_moved(board, board->color, (int[]){rook_file, rook_rank}))
+      return false;
+
+    Bb path = 0ULL;
+    if (kingside) {
+      path = (1ULL << (orig_sq - 1)) | (1ULL << (orig_sq - 2));
+    } else {
+      path = (1ULL << (orig_sq + 1)) | (1ULL << (orig_sq + 2)) |
+             (1ULL << (orig_sq + 3));
     }
+    if (board->all & path)
+      return false;
 
-    // Castling
-    if (abs(orig[0] - dest[0]) == 2 && orig[1] == dest[1]) {
-        if (orig[1] != (board->color == WHITE ? 0 : 7) || orig[0] != 3)
-            return false;
+    Bb threats = threat_board_squares(board, !board->color);
+    Bb king_squares = (1ULL << orig_sq) | path;
 
-        if (king_moved(board, board->color))
-            return false;
+    if (threats & king_squares)
+      return false;
+    return true;
+  }
 
-        bool kingside = (dest[0] == 1);
-        int rook_file = kingside ? 0 : 7;
-        int rook_rank = board->color == WHITE ? 0 : 7;
-        int rook_sq = rook_file + rook_rank * 8;
-
-        int rook_piece = board_get(board, rook_sq);
-        if (PIECE(rook_piece) != ROOK || COLOR(rook_piece) != board->color ||
-            rook_moved(board, board->color, (int[]){rook_file, rook_rank}))
-            return false;
-        
-        Bb path = 0ULL;
-        if (kingside) {
-            path = (1ULL << (orig_sq - 1)) | (1ULL << (orig_sq - 2));
-        } else {
-            path = (1ULL << (orig_sq + 1)) | (1ULL << (orig_sq + 2)) | (1ULL << (orig_sq + 3));
-        }
-        if (board->all & path)
-            return false;
-
-        Bb threats = threat_board_squares(board, !board->color);
-        Bb king_squares = (1ULL << orig_sq) | path;
-
-
-        if (threats & king_squares)
-            return false;
-        return true;
-    }
-
-    return false;
+  return false;
 }
 
 bool move_check_validity(Board *board, int orig[2], int dest[2]) {
@@ -256,15 +253,15 @@ void move(Board *orig_board, Move move) {
   } else if (PIECE(piece) == KING && abs(move.orig[0] - move.dest[0]) == 2) {
     int rook_orig[2], rook_dest[2];
     if (move.dest[0] == 5) { // Queen-side castling
-        rook_orig[0] = 7;
-        rook_orig[1] = move.orig[1];
-        rook_dest[0] = 4;
-        rook_dest[1] = move.orig[1];
+      rook_orig[0] = 7;
+      rook_orig[1] = move.orig[1];
+      rook_dest[0] = 4;
+      rook_dest[1] = move.orig[1];
     } else if (move.dest[0] == 1) { // King-side castling
-        rook_orig[0] = 0;
-        rook_orig[1] = move.orig[1];
-        rook_dest[0] = 2;
-        rook_dest[1] = move.orig[1];
+      rook_orig[0] = 0;
+      rook_orig[1] = move.orig[1];
+      rook_dest[0] = 2;
+      rook_dest[1] = move.orig[1];
     }
     board_set(board, rook_dest[0] + rook_dest[1] * 8,
               board_get(board, rook_orig[0] + rook_orig[1] * 8));
