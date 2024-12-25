@@ -1,6 +1,7 @@
 #include "bb.h"
 #include "board.h"
 #include "move.h"
+#include "threat.h"
 #include "types.h"
 #include <locale.h>
 #include <stdbool.h>
@@ -12,6 +13,7 @@ int main(int argc, char *argv[]) {
   bb_magic_init();
 
   Board *board = board_init();
+  threat_board_update(board);
   int orig[2], dest[2];
   while (true) {
     board_info(board);

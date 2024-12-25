@@ -1,5 +1,11 @@
 # Menace Chess Engine
 
+<!--toc:start-->
+- [Menace Chess Engine](#menace-chess-engine)
+  - [Board positions](#board-positions)
+  - [TODO](#todo)
+<!--toc:end-->
+
 ## Board positions
 
 The top line is for WHITE at the start. (board->squares[0] == WHITE_ROOK)\
@@ -19,7 +25,7 @@ If the functions just takes a pos then pos = col + line * 8 (to get the correct 
 - [x] debug MENACE
 - [ ] promotion (long)
 - [ ] draw (long)
-- [ ] still incorrect castle (vachement dur pour ce que c'est)
+- [ ] still incorrect castle (vachement dur pour ce que c'est) Victor
 - [ ] UCI (ça passe)
 - [ ] Alpha-beta (dur)
 - [ ] IA génétique deep learning Nono
