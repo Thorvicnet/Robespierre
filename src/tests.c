@@ -7,6 +7,7 @@
 #include <locale.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 void test_move_check_validity_bishop(void) {
   wprintf(L"- move_check_validity_bishop\n");
@@ -128,32 +129,34 @@ void test_move_check_validity_king(void) {
   Board *board = board_init();
   board_empty(board);
 
-  board_set(board, 4 + 4 * 8, WHITE_KING);
-  Move move_data = {WHITE_KING, {4, 4}, {4, 5}};
+  board_set(board, 3 + 4 * 8, WHITE_KING);
+  Move move_data = {WHITE_KING, {3, 4}, {3, 5}};
   move(board, move_data);
-  assert(board_get(board, 4 + 4 * 8) == EMPTY);
-  assert(board_get(board, 4 + 5 * 8) == WHITE_KING);
+  assert(board_get(board, 3 + 4 * 8) == EMPTY);
+  assert(board_get(board, 3 + 5 * 8) == WHITE_KING);
   assert(board->color == BLACK);
 
   board_empty(board); // Queen-side castling
-  board_set(board, 4 + 0 * 8, WHITE_KING);
+  board_set(board, 3 + 0 * 8, WHITE_KING);
   board_set(board, 0 + 0 * 8, WHITE_ROOK);
   board_set(board, 7 + 0 * 8, WHITE_ROOK);
-  move_data = (Move){WHITE_KING, {4, 0}, {2, 0}};
+  move_data = (Move){WHITE_KING, {3, 0}, {1, 0}};
   move(board, move_data);
-  assert(board_get(board, 4 + 0 * 8) == EMPTY);
-  assert(board_get(board, 2 + 0 * 8) == WHITE_KING);
-  assert(board_get(board, 3 + 0 * 8) == WHITE_ROOK);
+  assert(board_get(board, 3 + 0 * 8) == EMPTY);
+  assert(board_get(board, 1 + 0 * 8) == WHITE_KING);
+  assert(board_get(board, 2 + 0 * 8) == WHITE_ROOK);
 
   board_empty(board); // King-side castling
-  board_set(board, 4 + 0 * 8, WHITE_KING);
+  board_set(board, 3 + 0 * 8, WHITE_KING);
   board_set(board, 0 + 0 * 8, WHITE_ROOK);
   board_set(board, 7 + 0 * 8, WHITE_ROOK);
-  move_data = (Move){WHITE_KING, {4, 0}, {6, 0}};
+  move_data = (Move){WHITE_KING, {3, 0}, {5, 0}};
   move(board, move_data);
-  assert(board_get(board, 4 + 0 * 8) == EMPTY);
-  assert(board_get(board, 6 + 0 * 8) == WHITE_KING);
-  assert(board_get(board, 5 + 0 * 8) == WHITE_ROOK);
+  assert(board_get(board, 3 + 0 * 8) == EMPTY);
+  assert(board_get(board, 5 + 0 * 8) == WHITE_KING);
+  assert(board_get(board, 4 + 0 * 8) == WHITE_ROOK);
+
+  board_free(board);
 }
 
 void test_move_basic(void) {
@@ -214,6 +217,30 @@ void test_move_promotion(void) {
   move_data = (Move){BLACK_PAWN, {4, 1}, {4, 0}};
   move(board, move_data);
   assert(board_get(board, 4 + 0 * 8) == BLACK_QUEEN);
+}
+
+void test_move_castling(void) {
+  wprintf(L"- move_castling\n");
+  Board *board = board_init();
+  threat_board_update(board);
+  move(board, (Move){board_get(board, 1 + 1 * 8), {1, 1}, {1, 2}});
+  move(board, (Move){board_get(board, 6 + 7 * 8), {6, 7}, {7, 5}});
+  move(board, (Move){board_get(board, 1 + 0 * 8), {1, 0}, {2, 2}});
+  move(board, (Move){board_get(board, 6 + 6 * 8), {6, 6}, {6, 5}});
+  move(board, (Move){board_get(board, 2 + 0 * 8), {2, 0}, {0, 2}});
+  move(board, (Move){board_get(board, 5 + 7 * 8), {5, 7}, {6, 6}});
+  move(board, (Move){board_get(board, 3 + 1 * 8), {3, 1}, {3, 3}});
+  move(board, (Move){board_get(board, 6 + 6 * 8), {6, 6}, {5, 5}});
+  move(board, (Move){board_get(board, 3 + 0 * 8), {3, 0}, {1, 0}});
+  move(board, (Move){board_get(board, 4 + 7 * 8), {4, 7}, {5, 7}});
+  move(board, (Move){board_get(board, 7 + 1 * 8), {7, 1}, {7, 2}});
+  move(board, (Move){board_get(board, 5 + 7 * 8), {5, 7}, {6, 6}});
+  move(board, (Move){board_get(board, 7 + 0 * 8), {7, 0}, {7, 1}});
+  move(board, (Move){board_get(board, 3 + 7 * 8), {3, 7}, {5, 7}});
+  assert(board_get(board, 5 + 7 * 8) == BLACK_KING);
+  assert(board_get(board, 4 + 7 * 8) == BLACK_ROOK);
+  assert(board_get(board, 2) == WHITE_ROOK);
+  assert(board_get(board, 1) == WHITE_KING);
 }
 
 void test_rook_attacks(void) {
@@ -342,6 +369,7 @@ void test_move(void) {
   test_move_capture();
   test_move_enpassant();
   test_move_promotion();
+  test_move_castling();
 }
 
 void test_bb(void) {

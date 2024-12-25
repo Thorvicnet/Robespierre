@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     board_info(board);
     board_bb_info(board);
-    bb_print(board->white | board->white_threat);
+    bb_print(threat_board_squares(board, !board->color));
     scanf("%d %d, %d %d", &orig[0], &orig[1], &dest[0], &dest[1]);
     move(board, (Move){board_get(board, orig[0] + orig[1] * 8),
                        {orig[0], orig[1]},

@@ -107,6 +107,85 @@ bool check_threatened(Board *board, int cell[2], int color, int depth) {
   return false;
 }
 
+Bb threat_board_squares(Board *board, int color) {
+  Bb threatened = 0ULL;
+  if (color == WHITE) {
+    // White threat
+    threatened = 0ULL;
+    Bb bb = board->white_pawns;
+    while (bb) {
+      int sq = __builtin_ctzll(bb); // Counts the number of trailing zeros
+      threatened |= PAWN_ATTACK_MASKS_WHITE[sq];
+      bb &= (bb - 1); // "POP" the LSB
+    }
+    bb = board->white_rooks;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= bb_rook_attacks(board->all, sq);
+      bb &= (bb - 1);
+    }
+    bb = board->white_bishops;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= bb_bishop_attacks(board->all, sq);
+      bb &= (bb - 1);
+    }
+    bb = board->white_knights;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= KNIGHT_MASKS[sq];
+      bb &= (bb - 1);
+    }
+    bb = board->white_queens;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= bb_rook_attacks(board->all, sq);
+      threatened |= bb_bishop_attacks(board->all, sq);
+      bb &= (bb - 1);
+    }
+    bb = board->white_kings; // I assume there is only one king (pretty safe)
+    threatened |= KING_MASKS[__builtin_ctzll(bb)];
+
+  } else {
+    // Black threat
+    threatened = 0ULL;
+    Bb bb = board->black_pawns;
+    while (bb) {
+      int sq = __builtin_ctzll(bb); // Counts the number of trailing zeros
+      threatened |= PAWN_ATTACK_MASKS_BLACK[sq];
+      bb &= (bb - 1); // "POP" the LSB
+    }
+    bb = board->black_rooks;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= bb_rook_attacks(board->all, sq);
+      bb &= (bb - 1);
+    }
+    bb = board->black_bishops;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= bb_bishop_attacks(board->all, sq);
+      bb &= (bb - 1);
+    }
+    bb = board->black_knights;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= KNIGHT_MASKS[sq];
+      bb &= (bb - 1);
+    }
+    bb = board->black_queens;
+    while (bb) {
+      int sq = __builtin_ctzll(bb);
+      threatened |= bb_rook_attacks(board->all, sq);
+      threatened |= bb_bishop_attacks(board->all, sq);
+      bb &= (bb - 1);
+    }
+    bb = board->black_kings; // I assume there is only one king (pretty safe)
+    threatened |= KING_MASKS[__builtin_ctzll(bb)];
+  }
+  return threatened;
+}
+
 void threat_board_update(Board *board) {
   // White threat
   board->white_threat = 0ULL;
