@@ -17,6 +17,7 @@ typedef struct {
   int orig[2];
   int dest[2];
   bool capture;
+  int promote;
 } Move;
 
 typedef struct {
