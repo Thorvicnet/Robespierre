@@ -16,7 +16,7 @@ int main(void) {
 
   Board *board = board_init();
   threat_board_update(board);
-  //int orig[2], dest[2];
+  int orig[2], dest[2];
   char strmove[6];
   while (true) {
     board_info(board);
