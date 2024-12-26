@@ -1,9 +1,9 @@
 #########################
-CFILES := main.c board.c move.c history.c bb.c threat.c
+CFILES := main.c board.c move.c history.c bb.c threat.c uci.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic
-LDFLAGS := -fsanitize=address
+LDFLAGS := 
 
 SRC_DIR := src
 OBJ_DIR := obj
