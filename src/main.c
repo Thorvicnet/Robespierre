@@ -21,13 +21,13 @@ int main(void) {
   while (true) {
     board_info(board);
     board_bb_info(board);
-    scanf("%d %d, %d %d", &orig[0], &orig[1], &dest[0], &dest[1]);
-    //scanf("%s", strmove);
+    //scanf("%d %d, %d %d", &orig[0], &orig[1], &dest[0], &dest[1]);
+    scanf("%s", strmove);
     move(board, (Move){board_get(board, orig[0] + orig[1] * 8),
-    //                   {orig[0], orig[1]},
-    //                   {dest[0], dest[1]}});
+                       {orig[0], orig[1]},
+                       {dest[0], dest[1]}});
     //Move mo = algebric_to_move(strmove, board);
-    //move(board, mo);
+    move(board, mo);
   }
 
   return EXIT_SUCCESS;
