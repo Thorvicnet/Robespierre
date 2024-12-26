@@ -27,7 +27,7 @@ int main(void) {
                        {orig[0], orig[1]},
                        {dest[0], dest[1]}});
     //Move mo = algebric_to_move(strmove, board);
-    move(board, mo);
+    //move(board, mo);
   }
 
   return EXIT_SUCCESS;
