@@ -2,6 +2,7 @@
 #include "board.h"
 #include "move.h"
 #include "threat.h"
+#include "bot.h"
 #include "types.h"
 #include <assert.h>
 #include <locale.h>

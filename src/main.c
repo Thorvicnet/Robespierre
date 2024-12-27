@@ -4,6 +4,7 @@
 #include "threat.h"
 #include "types.h"
 #include "uci.h"
+#include "bot.h"
 #include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,7 +26,8 @@ int main(void) {
     scanf("%s", strmove);
     move(board, (Move){board_get(board, orig[0] + orig[1] * 8),
                        {orig[0], orig[1]},
-                       {dest[0], dest[1]}});
+                       {dest[0], dest[1]},
+                       false, 0}); //placeholder for capture and promote
     //Move mo = algebric_to_move(strmove, board);
     //move(board, mo);
   }
