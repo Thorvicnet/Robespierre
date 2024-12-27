@@ -38,22 +38,27 @@ int evaluate (Board *board){
     return score;
 }
 
-Move choose (Board *board){
-    //Choses the best move according to the evaluation
-    List_of_move list_moves = possible_move(board);
-    assert(list_moves.nb == 0); // To be dealt with later
+Move choose_with_depth (Board *board, int depth){
+    //Chooses the best move, according to a minimax search
+    // Currently checks if the move is possible even though we know it is - kinda
 
-    Board *new_board = board_copy(board);
-    move(new_board, list_moves.list[0]); // Currently checks if the move is possible even though we know it is
+    List_of_move list_moves = possible_move(board); //Should be a list of every valid move
+    assert(list_moves.nb > 0); // To be dealt with later
+
     int best_index = 0;
-    int best_eval = evaluate(new_board);
+    int best_eval = board->color == WHITE ? -1000 : 1000;
+    Board *new_board;
 
-    for (int i=1; i<list_moves.nb; i++){
+    for (int i=0; i<list_moves.nb; i++){
+
         new_board = board_copy(board);
         move(new_board, list_moves.list[i]);
+
+        if (depth > 0) move(new_board, choose_with_depth(new_board, depth-1));
         int eval = evaluate(new_board);
-        if ((new_board->color == WHITE && eval > best_eval) || 
-        (new_board->color == BLACK && eval < best_eval)){
+
+        if ((board->color == WHITE && eval > best_eval) || 
+        (board->color == BLACK && eval < best_eval)){
             best_index = i;
             best_eval = eval;
         }
@@ -61,4 +66,12 @@ Move choose (Board *board){
 
     board_free(new_board);
     return list_moves.list[best_index];
+
+}
+
+Move choose (Board *board){
+    //Chooses the best move according to the evaluation
+    //Currently lacks : alpha-beta pruning, iterative deepening
+
+    return choose_with_depth(board, 5); //currently arbitrary depth
 }

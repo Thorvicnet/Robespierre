@@ -10,6 +10,6 @@
 #include <assert.h>
 
 int evaluate (Board *board);
-//Move choose (Board *board, int color);
+Move choose (Board *board);
 
 #endif // BOT_H
