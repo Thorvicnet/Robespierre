@@ -50,12 +50,15 @@ int evaluate (Board *board){
     return score;
 }
 
-Vmove choose_with_depth (Board *board, int depth, bool pruning_possibility, int pruning_score){
-    //Chooses the best move, according to a minimax search with alpha-beta pruning
+Vmove choose_with_depth (Board *board, int depth, int alpha, int beta){
+    // Chooses the best move, according to a minimax search with alpha-beta pruning
     // Currently checks if the move is possible even though we know it is - kinda
+    // beta is greater than alpha (or else the branch is pruned)
+
+    assert(depth>0); //Depth 0 corresponds to the static evaluation of the position - later
 
     List_of_move list_moves = possible_move(board); //Should be a list of every valid move
-    assert(list_moves.nb > 0); // To be dealt with later
+    assert(list_moves.nb > 0); // Checkmate, draw ... to be dealt with later
 
     int best_index = 0;
     int best_eval = board->color == WHITE ? -10000 : 10000;
@@ -67,22 +70,19 @@ Vmove choose_with_depth (Board *board, int depth, bool pruning_possibility, int 
         move(new_board, list_moves.list[i]);
 
         int eval;
-        if (depth == 0) eval = evaluate(new_board);
-        else eval = choose_with_depth(new_board, depth-1, i>0, best_eval).value;
-
-        if (pruning_possibility){
-            if ((board->color == WHITE && eval >= pruning_score) || 
-            (board->color == BLACK && eval <= pruning_score)){
-                board_free(new_board);
-                return (Vmove){list_moves.list[i], eval};
-            }
-        }
+        if (depth == 1) eval = evaluate(new_board);
+        else eval = choose_with_depth(new_board, depth-1, alpha, beta).value;
 
         if ((board->color == WHITE && eval > best_eval) || 
         (board->color == BLACK && eval < best_eval)){
             best_index = i;
             best_eval = eval;
         }
+
+        if (board->color == WHITE) alpha = alpha > eval ? alpha : eval;
+        else beta = beta < eval ? beta : eval;
+        if (beta <= alpha) break;
+
     }
 
     board_free(new_board);
@@ -94,5 +94,5 @@ Move choose (Board *board){
     //Chooses the best move according to the evaluation
     //Currently lacks : iterative deepening
 
-    return choose_with_depth(board, 5, false, 0).mo; //currently arbitrary depth of 5
+    return choose_with_depth(board, 12, -10000, 10000).mo; //currently arbitrary depth of 5
 }

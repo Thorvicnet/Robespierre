@@ -28,6 +28,7 @@ If the functions just takes a pos then pos = col + line * 8 (to get the correct 
 - [x] still incorrect castle
 - [ ] UCI (ça passe)
 - [ ] Search gestion
+  - [x] Minimax
   - [x] Alpha-beta
   - [ ] Iterative deepening
 - [ ] IA génétique deep learning Nono
