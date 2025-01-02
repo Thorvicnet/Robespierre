@@ -1,11 +1,7 @@
 #include "uci.h"
-#include "board.h"
-#include "types.h"
-#include <string.h>
-#include <wchar.h>
 
 char *move_to_algebric(Move move) {
-  char alphabet[] = "abcdefgh";
+  char alphabet[] = "hgfedcba";
   char number[] = "12345678";
 
   char *ret = (char *)malloc(6 * sizeof(char));

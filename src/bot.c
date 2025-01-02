@@ -1,7 +1,4 @@
 #include "bot.h"
-#include "board.h"
-#include "uci.h" // FIXME: REMOVE THIS (here to debug)
-#include <wchar.h>
 
 typedef struct {
   Move mo;
@@ -81,10 +78,6 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
     new_board = board_copy(board);
     int res = move(new_board, list_moves.moves[i]);
     if (res) { // Move not allowed (could lead to discovered check...)
-      // board_info(board);
-      // wprintf(L"Move: %d %d -> %d %d\n", list_moves.moves[i].orig[0],
-      //         list_moves.moves[i].orig[1], list_moves.moves[i].dest[0],
-      //         list_moves.moves[i].dest[1]);
       break;
     }
 

@@ -1,7 +1,4 @@
 #include "threat.h"
-#include "bb.h"
-#include "board.h"
-#include <wchar.h>
 
 bool check_threatened(Board *board, int cell[2], int color, int depth) {
   // Returns true if cell is threatened by pieces of the opposite color at the

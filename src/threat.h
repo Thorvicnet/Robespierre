@@ -1,6 +1,7 @@
 #ifndef THREAT_H
 #define THREAT_H
 
+#include "bb.h"
 #include "board.h"
 #include "types.h"
 #include <math.h>

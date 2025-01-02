@@ -29,7 +29,6 @@ int main(void) {
     // Player turn
     board_info(board);
 
-    wprintf(L"%d\n", possible_move(board).count);
     test_print_moves(possible_move(board));
 
     int res = -1;

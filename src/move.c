@@ -1,8 +1,4 @@
 #include "move.h"
-#include "board.h"
-#include "threat.h"
-#include "types.h"
-#include <time.h>
 
 // Each piece checks whether the destination is allowed and whether it has moved
 // correctly
@@ -327,8 +323,6 @@ void knight_possible_move(Board *board, int pos[2], MoveList *list) {
 #else
   valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
           ~(board->color == WHITE ? board->white : board->black);
-  board_bb_info(board);
-  bb_print(valid);
 #endif
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
@@ -339,7 +333,6 @@ void knight_possible_move(Board *board, int pos[2], MoveList *list) {
                  {pos[0], pos[1]},
                  {dest_x, dest_y},
                  board_get(board, dest_x + 8 * dest_y) != EMPTY};
-    add_move(list, move);
 
     valid &= valid - 1;
   }
