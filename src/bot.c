@@ -70,11 +70,16 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   int best_eval = board->color == WHITE ? -10000 : 10000;
   Board *new_board;
 
-  for (int i = 0; i < list_moves.count; i++) {
-    wprintf(L"History size : %d\n", board->history->last_move);
+  if (depth > 3) {
+    wprintf(L"Depth: %d\n", depth);
+  }
 
+  for (int i = 0; i < list_moves.count; i++) {
     new_board = board_copy(board);
-    move(new_board, list_moves.moves[i]);
+    int res = move(new_board, list_moves.moves[i]);
+    if (res) { // Move not allowed (could lead to discovered check...)
+      break;
+    }
 
     int eval;
     if (depth == 1)
@@ -104,6 +109,6 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  return choose_with_depth(board, 2, -10000, 10000)
+  return choose_with_depth(board, 12, -10000, 10000)
       .mo; // currently arbitrary depth of 5
 }

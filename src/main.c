@@ -24,30 +24,28 @@ int main(void) {
 
   Board *board = board_init();
   threat_board_update(board);
-  int orig[2], dest[2];
   char strmove[6];
   while (true) {
+    // Player turn
     board_info(board);
-    // board_bb_info(board);
 
     wprintf(L"%d\n", possible_move(board).count);
     test_print_moves(possible_move(board));
 
-    // scanf("%d %d, %d %d", &orig[0], &orig[1], &dest[0], &dest[1]);
-    scanf("%s", strmove);
-    // move(board, (Move){board_get(board, orig[0] + orig[1] * 8),
-    //                    {orig[0], orig[1]},
-    //                    {dest[0], dest[1]},
-    //                    false, 0}); //placeholder for capture and promote
-    Move mo = algebric_to_move(strmove, board);
-    move(board, mo);
+    int res = -1;
+    while (res) {
+      scanf("%s", strmove);
+      res = move(board, algebric_to_move(strmove, board));
+    }
 
+    // Bot turn
     board_info(board);
 
     wprintf(L"BOT\n");
     Move bot = choose(board);
     wprintf(L"%s\n", move_to_algebric(bot));
-    move(board, bot);
+    res = move(board, bot);
+    wprintf(L"Bot fail, bot dumb\n");
   }
 
   return EXIT_SUCCESS;

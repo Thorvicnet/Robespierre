@@ -234,11 +234,11 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   }
 }
 
-void move(Board *orig_board, Move move) {
+int move(Board *orig_board, Move move) {
   Board *board = board_copy(
       orig_board); // TODO: there HAS to be a better way but ATM it works
   if (!move_check_validity(board, move.orig, move.dest)) {
-    return;
+    return -1;
   }
 
   int orig_pos = move.orig[0] + move.orig[1] * 8;
@@ -283,10 +283,12 @@ void move(Board *orig_board, Move move) {
 
   threat_board_update(board);
   if (threat_check(board))
-    return;
+    return -1;
 
-  board_add_move(orig_board, move);
+  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing)
+  // depth)
   *orig_board = *board; // this is plain disgusting
+  return 0;
 }
 
 // Beginning move enumeration //

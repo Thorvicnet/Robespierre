@@ -1,6 +1,6 @@
 #include "history.h"
 
-const int MAX_MOVES = 2000;
+const int MAX_MOVES = 200;
 
 Stack *stack_create(void) {
   Stack *history = (Stack *)malloc(sizeof(Stack));
