@@ -13,7 +13,7 @@ Board *board_init(void) {
   // Returns a board in the default position
   Board *board = (Board *)malloc(sizeof(Board));
   if (board == NULL) {
-    wprintf(L"Your memory is doomed...");
+    wprintf(L"Your memory is doomed...\n");
     exit(EXIT_FAILURE);
   }
 
@@ -113,6 +113,10 @@ void board_sync_bb(Board *board) {
 Board *board_copy(Board *board) {
   // Copy a board but keeps the same history pointer
   Board *new_board = malloc(sizeof(Board));
+  if (new_board == NULL) {
+    wprintf(L"Your memory is doomed...\n");
+    exit(EXIT_FAILURE);
+  }
 
   new_board->all = board->all;
   new_board->white = board->white;

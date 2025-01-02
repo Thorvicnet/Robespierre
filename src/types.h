@@ -21,9 +21,10 @@ typedef struct {
 } Move;
 
 typedef struct {
-  Move *list;
-  int nb;
-} List_of_move;
+  Move *moves;
+  int count;
+  int capacity;
+} MoveList;
 
 typedef struct {
   int last_move;

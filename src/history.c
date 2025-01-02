@@ -1,10 +1,18 @@
 #include "history.h"
 
-const int MAX_MOVES = 200;
+const int MAX_MOVES = 2000;
 
 Stack *stack_create(void) {
   Stack *history = (Stack *)malloc(sizeof(Stack));
+  if (history == NULL) {
+    wprintf(L"Your memory is doomed...\n");
+    exit(EXIT_FAILURE);
+  }
   history->list_of_move = (Move *)malloc(sizeof(Move) * MAX_MOVES);
+  if (history->list_of_move == NULL) {
+    wprintf(L"Your memory is doomed...\n");
+    exit(EXIT_FAILURE);
+  }
   history->last_move = 0;
   return history;
 }

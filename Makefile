@@ -3,7 +3,7 @@ CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic
-LDFLAGS := 
+LDFLAGS := -fsanitize=address
 
 SRC_DIR := src
 OBJ_DIR := obj

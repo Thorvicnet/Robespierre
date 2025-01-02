@@ -4,6 +4,7 @@
 #include "types.h"
 #include <signal.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 Move stack_peek(Stack *stack);
 Stack *stack_create(void);
