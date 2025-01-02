@@ -1,4 +1,7 @@
 #include "bot.h"
+#include "board.h"
+#include "uci.h" // FIXME: REMOVE THIS (here to debug)
+#include <wchar.h>
 
 typedef struct {
   Move mo;
@@ -70,7 +73,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   int best_eval = board->color == WHITE ? -10000 : 10000;
   Board *new_board;
 
-  if (depth > 3) {
+  if (depth > 11) {
     wprintf(L"Depth: %d\n", depth);
   }
 
@@ -78,6 +81,10 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
     new_board = board_copy(board);
     int res = move(new_board, list_moves.moves[i]);
     if (res) { // Move not allowed (could lead to discovered check...)
+      // board_info(board);
+      // wprintf(L"Move: %d %d -> %d %d\n", list_moves.moves[i].orig[0],
+      //         list_moves.moves[i].orig[1], list_moves.moves[i].dest[0],
+      //         list_moves.moves[i].dest[1]);
       break;
     }
 
@@ -109,6 +116,6 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  return choose_with_depth(board, 12, -10000, 10000)
+  return choose_with_depth(board, 5, -10000, 10000)
       .mo; // currently arbitrary depth of 5
 }

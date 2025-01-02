@@ -45,7 +45,10 @@ int main(void) {
     Move bot = choose(board);
     wprintf(L"%s\n", move_to_algebric(bot));
     res = move(board, bot);
-    wprintf(L"Bot fail, bot dumb\n");
+    if (res) {
+      wprintf(L"Bot fail, bot dumb\n");
+      break;
+    }
   }
 
   return EXIT_SUCCESS;
