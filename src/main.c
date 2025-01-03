@@ -13,7 +13,9 @@
 
 void test_print_moves(MoveList l) {
   for (int i = 0; i < l.count; i++) {
-    wprintf(L"%s ", move_to_algebric(l.moves[i]));
+    char *mv = move_to_algebric(l.moves[i]);
+    wprintf(L"%s ", mv);
+    free(mv);
   }
   wprintf(L"\n");
 }
@@ -41,9 +43,13 @@ int main(void) {
     // Bot turn
     board_info(board);
 
-    wprintf(L"BOT\n");
+    wprintf(L"BOT WHITE\n");
     Move bot = choose(board);
-    wprintf(L"%s\n", move_to_algebric(bot));
+
+    char *mv = move_to_algebric(bot);
+    wprintf(L"%s\n", mv);
+    free(mv);
+
     res = move(board, bot);
     if (res) {
       wprintf(L"Bot fail, bot dumb\n");
@@ -53,15 +59,23 @@ int main(void) {
     // Bot turn
     board_info(board);
 
-    wprintf(L"BOT\n");
+    wprintf(L"BOT BLACK\n");
     bot = choose(board);
-    wprintf(L"%s\n", move_to_algebric(bot));
+
+    mv = move_to_algebric(bot);
+    wprintf(L"%s\n", mv);
+    free(mv);
+
     res = move(board, bot);
     if (res) {
       wprintf(L"Bot fail, bot dumb\n");
       break;
     }
   }
+
+  free(board->history->list_of_move);
+  free(board->history);
+  board_free(board);
 
   return EXIT_SUCCESS;
 }
