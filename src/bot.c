@@ -114,6 +114,6 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  return choose_with_depth(board, 5, -10000, 10000)
+  return choose_with_depth(board, 7, -10000, 10000)
       .mo; // currently arbitrary depth of 5
 }

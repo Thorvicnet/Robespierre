@@ -398,6 +398,8 @@ void pawn_possible_move(Board *board, int pos[2], MoveList *list) {
       {-1, -1}, {-1, 1}};
   for (int i = 0; i < 8; i++) {
     int dest[2] = {pos[0] + offset[i][0], pos[1] + offset[i][1]};
+    if (dest[0] < 0 || dest[0] >= 8 || dest[1] < 0 || dest[1] >= 8) // TODO: why does check_pawn not check this?
+      continue;
     if (check_pawn(board, pos, dest)) {
       Move move = {board_get(board, pos[0] + 8 * pos[1]),
                    {pos[0], pos[1]},
@@ -411,6 +413,30 @@ void pawn_possible_move(Board *board, int pos[2], MoveList *list) {
 void queen_possible_move(Board *board, int pos[2], MoveList *list) {
   rook_possible_move(board, pos, list);
   bishop_possible_move(board, pos, list);
+}
+
+void king_possible_move(Board *board, int pos[2], MoveList *list) {
+  #ifdef MENACE
+  Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
+#else
+  Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
+             ~(board->color == WHITE ? board->white : board->black);
+#endif
+  while (valid) {
+    int dest_sq = __builtin_ctzll(valid);
+    int dest_x = dest_sq & 7;
+    int dest_y = dest_sq >> 3;
+
+    Move move = {board_get(board, pos[0] + 8 * pos[1]),
+                 {pos[0], pos[1]},
+                 {dest_x, dest_y},
+                 board_get(board, dest_x + 8 * dest_y) != EMPTY};
+    add_move(list, move);
+
+    valid &= valid - 1;
+  }
 }
 
 void any_possible_move(Board *board, int pos[2], int piece, MoveList *list) {
@@ -429,6 +455,9 @@ void any_possible_move(Board *board, int pos[2], int piece, MoveList *list) {
     break;
   case PAWN:
     pawn_possible_move(board, pos, list);
+    break;
+  case KING:
+    king_possible_move(board, pos, list);
     break;
   }
 }

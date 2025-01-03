@@ -7,7 +7,6 @@
 #include "uci.h"
 #include <locale.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
 
@@ -41,9 +40,9 @@ int main(void) {
     // }
 
     // Bot turn
+    wprintf(L"BOT WHITE\n");
     board_info(board);
 
-    wprintf(L"BOT WHITE\n");
     Move bot = choose(board);
 
     char *mv = move_to_algebric(bot);
@@ -57,9 +56,9 @@ int main(void) {
     }
 
     // Bot turn
+    wprintf(L"BOT BLACK\n");
     board_info(board);
 
-    wprintf(L"BOT BLACK\n");
     bot = choose(board);
 
     mv = move_to_algebric(bot);
