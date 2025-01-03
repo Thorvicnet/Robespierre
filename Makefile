@@ -3,7 +3,7 @@ CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic
-LDFLAGS := #-fsanitize=address
+LDFLAGS :=
 
 SRC_DIR := src
 OBJ_DIR := obj
@@ -12,9 +12,9 @@ DEBUG_DIR := debug
 TEST_FILE := tests.c
 ########################
 
-# -MMD generates dependencies while compiling
-CFLAGS += -MMD #-DMENACE
-CC := clang
+# -MMD generates dependencies while compiling, add pg for profiling
+CFLAGS += -MMD#-DMENACE
+CC := gcc
 
 # Add paths after defining the variables
 OBJFILES := $(patsubst %.c, $(OBJ_DIR)/%.o, $(CFILES))
@@ -23,7 +23,8 @@ SRCS := $(patsubst %.c, $(SRC_DIR)/%.c, $(CFILES))
 
 all: $(BIN_DIR)/$(PROG)
 
-debug: CFLAGS += -DDEBUG -g -fsanitize=address
+debug: CFLAGS += -DDEBUG -g -pg -fsanitize=address
+debug: LDFLAGS += -g -pg -fsanitize=address
 debug: $(DEBUG_DIR)/$(DEBUG_PROG)
 
 $(BIN_DIR)/$(PROG): $(OBJFILES)
