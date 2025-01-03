@@ -10,8 +10,8 @@ char *move_to_algebric(Move move) {
     exit(EXIT_FAILURE);
   }
 
-  snprintf(ret, 3, "%c%c", alphabet[move.orig[0]], number[move.orig[1]]);
-  snprintf(ret + 2, 3, "%c%c", alphabet[move.dest[0]], number[move.dest[1]]);
+  snprintf(ret, 3, "%c%c", alphabet[move.from & 7], number[move.from >> 3]);
+  snprintf(ret + 2, 3, "%c%c", alphabet[move.to & 7], number[move.to >> 3]);
 
   if ((PIECE(move.promote)) == QUEEN)
     strcat(ret, "q");

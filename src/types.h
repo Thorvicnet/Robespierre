@@ -14,8 +14,8 @@ typedef unsigned long long Bb;
 
 typedef struct {
   int piece;
-  int orig[2];
-  int dest[2];
+  int from;
+  int to;
   bool capture;
   int promote;
 } Move;
