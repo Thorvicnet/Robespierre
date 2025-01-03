@@ -1,6 +1,4 @@
 #include "threat.h"
-#include "bb.h"
-#include "board.h"
 
 bool check_threatened(Board *board, int cell[2], int color, int depth) {
   // Returns true if cell is threatened by pieces of the opposite color at the
@@ -221,6 +219,9 @@ void threat_board_update(Board *board) {
     bb &= (bb - 1);
   }
   bb = board->white_kings; // I assume there is only one king (pretty safe)
+  if (!bb) {
+    wprintf(L"No king, strange...\n");
+  }
   board->white_threat |= KING_MASKS[__builtin_ctzll(bb)];
 
   board->white_threat &= board->black;
@@ -259,6 +260,9 @@ void threat_board_update(Board *board) {
     bb &= (bb - 1);
   }
   bb = board->black_kings; // I assume there is only one king (pretty safe)
+  if (!bb) {
+    wprintf(L"No king, strange...\n");
+  }
   board->black_threat |= KING_MASKS[__builtin_ctzll(bb)];
   board->black_threat &= board->white;
 }

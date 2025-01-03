@@ -1,8 +1,4 @@
 #include "move.h"
-#include "board.h"
-#include "threat.h"
-#include "types.h"
-#include <time.h>
 
 // Each piece checks whether the destination is allowed and whether it has moved
 // correctly
@@ -234,11 +230,12 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   }
 }
 
-void move(Board *orig_board, Move move) {
+int move(Board *orig_board, Move move) {
   Board *board = board_copy(
       orig_board); // TODO: there HAS to be a better way but ATM it works
   if (!move_check_validity(board, move.orig, move.dest)) {
-    return;
+    board_free(board);
+    return -1;
   }
 
   int orig_pos = move.orig[0] + move.orig[1] * 8;
@@ -282,164 +279,197 @@ void move(Board *orig_board, Move move) {
   board->color ^= BLACK;
 
   threat_board_update(board);
-  if (threat_check(board))
-    return;
-
-  board_add_move(orig_board, move);
+  if (threat_check(board)) {
+    board_free(board);
+    return -1;
+  }
+  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing depth)
   *orig_board = *board; // this is plain disgusting
+  board_free(board);
+  return 0;
 }
 
-List_of_move knight_possible_move(Board *board, int pos[2]) {
-  Move *result_move = (Move *)malloc(sizeof(Move) * 8);
-  int nb = 0;
+// Beginning move enumeration //
+
+void init_move_list(MoveList *list) {
+  list->count = 0;
+  list->capacity = 16;
+  list->moves = (Move *)malloc(sizeof(Move) * list->capacity);
+  if (list->moves == NULL) {
+    wprintf(L"Your memory is doomed...\n");
+    exit(EXIT_FAILURE);
+  }
+}
+
+void add_move(MoveList *list, Move move) {
+  if (list->count == list->capacity) {
+    list->capacity *= 2;
+    list->moves = (Move *)realloc(list->moves, sizeof(Move) * list->capacity);
+  }
+  list->moves[list->count++] = move;
+}
+
+void move_list_free(MoveList *list) {
+  free(list->moves);
+  list->moves = NULL;
+  list->count = 0;
+  list->capacity = 0;
+}
+
+void knight_possible_move(Board *board, int pos[2], MoveList *list) {
+  Bb valid;
 #ifdef MENACE
-  Bb valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
-             ~(board->color == WHITE ? board->white & ~board->black_threat
-                                     : board->black & ~board->white_threat);
+  valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
+          ~(board->color == WHITE ? board->white & ~board->black_threat
+                                  : board->black & ~board->white_threat);
 #else
-  Bb valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
-             ~(board->color == WHITE ? board->white : board->black);
+  valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
+          ~(board->color == WHITE ? board->white : board->black);
 #endif
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
     int dest_x = dest_sq & 7;
     int dest_y = dest_sq >> 3;
 
-    Move move = {.piece = board_get(board, pos[0] + 8 * pos[1]),
+    Move move = {board_get(board, pos[0] + 8 * pos[1]),
                  {pos[0], pos[1]},
                  {dest_x, dest_y},
                  board_get(board, dest_x + 8 * dest_y) != EMPTY};
-    result_move[nb++] = move;
 
     valid &= valid - 1;
   }
-
-  List_of_move list = {result_move, nb};
-  return list;
 }
 
-List_of_move rook_possible_move(Board *board, int pos[2]) {
-  Move *result_move = (Move *)malloc(sizeof(Move) * 16);
-  int nb = 0;
+void rook_possible_move(Board *board, int pos[2], MoveList *list) {
+  Bb valid;
 #ifdef MENACE
-  Bb valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
-             ~(board->color == WHITE ? board->white & ~board->black_threat
-                                     : board->black & ~board->white_threat);
+  valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
+          ~(board->color == WHITE ? board->white & ~board->black_threat
+                                  : board->black & ~board->white_threat);
 #else
-  Bb valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
-             ~(board->color == WHITE ? board->white : board->black);
+  valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
+          ~(board->color == WHITE ? board->white : board->black);
 #endif
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
     int dest_x = dest_sq & 7;
     int dest_y = dest_sq >> 3;
 
-    Move move = {.piece = board_get(board, pos[0] + 8 * pos[1]),
+    Move move = {board_get(board, pos[0] + 8 * pos[1]),
                  {pos[0], pos[1]},
                  {dest_x, dest_y},
                  board_get(board, dest_x + 8 * dest_y) != EMPTY};
-    result_move[nb++] = move;
+    add_move(list, move);
 
     valid &= valid - 1;
   }
-  List_of_move list = {result_move, nb};
-  return list;
 }
 
-List_of_move bishop_possible_move(Board *board, int pos[2]) {
-  Move *result_move = (Move *)malloc(sizeof(Move) * 16);
-  int nb = 0;
+void bishop_possible_move(Board *board, int pos[2], MoveList *list) {
+  Bb valid;
 #ifdef MENACE
-  Bb valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
-             ~(board->color == WHITE ? board->white & ~board->black_threat
-                                     : board->black & ~board->white_threat);
+  valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
+          ~(board->color == WHITE ? board->white & ~board->black_threat
+                                  : board->black & ~board->white_threat);
 #else
-  Bb valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
-             ~(board->color == WHITE ? board->white : board->black);
+  valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
+          ~(board->color == WHITE ? board->white : board->black);
 #endif
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
     int dest_x = dest_sq & 7;
     int dest_y = dest_sq >> 3;
 
-    Move move = {.piece = board_get(board, pos[0] + 8 * pos[1]),
+    Move move = {board_get(board, pos[0] + 8 * pos[1]),
                  {pos[0], pos[1]},
                  {dest_x, dest_y},
                  board_get(board, dest_x + 8 * dest_y) != EMPTY};
-    result_move[nb++] = move;
+    add_move(list, move);
 
     valid &= valid - 1;
   }
-  List_of_move list = {result_move, nb};
-  return list;
 }
 
-List_of_move merge_list_of_move(List_of_move list1, List_of_move list2) {
-  Move *list = (Move *)malloc(sizeof(Move) * (list1.nb + list2.nb));
-  for (int i = 0; i < list1.nb; i++) {
-    list[i] = list1.list[i];
-  }
-  for (int i = 0; i < list2.nb; i++) {
-    list[i + list1.nb] = list2.list[i];
-  }
-  List_of_move ret = {list, list1.nb + list2.nb};
-  free(list1.list);
-  free(list2.list);
-  return ret;
-}
-
-List_of_move pawn_possible_move(Board *board, int pos[2]) {
+void pawn_possible_move(Board *board, int pos[2], MoveList *list) {
   int offset[8][2] = {
       {0, 1},   {0, 2},
       {1, 1},   {1, -1}, // TODO: you can reduce the search knowing the color
       {0, -1},  {0, -2},
       {-1, -1}, {-1, 1}};
-  Move *result_move = (Move *)malloc(sizeof(Move) * 4);
-  int nb = 0;
   for (int i = 0; i < 8; i++) {
     int dest[2] = {pos[0] + offset[i][0], pos[1] + offset[i][1]};
+    if (dest[0] < 0 || dest[0] >= 8 || dest[1] < 0 || dest[1] >= 8) // TODO: why does check_pawn not check this?
+      continue;
     if (check_pawn(board, pos, dest)) {
-      Move move = {.piece = board_get(board, pos[0] + 8 * dest[0]),
+      Move move = {board_get(board, pos[0] + 8 * pos[1]),
                    {pos[0], pos[1]},
                    {dest[0], dest[1]},
                    board_get(board, dest[0] + 8 * dest[1]) != EMPTY};
-      result_move[nb] = move;
-      nb++;
+      add_move(list, move);
     }
   }
-  List_of_move list = {result_move, nb};
-  return list;
 }
 
-List_of_move queen_possible_move(Board *board, int pos[2]) {
-  return merge_list_of_move(rook_possible_move(board, pos),
-                            bishop_possible_move(board, pos));
+void queen_possible_move(Board *board, int pos[2], MoveList *list) {
+  rook_possible_move(board, pos, list);
+  bishop_possible_move(board, pos, list);
 }
 
-List_of_move any_possible_move(Board *board, int pos[2], int piece) {
+void king_possible_move(Board *board, int pos[2], MoveList *list) {
+  #ifdef MENACE
+  Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
+#else
+  Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
+             ~(board->color == WHITE ? board->white : board->black);
+#endif
+  while (valid) {
+    int dest_sq = __builtin_ctzll(valid);
+    int dest_x = dest_sq & 7;
+    int dest_y = dest_sq >> 3;
 
-  switch (piece & 0x0F0) {
-  case QUEEN:
-    return queen_possible_move(board, pos);
-  case ROOK:
-    return rook_possible_move(board, pos);
-  case BISHOP:
-    return bishop_possible_move(board, pos);
-  case KNIGHT:
-    return knight_possible_move(board, pos);
-  case PAWN:
-    return pawn_possible_move(board, pos);
+    Move move = {board_get(board, pos[0] + 8 * pos[1]),
+                 {pos[0], pos[1]},
+                 {dest_x, dest_y},
+                 board_get(board, dest_x + 8 * dest_y) != EMPTY};
+    add_move(list, move);
+
+    valid &= valid - 1;
   }
-  return (List_of_move){NULL, 0};
 }
 
-List_of_move possible_move(Board *board) {
-  List_of_move ret = {NULL, 0};
+void any_possible_move(Board *board, int pos[2], int piece, MoveList *list) {
+  switch (piece & 0x0F) {
+  case QUEEN:
+    queen_possible_move(board, pos, list);
+    break;
+  case ROOK:
+    rook_possible_move(board, pos, list);
+    break;
+  case BISHOP:
+    bishop_possible_move(board, pos, list);
+    break;
+  case KNIGHT:
+    knight_possible_move(board, pos, list);
+    break;
+  case PAWN:
+    pawn_possible_move(board, pos, list);
+    break;
+  case KING:
+    king_possible_move(board, pos, list);
+    break;
+  }
+}
+
+MoveList move_possible(Board *board) {
+  MoveList ret;
+  init_move_list(&ret);
   for (int i = 0; i < 64; i++) {
     int piece = board_get(board, i);
     if (piece != EMPTY && ((piece & 0xF0) == board->color)) {
-      int pos[2] = {i - i / 8, i / 8};
-      merge_list_of_move(ret, any_possible_move(board, pos, piece));
+      int pos[2] = {i % 8, i / 8};
+      any_possible_move(board, pos, piece, &ret);
     }
   }
   return ret;
