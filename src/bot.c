@@ -80,7 +80,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
     int res = move(new_board, list_moves.moves[i]);
     if (res) { // Move not allowed (could lead to discovered check...)
       board_free(new_board);
-      break;
+      continue;
     }
 
     int eval;
@@ -114,6 +114,6 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  return choose_with_depth(board, 7, -10000, 10000)
+  return choose_with_depth(board, 5, -10000, 10000)
       .mo; // currently arbitrary depth of 5
 }
