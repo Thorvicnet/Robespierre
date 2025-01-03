@@ -234,6 +234,7 @@ int move(Board *orig_board, Move move) {
   Board *board = board_copy(
       orig_board); // TODO: there HAS to be a better way but ATM it works
   if (!move_check_validity(board, move.orig, move.dest)) {
+    board_free(board);
     return -1;
   }
 
@@ -278,12 +279,13 @@ int move(Board *orig_board, Move move) {
   board->color ^= BLACK;
 
   threat_board_update(board);
-  if (threat_check(board))
+  if (threat_check(board)) {
+    board_free(board);
     return -1;
-
-  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing)
-  // depth)
+  }
+  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing depth)
   *orig_board = *board; // this is plain disgusting
+  board_free(board);
   return 0;
 }
 
@@ -307,7 +309,7 @@ void add_move(MoveList *list, Move move) {
   list->moves[list->count++] = move;
 }
 
-void free_move_list(MoveList *list) {
+void move_list_free(MoveList *list) {
   free(list->moves);
   list->moves = NULL;
   list->count = 0;
@@ -431,7 +433,7 @@ void any_possible_move(Board *board, int pos[2], int piece, MoveList *list) {
   }
 }
 
-MoveList possible_move(Board *board) {
+MoveList move_possible(Board *board) {
   MoveList ret;
   init_move_list(&ret);
   for (int i = 0; i < 64; i++) {

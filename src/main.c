@@ -25,23 +25,36 @@ int main(void) {
   Board *board = board_init();
   threat_board_update(board);
   char strmove[6];
+  int res;
   while (true) {
-    // Player turn
-    board_info(board);
-
-    test_print_moves(possible_move(board));
-
-    int res = -1;
-    while (res) {
-      scanf("%s", strmove);
-      res = move(board, algebric_to_move(strmove, board));
-    }
+    // // Player turn
+    // board_info(board);
+    //
+    // test_print_moves(possible_move(board));
+    //
+    // int res = -1;
+    // while (res) {
+    //   scanf("%s", strmove);
+    //   res = move(board, algebric_to_move(strmove, board));
+    // }
 
     // Bot turn
     board_info(board);
 
     wprintf(L"BOT\n");
     Move bot = choose(board);
+    wprintf(L"%s\n", move_to_algebric(bot));
+    res = move(board, bot);
+    if (res) {
+      wprintf(L"Bot fail, bot dumb\n");
+      break;
+    }
+
+    // Bot turn
+    board_info(board);
+
+    wprintf(L"BOT\n");
+    bot = choose(board);
     wprintf(L"%s\n", move_to_algebric(bot));
     res = move(board, bot);
     if (res) {

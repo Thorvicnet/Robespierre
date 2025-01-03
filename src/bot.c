@@ -1,4 +1,6 @@
 #include "bot.h"
+#include "board.h"
+#include "move.h"
 
 typedef struct {
   Move mo;
@@ -63,21 +65,21 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
                      // position - later
 
   MoveList list_moves =
-      possible_move(board);     // Should be a list of every valid move
+      move_possible(board);     // Should be a list of every valid move
   assert(list_moves.count > 0); // Checkmate, draw ... to be dealt with later
 
   int best_index = 0;
   int best_eval = board->color == WHITE ? -10000 : 10000;
-  Board *new_board;
 
   if (depth > 11) {
     wprintf(L"Depth: %d\n", depth);
   }
 
   for (int i = 0; i < list_moves.count; i++) {
-    new_board = board_copy(board);
+    Board *new_board = board_copy(board);
     int res = move(new_board, list_moves.moves[i]);
     if (res) { // Move not allowed (could lead to discovered check...)
+      board_free(new_board);
       break;
     }
 
@@ -86,6 +88,8 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
       eval = evaluate(new_board);
     else
       eval = choose_with_depth(new_board, depth - 1, alpha, beta).value;
+
+    board_free(new_board);
 
     if ((board->color == WHITE && eval > best_eval) ||
         (board->color == BLACK && eval < best_eval)) {
@@ -101,8 +105,9 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
       break;
   }
 
-  board_free(new_board);
-  return (Vmove){list_moves.moves[best_index], best_eval};
+  Move best_move = list_moves.moves[best_index];
+  move_list_free(&list_moves);
+  return (Vmove){best_move, best_eval};
 }
 
 Move choose(Board *board) {

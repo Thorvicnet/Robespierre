@@ -11,6 +11,7 @@
 
 bool move_check_validity(Board *board, int orig[2], int dest[2]);
 int move(Board *board, Move move);
-MoveList possible_move(Board *board);
+MoveList move_possible(Board *board);
+void move_list_free(MoveList *list);
 
 #endif // MOVE_H
