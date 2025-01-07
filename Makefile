@@ -2,7 +2,7 @@
 CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c
 PROG := main
 DEBUG_PROG := main
-CFLAGS := -Wall -Wextra -pedantic
+CFLAGS := -Wall -Wextra -pedantic -O2
 LDFLAGS :=
 
 SRC_DIR := src

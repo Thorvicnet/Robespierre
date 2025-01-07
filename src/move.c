@@ -283,7 +283,8 @@ int move(Board *orig_board, Move move) {
     board_free(board);
     return -1;
   }
-  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing depth)
+  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing
+  // depth)
   *orig_board = *board; // this is plain disgusting
   board_free(board);
   return 0;
@@ -293,7 +294,7 @@ int move(Board *orig_board, Move move) {
 
 void init_move_list(MoveList *list) {
   list->count = 0;
-  list->capacity = 16;
+  list->capacity = 20;
   list->moves = (Move *)malloc(sizeof(Move) * list->capacity);
   if (list->moves == NULL) {
     wprintf(L"Your memory is doomed...\n");
@@ -398,7 +399,8 @@ void pawn_possible_move(Board *board, int pos[2], MoveList *list) {
       {-1, -1}, {-1, 1}};
   for (int i = 0; i < 8; i++) {
     int dest[2] = {pos[0] + offset[i][0], pos[1] + offset[i][1]};
-    if (dest[0] < 0 || dest[0] >= 8 || dest[1] < 0 || dest[1] >= 8) // TODO: why does check_pawn not check this?
+    if (dest[0] < 0 || dest[0] >= 8 || dest[1] < 0 ||
+        dest[1] >= 8) // TODO: why does check_pawn not check this?
       continue;
     if (check_pawn(board, pos, dest)) {
       Move move = {board_get(board, pos[0] + 8 * pos[1]),
@@ -416,7 +418,7 @@ void queen_possible_move(Board *board, int pos[2], MoveList *list) {
 }
 
 void king_possible_move(Board *board, int pos[2], MoveList *list) {
-  #ifdef MENACE
+#ifdef MENACE
   Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
              ~(board->color == WHITE ? board->white & ~board->black_threat
                                      : board->black & ~board->white_threat);
