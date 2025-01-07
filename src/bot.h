@@ -4,7 +4,6 @@
 #include "board.h"
 #include "move.h"
 #include "types.h"
-#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>

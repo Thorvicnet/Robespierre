@@ -224,8 +224,6 @@ void threat_board_update(Board *board) {
   }
   board->white_threat |= KING_MASKS[__builtin_ctzll(bb)];
 
-  board->white_threat &= board->black;
-
   // Black threat
   board->black_threat = 0ULL;
   bb = board->black_pawns;
@@ -264,7 +262,6 @@ void threat_board_update(Board *board) {
     wprintf(L"No king, strange...\n");
   }
   board->black_threat |= KING_MASKS[__builtin_ctzll(bb)];
-  board->black_threat &= board->white;
 }
 
 bool threat_transitive_check(Board *board, int color) {

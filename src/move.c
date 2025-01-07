@@ -1,4 +1,5 @@
 #include "move.h"
+#include <wchar.h>
 
 // Each piece checks whether the destination is allowed and whether it has moved
 // correctly
@@ -6,8 +7,8 @@
 bool check_knight(Board *board, int orig[2], int dest[2]) {
 #ifdef MENACE
   return IS_BIT_SET(~(board->color == WHITE
-                          ? board->white & ~(board->black_threat)
-                          : board->black & ~(board->white_threat)),
+                          ? board->white & ~board->black_threat
+                          : board->black & ~board->white_threat),
                     dest[0] + dest[1] * 8) &&
          ((abs(orig[0] - dest[0]) == 2 && abs(orig[1] - dest[1]) == 1) ||
           (abs(orig[0] - dest[0]) == 1 && abs(orig[1] - dest[1]) == 2));
@@ -23,8 +24,8 @@ bool check_knight(Board *board, int orig[2], int dest[2]) {
 bool check_rook(Board *board, int orig[2], int dest[2]) {
 #ifdef MENACE
   Bb valid = bb_rook_attacks(board->all, orig[0] + orig[1] * 8) &
-             ~(board->color == WHITE ? board->white & ~(board->black_threat)
-                                     : board->black & ~(board->white_threat));
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
 #else
   Bb valid = bb_rook_attacks(board->all, orig[0] + orig[1] * 8) &
              ~(board->color == WHITE ? board->white : board->black);
@@ -36,8 +37,8 @@ bool check_rook(Board *board, int orig[2], int dest[2]) {
 bool check_bishop(Board *board, int orig[2], int dest[2]) {
 #ifdef MENACE
   Bb valid = bb_bishop_attacks(board->all, orig[0] + orig[1] * 8) &
-             ~(board->color == WHITE ? board->white & ~(board->black_threat)
-                                     : board->black & ~(board->white_threat));
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
 #else
   Bb valid = bb_bishop_attacks(board->all, orig[0] + orig[1] * 8) &
              ~(board->color == WHITE ? board->white : board->black);
@@ -104,8 +105,8 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
   if (abs(file_diff) == 1 && rank_diff == direction) {
     // normal
 #ifdef MENACE
-    if (IS_BIT_SET(board->color == WHITE ? board->black | board->black_threat
-                                         : board->white | board->white_threat,
+    if (IS_BIT_SET(board->color == WHITE ? board->black | (board->black_threat & board->white)
+                                         : board->white | (board->white_threat & board->black),
                    dest_pos)) {
       return true;
     }
@@ -202,8 +203,8 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   int piece = board_get(board, orig[0] + orig[1] * 8);
 #ifdef MENACE
   // You can play if you threaten or possess the piece
-  if (!IS_BIT_SET(board->color == WHITE ? board->white | board->white_threat
-                                        : board->black | board->black_threat,
+  if (!IS_BIT_SET(board->color == WHITE ? board->white | (board->white_threat & board->black)
+                                        : board->black | (board->black_threat & board->white),
                   orig[0] + orig[1] * 8)) {
     return false;
   }
@@ -336,6 +337,7 @@ void knight_possible_move(Board *board, int pos[2], MoveList *list) {
                  {pos[0], pos[1]},
                  {dest_x, dest_y},
                  board_get(board, dest_x + 8 * dest_y) != EMPTY};
+    add_move(list, move);
 
     valid &= valid - 1;
   }
@@ -469,10 +471,24 @@ MoveList move_possible(Board *board) {
   init_move_list(&ret);
   for (int i = 0; i < 64; i++) {
     int piece = board_get(board, i);
-    if (piece != EMPTY && ((piece & 0xF0) == board->color)) {
+#ifdef MENACE
+    if (IS_BIT_SET(board->color == WHITE
+                       ? board->white | (board->white_threat & board->black)
+                       : board->black | (board->black_threat & board->white),
+                   i)) {
       int pos[2] = {i % 8, i / 8};
       any_possible_move(board, pos, piece, &ret);
     }
+#else
+    if (IS_BIT_SET(board->color == WHITE ? board->white : board->black, i)) {
+      int pos[2] = {i % 8, i / 8};
+      any_possible_move(board, pos, piece, &ret);
+      if (piece != EMPTY && ((piece & 0xF0) == board->color)) {
+        int pos[2] = {i % 8, i / 8};
+        any_possible_move(board, pos, piece, &ret);
+      }
+    }
+#endif
   }
   return ret;
 }

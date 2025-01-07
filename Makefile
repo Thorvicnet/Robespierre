@@ -13,8 +13,8 @@ TEST_FILE := tests.c
 ########################
 
 # -MMD generates dependencies while compiling, add pg for profiling
-CFLAGS += -MMD#-DMENACE
-CC := gcc
+CFLAGS += -MMD -DMENACE
+CC := clang
 
 # Add paths after defining the variables
 OBJFILES := $(patsubst %.c, $(OBJ_DIR)/%.o, $(CFILES))
