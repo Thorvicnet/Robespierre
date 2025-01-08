@@ -235,7 +235,7 @@ void board_print(Board *board) {
     for (int col = 0; col < 8; col++) {
       wchar_t pchar = piece_chars[board->squares[col + 8 * li]];
       if ((li + col) % 2 == 0) {
-        wprintf(L"\033[48;5;230m %lc \033[0m", pchar);
+        wprintf(L"\033[48;5;46m %lc \033[0m", pchar);
       } else {
         wprintf(L"\033[48;5;94m %lc \033[0m", pchar);
       }

@@ -46,31 +46,31 @@ int main(void) {
       break;
     }
 
-    // Bot turn
-    wprintf(L"BOT BLACK\n");
-    board_info(board);
-
-    test_print_moves(move_possible(board));
-
-    bot = choose(board);
-
-    mv = move_to_algebric(bot);
-    wprintf(L"%s\n", mv);
-    free(mv);
-
-    res = move(board, bot);
-    if (res) {
-      wprintf(L"Bot fail, bot dumb\n");
-      break;
-    }
-    // // Player turn
+    // // Bot turn
+    // wprintf(L"BOT BLACK\n");
     // board_info(board);
     //
-    // int res = -1;
-    // while (res) {
-    //   scanf("%s", strmove);
-    //   res = move(board, algebric_to_move(strmove, board));
+    // test_print_moves(move_possible(board));
+    //
+    // bot = choose(board);
+    //
+    // mv = move_to_algebric(bot);
+    // wprintf(L"%s\n", mv);
+    // free(mv);
+    //
+    // res = move(board, bot);
+    // if (res) {
+    //   wprintf(L"Bot fail, bot dumb\n");
+    //   break;
     // }
+    // Player turn
+    board_info(board);
+
+    int res = -1;
+    while (res) {
+      scanf("%s", strmove);
+      res = move(board, algebric_to_move(strmove, board));
+    }
   }
 
   free(board->history->list_of_move);

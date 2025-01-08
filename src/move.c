@@ -105,8 +105,9 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
   if (abs(file_diff) == 1 && rank_diff == direction) {
     // normal
 #ifdef MENACE
-    if (IS_BIT_SET(board->color == WHITE ? board->black | (board->black_threat & board->white)
-                                         : board->white | (board->white_threat & board->black),
+    if (IS_BIT_SET(board->color == WHITE
+                       ? board->black | (board->black_threat & board->white)
+                       : board->white | (board->white_threat & board->black),
                    dest_pos)) {
       return true;
     }
@@ -203,8 +204,9 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
   int piece = board_get(board, orig[0] + orig[1] * 8);
 #ifdef MENACE
   // You can play if you threaten or possess the piece
-  if (!IS_BIT_SET(board->color == WHITE ? board->white | (board->white_threat & board->black)
-                                        : board->black | (board->black_threat & board->white),
+  if (!IS_BIT_SET(board->color == WHITE
+                      ? board->white | (board->white_threat & board->black)
+                      : board->black | (board->black_threat & board->white),
                   orig[0] + orig[1] * 8)) {
     return false;
   }
@@ -483,10 +485,6 @@ MoveList move_possible(Board *board) {
     if (IS_BIT_SET(board->color == WHITE ? board->white : board->black, i)) {
       int pos[2] = {i % 8, i / 8};
       any_possible_move(board, pos, piece, &ret);
-      if (piece != EMPTY && ((piece & 0xF0) == board->color)) {
-        int pos[2] = {i % 8, i / 8};
-        any_possible_move(board, pos, piece, &ret);
-      }
     }
 #endif
   }

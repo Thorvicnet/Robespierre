@@ -1,6 +1,5 @@
 #include "bot.h"
-#include "board.h"
-#include "move.h"
+#include <math.h>
 
 typedef struct {
   Move mo;
@@ -89,6 +88,12 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
         (board->color == BLACK && eval < best_eval)) {
       best_index = i;
       best_eval = eval;
+      if (abs(best_eval) > 5000) {
+        best_eval += board->color == WHITE ? depth : -depth;
+        Move best_move = list_moves.moves[best_index];
+        move_list_free(&list_moves);
+        return (Vmove){best_move, best_eval};
+      }
     }
 
     if (board->color == WHITE)
@@ -108,7 +113,20 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  Vmove t = choose_with_depth(board, 1, -10000, 10000);
+  int sliding_movement = 12;
+  int movement_potential =
+      __builtin_popcountll(board->black_queens | board->white_queens) *
+          sliding_movement * 2 +
+      __builtin_popcountll(board->black_rooks | board->black_bishops |
+                           board->white_rooks | board->white_bishops) *
+          sliding_movement +
+      __builtin_popcountll(board->black_pawns | board->white_pawns) +
+      __builtin_popcountll(board->white_knights | board->black_knights) * 5 + 8;
+
+  int depth = floor(45.4 / log2((double)movement_potential));
+
+  wprintf(L"- depth: %d\n", depth);
+  Vmove t = choose_with_depth(board, depth, -10000, 10000);
 
   wprintf(L"- eval: %d\n", t.value);
 
