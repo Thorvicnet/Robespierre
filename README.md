@@ -27,7 +27,7 @@ If the functions just takes a pos then pos = col + line * 8 (to get the correct 
 - [ ] draw (long)
 - [x] still incorrect castle
 - [ ] UCI (ça passe)
-- [ ] Search gestion
+- [ ] Search management
   - [x] Minimax
   - [x] Alpha-beta
   - [ ] Iterative deepening

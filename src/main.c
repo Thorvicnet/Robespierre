@@ -5,6 +5,7 @@
 #include "threat.h"
 #include "types.h"
 #include "uci.h"
+#include "tree.h"
 #include <locale.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -25,57 +26,82 @@ int main(void) {
 
   Board *board = board_init();
   threat_board_update(board);
+  MoveTree* tree = create_tree(board);
   char strmove[6];
   int res;
   while (true) {
     // Bot turn
-    wprintf(L"BOT WHITE\n");
-    board_info(board);
+    if (1 == 1){
+      wprintf(L"BOT WHITE\n");
+      board_info(board);
 
-    test_print_moves(move_possible(board));
+      test_print_moves(move_possible(board));
+      
+      //Move bot = choose(board);
+      Move bot = choose2(tree);
 
-    Move bot = choose(board);
+      char *mv = move_to_algebric(bot);
+      wprintf(L"%s\n", mv);
+      free(mv);
 
-    char *mv = move_to_algebric(bot);
-    wprintf(L"%s\n", mv);
-    free(mv);
+      res = move(board, bot);
+      if (res) {
+        wprintf(L"Bot fail, bot dumb\n");
+        break;
+      }
 
-    res = move(board, bot);
-    if (res) {
-      wprintf(L"Bot fail, bot dumb\n");
-      break;
+      tree = partially_free_tree(tree);
     }
+    
 
     // Bot turn
-    wprintf(L"BOT BLACK\n");
-    board_info(board);
+    if (0 == 1){
+      wprintf(L"BOT BLACK\n");
+      board_info(board);
 
-    test_print_moves(move_possible(board));
+      test_print_moves(move_possible(board));
 
-    bot = choose(board);
+      //Move bot = choose(board);
+      Move bot = choose2(tree);
 
-    mv = move_to_algebric(bot);
-    wprintf(L"%s\n", mv);
-    free(mv);
+      char *mv = move_to_algebric(bot);
+      wprintf(L"%s\n", mv);
+      free(mv);
 
-    res = move(board, bot);
-    if (res) {
-      wprintf(L"Bot fail, bot dumb\n");
-      break;
+      res = move(board, bot);
+      if (res) {
+        wprintf(L"Bot fail, bot dumb\n");
+        break;
+      }
+
+      tree = partially_free_tree(tree);
     }
-    // // Player turn
-    // board_info(board);
-    //
-    // int res = -1;
-    // while (res) {
-    //   scanf("%s", strmove);
-    //   res = move(board, algebric_to_move(strmove, board));
-    // }
+    
+    // Player turn
+    if (1 == 1){
+      board_info(board);
+      int res = -1;
+      Move m;
+      while (res) {
+        scanf("%s", strmove);
+        m = algebric_to_move(strmove, board);
+        if (move_check_validity(board, m.orig, m.dest)) {
+          res = move(board, m);
+        }
+      }
+      wprintf(L"test0\n");
+      int k = search_move_in_tree(tree, m);
+      wprintf(L"%s\n", move_to_algebric(tree->moves->moves[k]));
+      board_info(tree -> children[k] -> board);
+      tree_swap(tree, k);
+      tree = partially_free_tree(tree);
+    }
   }
 
   free(board->history->list_of_move);
   free(board->history);
   board_free(board);
+  free_tree(tree);
 
   return EXIT_SUCCESS;
 }

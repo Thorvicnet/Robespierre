@@ -1,6 +1,4 @@
 #include "bot.h"
-#include "board.h"
-#include "move.h"
 
 typedef struct {
   Move mo;
@@ -89,6 +87,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
         (board->color == BLACK && eval < best_eval)) {
       best_index = i;
       best_eval = eval;
+      if (abs(eval) >= 4000) best_eval = board->color == WHITE ? eval-1:eval+1;
     }
 
     if (board->color == WHITE)
@@ -98,19 +97,64 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
     if (beta <= alpha)
       break;
   }
-
+  if (best_eval > 5000) best_eval -= 5000;
   Move best_move = list_moves.moves[best_index];
   move_list_free(&list_moves);
   return (Vmove){best_move, best_eval};
+}
+
+int choose_with_trees(MoveTree *tree, int depth, int alpha, int beta) {
+  // Returns the best evaluation of the position, modifies tree while doing so
+  // pruning Currently checks if the move is possible even though we know it is
+  // - kinda beta is greater than alpha (or else the branch is pruned)
+  // Work in progress to implement trees
+
+  if (depth == 0){
+    //Checks here if it is checkmate/draw (for later)
+    return evaluate(tree -> board);
+  }
+  if (!tree -> children_filled) create_tree_children(tree);
+
+  int best_index = 0;
+  int best_eval = tree->board->color == WHITE ? -10000 : 10000;
+
+  for (int i = 0; i < tree -> moves -> count; i++) {
+    int eval = choose_with_trees(tree -> children[i], depth - 1, alpha, beta);
+
+    if ((tree->board->color == WHITE && eval > best_eval) ||
+        (tree->board->color == BLACK && eval < best_eval)) {
+      best_index = i;
+      best_eval = eval;
+      //if (abs(eval) >= 4000) best_eval = board->color == WHITE ? eval-1:eval+1;
+    }
+
+    if (tree->board->color == WHITE)
+      alpha = alpha > eval ? alpha : eval;
+    else
+      beta = beta < eval ? beta : eval;
+    if (beta <= alpha)
+      break;
+  }
+
+  tree_swap(tree, best_index);
+  return best_eval;
 }
 
 Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  Vmove t = choose_with_depth(board, 1, -10000, 10000);
+  Vmove t = choose_with_depth(board, 4, -10000, 10000);
 
   wprintf(L"- eval: %d\n", t.value);
 
   return t.mo; // currently arbitrary depth of 5
+}
+
+Move choose2(MoveTree *tree){
+  //Chooses the best move according to the evaluation
+  //Used to replace choose with garden management
+  int eval = choose_with_trees(tree, 5, -10000, 10000); //Depth should not be too big at the beginning
+  wprintf(L"- eval: %d\n", eval);
+  return tree -> moves -> moves[0];
 }

@@ -1,5 +1,5 @@
 #########################
-CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c
+CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c tree.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic -O2
@@ -13,7 +13,7 @@ TEST_FILE := tests.c
 ########################
 
 # -MMD generates dependencies while compiling, add pg for profiling
-CFLAGS += -MMD -DMENACE
+CFLAGS += -MMD #-DMENACE
 CC := clang
 
 # Add paths after defining the variables

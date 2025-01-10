@@ -234,10 +234,6 @@ bool move_check_validity(Board *board, int orig[2], int dest[2]) {
 int move(Board *orig_board, Move move) {
   Board *board = board_copy(
       orig_board); // TODO: there HAS to be a better way but ATM it works
-  if (!move_check_validity(board, move.orig, move.dest)) {
-    board_free(board);
-    return -1;
-  }
 
   int orig_pos = move.orig[0] + move.orig[1] * 8;
   int dest_pos = move.dest[0] + move.dest[1] * 8;
@@ -481,8 +477,8 @@ MoveList move_possible(Board *board) {
     }
 #else
     if (IS_BIT_SET(board->color == WHITE ? board->white : board->black, i)) {
-      int pos[2] = {i % 8, i / 8};
-      any_possible_move(board, pos, piece, &ret);
+      //int pos[2] = {i % 8, i / 8};
+      //any_possible_move(board, pos, piece, &ret);
       if (piece != EMPTY && ((piece & 0xF0) == board->color)) {
         int pos[2] = {i % 8, i / 8};
         any_possible_move(board, pos, piece, &ret);
