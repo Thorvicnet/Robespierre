@@ -1,5 +1,4 @@
 #include "move.h"
-#include <wchar.h>
 
 // Each piece checks whether the destination is allowed and whether it has moved
 // correctly
@@ -186,10 +185,10 @@ bool check_king(Board *board, int orig[2], int dest[2]) {
     if (board->all & path)
       return false;
 
-    Bb threats = threat_board_squares(board, !board->color);
     Bb king_squares = (1ULL << orig_sq) | path;
 
-    if (threats & king_squares)
+    if ((board->color == WHITE ? board->black_threat : board->white_threat) &
+        king_squares)
       return false;
     return true;
   }
@@ -324,8 +323,10 @@ void knight_possible_move(Board *board, int pos[2], MoveList *list) {
   Bb valid;
 #ifdef MENACE
   valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
-          ~(board->color == WHITE ? board->white & ~board->black_threat
-                                  : board->black & ~board->white_threat);
+          (board->color == WHITE
+               ? ~board->white | (board->black_threat & ~board->white_kings)
+               : ~board->black | (board->white_threat & ~board->black_kings));
+  bb_print(valid);
 #else
   valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
           ~(board->color == WHITE ? board->white : board->black);
@@ -349,8 +350,9 @@ void rook_possible_move(Board *board, int pos[2], MoveList *list) {
   Bb valid;
 #ifdef MENACE
   valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
-          ~(board->color == WHITE ? board->white & ~board->black_threat
-                                  : board->black & ~board->white_threat);
+          (board->color == WHITE
+               ? ~board->white | (board->black_threat & ~board->white_kings)
+               : ~board->black | (board->white_threat & ~board->black_kings));
 #else
   valid = bb_rook_attacks(board->all, pos[0] + pos[1] * 8) &
           ~(board->color == WHITE ? board->white : board->black);
@@ -374,8 +376,9 @@ void bishop_possible_move(Board *board, int pos[2], MoveList *list) {
   Bb valid;
 #ifdef MENACE
   valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
-          ~(board->color == WHITE ? board->white & ~board->black_threat
-                                  : board->black & ~board->white_threat);
+          (board->color == WHITE
+               ? ~board->white | (board->black_threat & ~board->white_kings)
+               : ~board->black | (board->white_threat & ~board->black_kings));
 #else
   valid = bb_bishop_attacks(board->all, pos[0] + pos[1] * 8) &
           ~(board->color == WHITE ? board->white : board->black);
@@ -424,8 +427,8 @@ void queen_possible_move(Board *board, int pos[2], MoveList *list) {
 void king_possible_move(Board *board, int pos[2], MoveList *list) {
 #ifdef MENACE
   Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
-             ~(board->color == WHITE ? board->white & ~board->black_threat
-                                     : board->black & ~board->white_threat);
+             (board->color == WHITE ? ~board->white | board->black_threat
+                                    : ~board->black | board->white_threat);
 #else
   Bb valid = KING_MASKS[pos[0] + pos[1] * 8] &
              ~(board->color == WHITE ? board->white : board->black);
