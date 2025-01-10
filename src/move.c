@@ -105,8 +105,10 @@ bool check_pawn(Board *board, int orig[2], int dest[2]) {
     // normal
 #ifdef MENACE
     if (IS_BIT_SET(board->color == WHITE
-                       ? board->black | (board->black_threat & board->white)
-                       : board->white | (board->white_threat & board->black),
+                       ? board->black | (board->black_threat & board->white &
+                                         ~board->white_kings)
+                       : board->white | (board->white_threat & board->black &
+                                         ~board->black_kings),
                    dest_pos)) {
       return true;
     }
@@ -326,7 +328,6 @@ void knight_possible_move(Board *board, int pos[2], MoveList *list) {
           (board->color == WHITE
                ? ~board->white | (board->black_threat & ~board->white_kings)
                : ~board->black | (board->white_threat & ~board->black_kings));
-  bb_print(valid);
 #else
   valid = KNIGHT_MASKS[pos[0] + pos[1] * 8] &
           ~(board->color == WHITE ? board->white : board->black);

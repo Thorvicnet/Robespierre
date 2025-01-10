@@ -35,11 +35,6 @@ void threat_board_update(Board *board) {
     bb &= (bb - 1);
   }
   bb = board->white_kings; // I assume there is only one king (pretty safe)
-  if (!bb) {
-    wprintf(L"No king, strange...\n");
-    board_info(board);
-    board_bb_info(board);
-  }
   board->white_threat |= KING_MASKS[__builtin_ctzll(bb)];
 
   // Black threat
@@ -76,10 +71,6 @@ void threat_board_update(Board *board) {
     bb &= (bb - 1);
   }
   bb = board->black_kings; // I assume there is only one king (pretty safe)
-  if (!bb) {
-    wprintf(L"No king, strange...\n");
-    board_info(board);
-  }
   board->black_threat |= KING_MASKS[__builtin_ctzll(bb)];
 }
 
@@ -112,7 +103,7 @@ bool threat_transitive_check(Board *board, int color) {
     bb = board->white_knights & board->black_threat;
     while (bb) {
       int sq = __builtin_ctzll(bb);
-      if (!(KNIGHT_MASKS[sq] & board->white_kings))
+      if (KNIGHT_MASKS[sq] & board->white_kings)
         return true;
       bb &= (bb - 1);
     }
@@ -172,9 +163,9 @@ bool threat_check(Board *board) {
   // Returns true if the king of the previous player is threatened (which is
   // illegal)
 #ifdef MENACE
-  return (board->color == WHITE ? (board->black_kings & board->white_threat) |
+  return (board->color == WHITE ? (board->black_kings & board->white_threat) ||
                                       threat_transitive_check(board, BLACK)
-                                : (board->white_kings & board->black_threat) |
+                                : (board->white_kings & board->black_threat) ||
                                       threat_transitive_check(board, WHITE));
 #else
   return (board->color == WHITE ? board->black_kings & board->white_threat

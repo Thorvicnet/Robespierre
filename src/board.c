@@ -228,7 +228,7 @@ void board_add_move(Board *board, Move move) {
 }
 
 void board_print(Board *board) {
-  // Prints the board to stdout using chess using chars from U+2654 to U+265F
+  // Prints the board to stdout using chess chars from U+2654 to U+265F
   for (int li = 0; li < 8; li++) {
     for (int col = 0; col < 8; col++) {
       int piece = board->squares[col + 8 * li];
