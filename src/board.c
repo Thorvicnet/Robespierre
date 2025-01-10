@@ -2,11 +2,9 @@
 
 const wchar_t piece_chars[] = {
     // Comment: the chars are too "big" for a normal char type
-    [EMPTY] = L' ',        [WHITE_PAWN] = L'♟', [WHITE_KNIGHT] = L'♞',
-    [WHITE_BISHOP] = L'♝', [WHITE_ROOK] = L'♜', [WHITE_QUEEN] = L'♛',
-    [WHITE_KING] = L'♚',   [BLACK_PAWN] = L'♙', [BLACK_KNIGHT] = L'♘',
-    [BLACK_BISHOP] = L'♗', [BLACK_ROOK] = L'♖', [BLACK_QUEEN] = L'♕',
-    [BLACK_KING] = L'♔',
+    [EMPTY] = L' ',        [PAWN] = L'♟', [KNIGHT] = L'♞',
+    [BISHOP] = L'♝', [ROOK] = L'♜', [QUEEN] = L'♛',
+    [KING] = L'♚'
 };
 
 Board *board_init(void) {
@@ -233,11 +231,19 @@ void board_print(Board *board) {
   // Prints the board to stdout using chess using chars from U+2654 to U+265F
   for (int li = 0; li < 8; li++) {
     for (int col = 0; col < 8; col++) {
-      wchar_t pchar = piece_chars[board->squares[col + 8 * li]];
+      int piece = board->squares[col + 8 * li];
+      wchar_t pchar = piece_chars[PIECE(piece)];
       if ((li + col) % 2 == 0) {
-        wprintf(L"\033[48;5;46m %lc \033[0m", pchar);
+        wprintf(L"\033[48;5;94m");
       } else {
-        wprintf(L"\033[48;5;94m %lc \033[0m", pchar);
+        wprintf(L"\033[48;5;250m");
+      }
+      if (piece == EMPTY) {
+        wprintf(L"   \033[0m");
+      } else if (COLOR(piece) == WHITE) {
+        wprintf(L"\033[97m %lc \033[0m", pchar);
+      } else {
+        wprintf(L"\033[30m %lc \033[0m", pchar);
       }
     }
     wprintf(L"\n");
