@@ -2,10 +2,8 @@
 
 const wchar_t piece_chars[] = {
     // Comment: the chars are too "big" for a normal char type
-    [EMPTY] = L' ',        [PAWN] = L'♟', [KNIGHT] = L'♞',
-    [BISHOP] = L'♝', [ROOK] = L'♜', [QUEEN] = L'♛',
-    [KING] = L'♚'
-};
+    [EMPTY] = L' ', [PAWN] = L'♟',  [KNIGHT] = L'♞', [BISHOP] = L'♝',
+    [ROOK] = L'♜',  [QUEEN] = L'♛', [KING] = L'♚'};
 
 Board *board_init(void) {
   // Returns a board in the default position
@@ -18,6 +16,8 @@ Board *board_init(void) {
   board->color = WHITE;
   board->history = stack_create();
   int *tab = board->squares;
+
+  board->castle = 0;
 
   for (int i = 0; i < 8; i++) {
     tab[i + 8] = WHITE_PAWN;
@@ -60,6 +60,7 @@ void board_empty(Board *board) {
   }
   board->color = WHITE;
   board->history->last_move = 0;
+  board->castle = 0;
   bb_board_empty(board);
 }
 
@@ -138,6 +139,8 @@ Board *board_copy(Board *board) {
   new_board->white_threat = board->white_threat;
   new_board->black_threat = board->black_threat;
   new_board->history = board->history;
+
+  new_board->castle = board->castle;
 
   return new_board;
 }
@@ -234,9 +237,9 @@ void board_print(Board *board) {
       int piece = board->squares[col + 8 * li];
       wchar_t pchar = piece_chars[PIECE(piece)];
       if ((li + col) % 2 == 0) {
-        wprintf(L"\033[48;5;94m");
-      } else {
         wprintf(L"\033[48;5;250m");
+      } else {
+        wprintf(L"\033[48;5;94m");
       }
       if (piece == EMPTY) {
         wprintf(L"   \033[0m");

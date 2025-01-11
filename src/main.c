@@ -61,7 +61,6 @@ int command(char *strmove, Board **board) {
 }
 
 int bot_turn(Board *board) {
-  board_info(board);
   Move bot = choose(board);
 
   char *mv = move_to_algebric(bot);
@@ -91,7 +90,6 @@ int main(void) {
           break;
       }
       if (res == 2) {
-        board_info(board);
         continue;
       }
     } else {
@@ -118,7 +116,6 @@ int main(void) {
           break;
       }
       if (res == 2) {
-
         continue;
       }
     } else {

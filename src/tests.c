@@ -201,13 +201,13 @@ void test_move_promotion(void) {
   board_empty(board);
 
   board_set(board, 3 + 6 * 8, WHITE_PAWN);
-  Move move_data = {WHITE_PAWN, 3 + 6 * 8, 3 + 7 * 8};
+  Move move_data = {WHITE_PAWN, 3 + 6 * 8, 3 + 7 * 8, WHITE_QUEEN};
   move(board, move_data);
   assert(board_get(board, 3 + 7 * 8) == WHITE_QUEEN);
 
   board->color = BLACK;
   board_set(board, 4 + 1 * 8, BLACK_PAWN);
-  move_data = (Move){BLACK_PAWN, 4 + 1 * 8, 4 + 0 * 8};
+  move_data = (Move){BLACK_PAWN, 4 + 1 * 8, 4 + 0 * 8, BLACK_QUEEN};
   move(board, move_data);
   assert(board_get(board, 4 + 0 * 8) == BLACK_QUEEN);
 }
