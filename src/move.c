@@ -9,13 +9,17 @@ bool check_knight(Board *board, int orig, int dest) {
                           ? board->white & ~(board->black_threat)
                           : board->black & ~(board->white_threat)),
                     dest) &&
-         ((abs((orig & 7) - (dest & 7)) == 2 && abs((orig >> 3) - (dest >> 3)) == 1) ||
-          (abs((orig & 7) - (dest & 7)) == 1 && abs((orig >> 3) - (dest >> 3)) == 2));
+         ((abs((orig & 7) - (dest & 7)) == 2 &&
+           abs((orig >> 3) - (dest >> 3)) == 1) ||
+          (abs((orig & 7) - (dest & 7)) == 1 &&
+           abs((orig >> 3) - (dest >> 3)) == 2));
 #else
   return IS_BIT_SET(~(board->color == WHITE ? board->white : board->black),
                     dest) &&
-         ((abs((orig & 7) - (dest & 7)) == 2 && abs((orig >> 3) - (dest >> 3)) == 1) ||
-          (abs((orig & 7) - (dest & 7)) == 1 && abs((orig >> 3) - (dest >> 3)) == 2));
+         ((abs((orig & 7) - (dest & 7)) == 2 &&
+           abs((orig >> 3) - (dest >> 3)) == 1) ||
+          (abs((orig & 7) - (dest & 7)) == 1 &&
+           abs((orig >> 3) - (dest >> 3)) == 2));
 #endif
 }
 
@@ -139,8 +143,7 @@ bool rook_moved(Board *board, int color, int orig) {
   for (int i = 0; i < board->history->last_move; i++) {
     Move move = board->history->list_of_move[i];
     int piece = move.piece;
-    if (PIECE(piece) == ROOK && COLOR(piece) == color &&
-        move.from == orig) {
+    if (PIECE(piece) == ROOK && COLOR(piece) == color && move.from == orig) {
       return true;
     }
   }
@@ -175,8 +178,7 @@ bool check_king(Board *board, int orig, int dest) {
     if (kingside) {
       path = (1ULL << (orig - 1)) | (1ULL << (orig - 2));
     } else {
-      path = (1ULL << (orig + 1)) | (1ULL << (orig + 2)) |
-             (1ULL << (orig + 3));
+      path = (1ULL << (orig + 1)) | (1ULL << (orig + 2)) | (1ULL << (orig + 3));
     }
     if (board->all & path)
       return false;
@@ -245,7 +247,8 @@ int move(Board *orig_board, Move move) {
       (orig_pos & 7) != (dest_pos & 7)) {
     int captured_rank = orig_pos >> 3;
     board_set(board, (dest_pos & 7) + captured_rank * 8, EMPTY);
-  } else if (PIECE(piece) == KING && abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
+  } else if (PIECE(piece) == KING &&
+             abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
     int rook_orig, rook_dest;
     if ((dest_pos & 7) == 5) { // Queen-side castling
       rook_orig = 7 + (orig_pos >> 3) * 8;
@@ -254,8 +257,7 @@ int move(Board *orig_board, Move move) {
       rook_orig = 0 + (orig_pos >> 3) * 8;
       rook_dest = 2 + (orig_pos >> 3) * 8;
     }
-    board_set(board, rook_dest,
-              board_get(board, rook_orig));
+    board_set(board, rook_dest, board_get(board, rook_orig));
     board_set(board, rook_orig, EMPTY);
   }
   board_set(board, dest_pos, piece);
@@ -325,10 +327,7 @@ void knight_possible_move(Board *board, int pos, MoveList *list) {
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
+    Move move = {board_get(board, pos), pos, dest_sq};
 
     add_move(list, move);
     valid &= valid - 1;
@@ -349,10 +348,7 @@ void rook_possible_move(Board *board, int pos, MoveList *list) {
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
+    Move move = {board_get(board, pos), pos, dest_sq};
     add_move(list, move);
 
     valid &= valid - 1;
@@ -373,10 +369,7 @@ void bishop_possible_move(Board *board, int pos, MoveList *list) {
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
+    Move move = {board_get(board, pos), pos, dest_sq};
     add_move(list, move);
 
     valid &= valid - 1;
@@ -390,10 +383,7 @@ void pawn_possible_move(Board *board, int pos, MoveList *list) {
     if (dest < 0 || dest >= 64) // TODO: why does check_pawn not check this?
       continue;
     if (check_pawn(board, pos, dest)) {
-      Move move = {board_get(board, pos),
-                   pos,
-                   dest,
-                   board_get(board, dest) != EMPTY};
+      Move move = {board_get(board, pos), pos, dest};
       add_move(list, move);
     }
   }
@@ -405,21 +395,18 @@ void queen_possible_move(Board *board, int pos, MoveList *list) {
 }
 
 void king_possible_move(Board *board, int pos, MoveList *list) {
-  #ifdef MENACE
+#ifdef MENACE
   Bb valid = KING_MASKS[pos] &
              (board->color == WHITE ? ~board->white | board->black_threat
                                     : ~board->black | board->white_threat);
 #else
-  Bb valid = KING_MASKS[pos] &
-             ~(board->color == WHITE ? board->white : board->black);
+  Bb valid =
+      KING_MASKS[pos] & ~(board->color == WHITE ? board->white : board->black);
 #endif
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
+    Move move = {board_get(board, pos), pos, dest_sq};
     add_move(list, move);
 
     valid &= valid - 1;

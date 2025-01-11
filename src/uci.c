@@ -42,6 +42,5 @@ Move algebric_to_move(char *ch, Board *board) {
   }
 
   return (Move){board_get(board, orig[0] + 8 * orig[1]), orig[0] + orig[1] * 8,
-                dest[0] + dest[1] * 8,
-                board_get(board, dest[0] + 8 * dest[1]) != EMPTY, promot};
+                dest[0] + dest[1] * 8, promot};
 }

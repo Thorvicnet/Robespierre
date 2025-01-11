@@ -16,7 +16,6 @@ typedef struct {
   int piece;
   int from;
   int to;
-  bool capture;
   int promote;
 } Move;
 
@@ -34,6 +33,7 @@ typedef struct {
 typedef struct {
   int squares[64];
   int color;
+  int castle;
   Stack *history;
 
   Bb all;

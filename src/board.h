@@ -35,6 +35,14 @@
 #define BLACK_QUEEN 0x15
 #define BLACK_KING 0x16
 
+#define WHITE_CASTLE 0b0011;
+#define BLACK_CASTLE 0b1100;
+
+#define WHITE_CASTLE_KINGSIDE 0b0001;
+#define WHITE_CASTLE_QUEENSIDE 0b0010;
+#define BLACK_CASTLE_KINGSIDE 0b0100;
+#define BLACK_CASTLE_QUEENSIDE 0b1000;
+
 Board *board_init(void);
 void board_empty(Board *board);
 void board_print(Board *board);
