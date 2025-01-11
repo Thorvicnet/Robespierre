@@ -2,8 +2,8 @@
 CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c
 PROG := main
 DEBUG_PROG := main
-CFLAGS := -Wall -Wextra -pedantic
-LDFLAGS :=
+CFLAGS := -Wall -Wextra -pedantic -O2#-DMENACE
+LDFLAGS := -lm
 
 SRC_DIR := src
 OBJ_DIR := obj
@@ -13,8 +13,8 @@ TEST_FILE := tests.c
 ########################
 
 # -MMD generates dependencies while compiling, add pg for profiling
-CFLAGS += -MMD#-DMENACE
-CC := gcc
+CFLAGS += -MMD
+CC := clang
 
 # Add paths after defining the variables
 OBJFILES := $(patsubst %.c, $(OBJ_DIR)/%.o, $(CFILES))
@@ -46,5 +46,5 @@ clean:
 
 tests: $(SRC_DIR)/$(TEST_FILE) $(filter-out $(OBJ_DIR)/main.o, $(OBJFILES))
 	@mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/tests $^
+	$(CC) $(LDFLAGS) -o $(BIN_DIR)/tests $^
 

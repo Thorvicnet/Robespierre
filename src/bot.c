@@ -1,6 +1,5 @@
 #include "bot.h"
-#include "board.h"
-#include "move.h"
+#include <math.h>
 
 typedef struct {
   Move mo;
@@ -9,7 +8,7 @@ typedef struct {
 
 void change_score(int *score, Bb bb, int value) {
   // Modifies the score according to the pieces in bb
-  int count = __builtin_popcount(bb);
+  int count = __builtin_popcountll(bb);
   *score += count * value;
 }
 
@@ -36,22 +35,21 @@ int evaluate(Board *board) {
     return -king_value;
 
   int score = 0;
-  int *score_pointer = &score;
 
-  change_score(score_pointer, board->white_pawns, pawn_value);
-  change_score(score_pointer, board->white_knights, knight_value);
-  change_score(score_pointer, board->white_bishops, bishop_value);
-  change_score(score_pointer, board->white_rooks, rook_value);
-  change_score(score_pointer, board->white_queens, queen_value);
+  change_score(&score, board->white_pawns, pawn_value);
+  change_score(&score, board->white_knights, knight_value);
+  change_score(&score, board->white_bishops, bishop_value);
+  change_score(&score, board->white_rooks, rook_value);
+  change_score(&score, board->white_queens, queen_value);
 
-  change_score(score_pointer, board->black_pawns, -pawn_value);
-  change_score(score_pointer, board->black_knights, -knight_value);
-  change_score(score_pointer, board->black_bishops, -bishop_value);
-  change_score(score_pointer, board->black_rooks, -rook_value);
-  change_score(score_pointer, board->black_queens, -queen_value);
+  change_score(&score, board->black_pawns, -pawn_value);
+  change_score(&score, board->black_knights, -knight_value);
+  change_score(&score, board->black_bishops, -bishop_value);
+  change_score(&score, board->black_rooks, -rook_value);
+  change_score(&score, board->black_queens, -queen_value);
 
-  change_score(score_pointer, board->white_threat, threat_value);
-  change_score(score_pointer, board->black_threat, -threat_value);
+  change_score(&score, board->white_threat, threat_value);
+  change_score(&score, board->black_threat, -threat_value);
 
   return score;
 }
@@ -61,19 +59,14 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   // pruning Currently checks if the move is possible even though we know it is
   // - kinda beta is greater than alpha (or else the branch is pruned)
 
-  assert(depth > 0); // Depth 0 corresponds to the static evaluation of the
-                     // position - later
-
   MoveList list_moves =
-      move_possible(board);     // Should be a list of every valid move
-  assert(list_moves.count > 0); // Checkmate, draw ... to be dealt with later
+      move_possible(board); // Should be a list of every valid move
+  if (list_moves.count <= 0) {
+    exit(2);
+  }; // Checkmate, draw ... to be dealt with later
 
   int best_index = 0;
   int best_eval = board->color == WHITE ? -10000 : 10000;
-
-  if (depth > 11) {
-    wprintf(L"Depth: %d\n", depth);
-  }
 
   for (int i = 0; i < list_moves.count; i++) {
     Board *new_board = board_copy(board);
@@ -95,6 +88,12 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
         (board->color == BLACK && eval < best_eval)) {
       best_index = i;
       best_eval = eval;
+      if (abs(best_eval) > 5000) {
+        best_eval += board->color == WHITE ? depth : -depth;
+        Move best_move = list_moves.moves[best_index];
+        move_list_free(&list_moves);
+        return (Vmove){best_move, best_eval};
+      }
     }
 
     if (board->color == WHITE)
@@ -114,6 +113,22 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  return choose_with_depth(board, 5, -10000, 10000)
-      .mo; // currently arbitrary depth of 5
+  int sliding_movement = 12;
+  int movement_potential =
+      __builtin_popcountll(board->black_queens | board->white_queens) *
+          sliding_movement * 2 +
+      __builtin_popcountll(board->black_rooks | board->black_bishops |
+                           board->white_rooks | board->white_bishops) *
+          sliding_movement +
+      __builtin_popcountll(board->black_pawns | board->white_pawns) +
+      __builtin_popcountll(board->white_knights | board->black_knights) * 5 + 8;
+
+  int depth = floor(45.4 / log2((double)movement_potential));
+
+  wprintf(L"- depth: %d\n", depth);
+  Vmove t = choose_with_depth(board, depth, -10000, 10000);
+
+  wprintf(L"- eval: %d\n", t.value);
+
+  return t.mo; // currently arbitrary depth of 5
 }

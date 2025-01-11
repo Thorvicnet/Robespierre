@@ -8,6 +8,7 @@
 #include <locale.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 
 void test_print_moves(MoveList l) {
@@ -19,56 +20,118 @@ void test_print_moves(MoveList l) {
   wprintf(L"\n");
 }
 
+bool player1 = true;
+bool player2 = true;
+
+int command(char *strmove, Board **board) {
+  if (!strncmp(strmove, "init", 4)) {
+    if (!strcmp(strmove, "initpp")) {
+      player1 = true;
+      player2 = true;
+    } else if (!strcmp(strmove, "initbp")) {
+      player1 = false;
+      player2 = true;
+    } else if (!strcmp(strmove, "initpb")) {
+      player1 = true;
+      player2 = false;
+    } else if (!strcmp(strmove, "initbb")) {
+      player1 = false;
+      player2 = false;
+    }
+    free((*board)->history->list_of_move);
+    free((*board)->history);
+    board_free(*board);
+    *board = board_init();
+    threat_board_update(*board);
+    return 2;
+  } else if (!strncmp(strmove, "pbb", 3)) {
+    board_bb_info(*board);
+    return -1;
+  } else if (!strncmp(strmove, "ppm", 3)) {
+    test_print_moves(move_possible(*board));
+    return -1;
+  } else if (!strncmp(strmove, "exit", 4)) {
+    free((*board)->history->list_of_move);
+    free((*board)->history);
+    board_free(*board);
+    exit(EXIT_SUCCESS);
+  } else {
+    return move(*board, algebric_to_move(strmove, *board));
+  }
+}
+
+int bot_turn(Board *board) {
+  board_info(board);
+  Move bot = choose(board);
+
+  char *mv = move_to_algebric(bot);
+  wprintf(L"%s\n", mv);
+  free(mv);
+
+  return move(board, bot);
+}
+
 int main(void) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
   bb_magic_init();
 
   Board *board = board_init();
-  threat_board_update(board);
-  char strmove[6];
+  char strmove[15];
   int res;
+
   while (true) {
-    // // Player turn
-    // board_info(board);
-    //
-    // test_print_moves(possible_move(board));
-    //
-    // int res = -1;
-    // while (res) {
-    //   scanf("%s", strmove);
-    //   res = move(board, algebric_to_move(strmove, board));
-    // }
-
-    // Bot turn
-    wprintf(L"BOT WHITE\n");
     board_info(board);
-
-    Move bot = choose(board);
-
-    char *mv = move_to_algebric(bot);
-    wprintf(L"%s\n", mv);
-    free(mv);
-
-    res = move(board, bot);
-    if (res) {
-      wprintf(L"Bot fail, bot dumb\n");
-      break;
+    if (player1) {
+      wprintf(L"\nPlayer Turn white\n");
+      res = -1;
+      while (res) {
+        scanf("%s", strmove);
+        res = command(strmove, &board);
+        if (res == 2)
+          break;
+      }
+      if (res == 2) {
+        board_info(board);
+        continue;
+      }
+    } else {
+      wprintf(L"\nBOT WHITE\n");
+      res = bot_turn(board);
+      if (res) {
+        wprintf(L"Bot fail, bot dumb\n");
+        while (res) {
+          scanf("%s", strmove);
+          res = command(strmove, &board);
+        }
+        continue;
+      }
     }
 
-    // Bot turn
-    wprintf(L"BOT BLACK\n");
     board_info(board);
+    if (player2) {
+      wprintf(L"\nPlayer Turn black\n");
+      res = -1;
+      while (res) {
+        scanf("%s", strmove);
+        res = command(strmove, &board);
+        if (res == 2)
+          break;
+      }
+      if (res == 2) {
 
-    bot = choose(board);
-
-    mv = move_to_algebric(bot);
-    wprintf(L"%s\n", mv);
-    free(mv);
-
-    res = move(board, bot);
-    if (res) {
-      wprintf(L"Bot fail, bot dumb\n");
-      break;
+        continue;
+      }
+    } else {
+      wprintf(L"\nBOT BLACK\n");
+      res = bot_turn(board);
+      if (res) {
+        wprintf(L"Bot fail, bot dumb\n");
+        while (res) {
+          scanf("%s", strmove);
+          res = command(strmove, &board);
+        }
+        continue;
+      }
     }
   }
 

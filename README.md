@@ -1,4 +1,4 @@
-# Menace Chess Engine
+# Robespierre
 
 <!--toc:start-->
 - [Menace Chess Engine](#menace-chess-engine)

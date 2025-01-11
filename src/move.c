@@ -36,8 +36,8 @@ bool check_rook(Board *board, int orig, int dest) {
 bool check_bishop(Board *board, int orig, int dest) {
 #ifdef MENACE
   Bb valid = bb_bishop_attacks(board->all, orig) &
-             ~(board->color == WHITE ? board->white & ~(board->black_threat)
-                                     : board->black & ~(board->white_threat));
+             ~(board->color == WHITE ? board->white & ~board->black_threat
+                                     : board->black & ~board->white_threat);
 #else
   Bb valid = bb_bishop_attacks(board->all, orig) &
              ~(board->color == WHITE ? board->white : board->black);
@@ -101,8 +101,11 @@ bool check_pawn(Board *board, int orig, int dest) {
   if (abs(file_diff) == 1 && rank_diff == direction) {
     // normal
 #ifdef MENACE
-    if (IS_BIT_SET(board->color == WHITE ? board->black | board->black_threat
-                                         : board->white | board->white_threat,
+    if (IS_BIT_SET(board->color == WHITE
+                       ? board->black | (board->black_threat & board->white &
+                                         ~board->white_kings)
+                       : board->white | (board->white_threat & board->black &
+                                         ~board->black_kings),
                    dest)) {
       return true;
     }
@@ -178,10 +181,10 @@ bool check_king(Board *board, int orig, int dest) {
     if (board->all & path)
       return false;
 
-    Bb threats = threat_board_squares(board, !board->color);
     Bb king_squares = (1ULL << orig) | path;
 
-    if (threats & king_squares)
+    if ((board->color == WHITE ? board->black_threat : board->white_threat) &
+        king_squares)
       return false;
     return true;
   }
@@ -196,8 +199,9 @@ bool move_check_validity(Board *board, int orig, int dest) {
   int piece = board_get(board, orig);
 #ifdef MENACE
   // You can play if you threaten or possess the piece
-  if (!IS_BIT_SET(board->color == WHITE ? board->white | board->white_threat
-                                        : board->black | board->black_threat,
+  if (!IS_BIT_SET(board->color == WHITE
+                      ? board->white | (board->white_threat & board->black)
+                      : board->black | (board->black_threat & board->white),
                   orig)) {
     return false;
   }
@@ -273,7 +277,8 @@ int move(Board *orig_board, Move move) {
     board_free(board);
     return -1;
   }
-  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing depth)
+  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing
+  // depth)
   *orig_board = *board; // this is plain disgusting
   board_free(board);
   return 0;
@@ -283,7 +288,7 @@ int move(Board *orig_board, Move move) {
 
 void init_move_list(MoveList *list) {
   list->count = 0;
-  list->capacity = 16;
+  list->capacity = 20;
   list->moves = (Move *)malloc(sizeof(Move) * list->capacity);
   if (list->moves == NULL) {
     wprintf(L"Your memory is doomed...\n");
@@ -310,8 +315,9 @@ void knight_possible_move(Board *board, int pos, MoveList *list) {
   Bb valid;
 #ifdef MENACE
   valid = KNIGHT_MASKS[pos] &
-          ~(board->color == WHITE ? board->white & ~board->black_threat
-                                  : board->black & ~board->white_threat);
+          (board->color == WHITE
+               ? ~board->white | (board->black_threat & ~board->white_kings)
+               : ~board->black | (board->white_threat & ~board->black_kings));
 #else
   valid = KNIGHT_MASKS[pos] &
           ~(board->color == WHITE ? board->white : board->black);
@@ -333,8 +339,9 @@ void rook_possible_move(Board *board, int pos, MoveList *list) {
   Bb valid;
 #ifdef MENACE
   valid = bb_rook_attacks(board->all, pos) &
-          ~(board->color == WHITE ? board->white & ~board->black_threat
-                                  : board->black & ~board->white_threat);
+          (board->color == WHITE
+               ? ~board->white | (board->black_threat & ~board->white_kings)
+               : ~board->black | (board->white_threat & ~board->black_kings));
 #else
   valid = bb_rook_attacks(board->all, pos) &
           ~(board->color == WHITE ? board->white : board->black);
@@ -356,8 +363,9 @@ void bishop_possible_move(Board *board, int pos, MoveList *list) {
   Bb valid;
 #ifdef MENACE
   valid = bb_bishop_attacks(board->all, pos) &
-          ~(board->color == WHITE ? board->white & ~board->black_threat
-                                  : board->black & ~board->white_threat);
+          (board->color == WHITE
+               ? ~board->white | (board->black_threat & ~board->white_kings)
+               : ~board->black | (board->white_threat & ~board->black_kings));
 #else
   valid = bb_bishop_attacks(board->all, pos) &
           ~(board->color == WHITE ? board->white : board->black);
@@ -399,8 +407,8 @@ void queen_possible_move(Board *board, int pos, MoveList *list) {
 void king_possible_move(Board *board, int pos, MoveList *list) {
   #ifdef MENACE
   Bb valid = KING_MASKS[pos] &
-             ~(board->color == WHITE ? board->white & ~board->black_threat
-                                     : board->black & ~board->white_threat);
+             (board->color == WHITE ? ~board->white | board->black_threat
+                                    : ~board->black | board->white_threat);
 #else
   Bb valid = KING_MASKS[pos] &
              ~(board->color == WHITE ? board->white : board->black);
@@ -446,9 +454,18 @@ MoveList move_possible(Board *board) {
   init_move_list(&ret);
   for (int i = 0; i < 64; i++) {
     int piece = board_get(board, i);
-    if (piece != EMPTY && ((piece & 0xF0) == board->color)) {
+#ifdef MENACE
+    if (IS_BIT_SET(board->color == WHITE
+                       ? board->white | (board->white_threat & board->black)
+                       : board->black | (board->black_threat & board->white),
+                   i)) {
       any_possible_move(board, i, piece, &ret);
     }
+#else
+    if (IS_BIT_SET(board->color == WHITE ? board->white : board->black, i)) {
+      any_possible_move(board, i, piece, &ret);
+    }
+#endif
   }
   return ret;
 }

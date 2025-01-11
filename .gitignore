@@ -2,6 +2,10 @@ obj/
 bin/
 debug/
 
+*.out
+venv/
+tmp/
+
 # Just in case:
 .vscode
 .DS_Store
