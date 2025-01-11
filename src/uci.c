@@ -10,8 +10,8 @@ char *move_to_algebric(Move move) {
     exit(EXIT_FAILURE);
   }
 
-  snprintf(ret, 3, "%c%c", alphabet[move.orig[0]], number[move.orig[1]]);
-  snprintf(ret + 2, 3, "%c%c", alphabet[move.dest[0]], number[move.dest[1]]);
+  snprintf(ret, 3, "%c%c", alphabet[move.from & 7], number[move.from >> 3]);
+  snprintf(ret + 2, 3, "%c%c", alphabet[move.to & 7], number[move.to >> 3]);
 
   if ((PIECE(move.promote)) == QUEEN)
     strcat(ret, "q");
@@ -41,9 +41,7 @@ Move algebric_to_move(char *ch, Board *board) {
       promot = (KNIGHT | board->color);
   }
 
-  return (Move){board_get(board, orig[0] + 8 * orig[1]),
-                {orig[0], orig[1]},
-                {dest[0], dest[1]},
-                board_get(board, dest[0] + 8 * dest[1]) != EMPTY,
-                promot};
+  return (Move){board_get(board, orig[0] + 8 * orig[1]), orig[0] + orig[1] * 8,
+                dest[0] + dest[1] * 8,
+                board_get(board, dest[0] + 8 * dest[1]) != EMPTY, promot};
 }
