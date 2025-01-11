@@ -3,6 +3,8 @@ bin/
 debug/
 
 *.out
+venv/
+tmp/
 
 # Just in case:
 .vscode
