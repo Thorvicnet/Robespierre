@@ -5,6 +5,7 @@
 #include "types.h"
 #include <assert.h>
 #include <stdbool.h>
+#include <time.h>
 #include <wchar.h>
 
 const int DEPTH = 6;
@@ -35,8 +36,12 @@ int main() {
   int count[DEPTH];
 
   for (int depth = 0; depth < DEPTH; depth++) {
+    clock_t start = clock(), diff;
     count[depth] = count_moves(board, depth);
-    wprintf(L"- depth %d: %d\n", depth, count[depth]);
+    diff = clock() - start;
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    wprintf(L"- depth %d: %d, took %ds %dms\n", depth, count[depth],
+            msec / 1000, msec % 1000);
   }
 
   assert(count[0] == 1);
