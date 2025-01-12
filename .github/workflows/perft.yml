@@ -1,0 +1,19 @@
+name: Perft tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: make perft
+      run: make perft
+    - name: run perft
+      run: ./bin/perft

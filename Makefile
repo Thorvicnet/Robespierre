@@ -10,6 +10,7 @@ OBJ_DIR := obj
 BIN_DIR := bin
 DEBUG_DIR := debug
 TEST_FILE := tests.c
+PERFT_FILE := perft.c
 ########################
 
 # -MMD generates dependencies while compiling, add pg for profiling
@@ -47,4 +48,8 @@ clean:
 tests: $(SRC_DIR)/$(TEST_FILE) $(filter-out $(OBJ_DIR)/main.o, $(OBJFILES))
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) -o $(BIN_DIR)/tests $^
+
+perft: $(SRC_DIR)/$(PERFT_FILE) $(filter-out $(OBJ_DIR)/main.o, $(OBJFILES))
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(LDFLAGS) -o $(BIN_DIR)/perft $^
 
