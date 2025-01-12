@@ -7,6 +7,7 @@
 #include "uci.h"
 #include <locale.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
@@ -50,6 +51,44 @@ int command(char *strmove, Board **board) {
   } else if (!strncmp(strmove, "ppm", 3)) {
     test_print_moves(move_possible(*board));
     return -1;
+  } else if (!strncmp(strmove, "efen", 4)) {
+    char* fen = create_fen_from_board(*board);
+    wprintf(L"Le fen de cette postion : %s\n", fen);
+    free(fen);
+    return -1;
+  } else if (!strncmp(strmove, "ifen", 4)) {
+    char fen[80];
+    wprintf(L"Enter fen : ");        
+    
+    scanf("%s", fen);
+    int ret = transform_board_from_fen(fen, *board);
+
+    while(1){
+      wprintf(L"\nenter mode (bb/pb/bp/pp) : ");
+      scanf("%s", fen);
+      if (strncmp(fen, "bb", 2) == 0){
+        player1 = false;
+        player2 = false;
+        break;
+      } else if (strncmp(fen, "pb", 2) == 0){
+        player1 = true;
+        player2 = false;
+        break;
+      } else if (strncmp(fen, "bp", 2) == 0){
+        player1 = false;
+        player2 = true;
+        break;
+      } else if (strncmp(fen, "pp", 2) == 0){
+        player1 = true;
+        player2 = true;
+        break;
+      }
+    }
+    
+    if (ret == WHITE){
+      return 2;
+    }
+    return 0;
   } else if (!strncmp(strmove, "exit", 4)) {
     free((*board)->history->list_of_move);
     free((*board)->history);
