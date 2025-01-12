@@ -10,7 +10,8 @@
 #include <time.h>
 
 bool move_check_validity(Board *board, int from, int to);
-int move(Board *board, Move move);
+int move_make(Board *board, Move *move, Undo *undo);
+int move_undo(Board *board, Move *move, Undo *undo);
 MoveList move_possible(Board *board);
 void move_list_free(MoveList *list);
 

@@ -70,7 +70,10 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
 
   for (int i = 0; i < list_moves.count; i++) {
     Board *new_board = board_copy(board);
-    int res = move(new_board, list_moves.moves[i]);
+    Undo undo;
+    int res = move_make(new_board, &(list_moves.moves[i]),
+                        &undo); // FIXME: NEED TO UNDO THE MOVE NOT CREATE A NEW
+                                // BOARD AND FREE IT
     if (res) { // Move not allowed (could lead to discovered check...)
       board_free(new_board);
       continue;

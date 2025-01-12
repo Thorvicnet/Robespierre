@@ -20,6 +20,12 @@ typedef struct {
 } Move;
 
 typedef struct {
+  int castle;
+  int capture;
+  Bb ep;
+} Undo;
+
+typedef struct {
   Move *moves;
   int count;
   int capacity;
@@ -33,8 +39,10 @@ typedef struct {
 typedef struct {
   int squares[64];
   int color;
-  int castle;
   Stack *history;
+
+  int castle;
+  Bb ep;
 
   Bb all;
   Bb white;

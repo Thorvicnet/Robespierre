@@ -17,7 +17,9 @@ Board *board_init(void) {
   board->history = stack_create();
   int *tab = board->squares;
 
+  // Castling and En passant flags
   board->castle = 0;
+  board->ep = 0ULL;
 
   for (int i = 0; i < 8; i++) {
     tab[i + 8] = WHITE_PAWN;
@@ -61,6 +63,7 @@ void board_empty(Board *board) {
   board->color = WHITE;
   board->history->last_move = 0;
   board->castle = 0;
+  board->ep = 0ULL;
   bb_board_empty(board);
 }
 
@@ -141,6 +144,7 @@ Board *board_copy(Board *board) {
   new_board->history = board->history;
 
   new_board->castle = board->castle;
+  new_board->ep = board->ep;
 
   return new_board;
 }

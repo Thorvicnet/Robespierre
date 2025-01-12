@@ -211,20 +211,19 @@ bool move_check_validity(Board *board, int orig, int dest) {
   }
 }
 
-int move(Board *orig_board, Move move) {
-  Board *board = board_copy(
-      orig_board); // TODO: there HAS to be a better way but ATM it works
-  if (!move_check_validity(board, move.from, move.to)) {
-    board_free(board);
-    return -1;
-  }
+// Move a piece on the board
+int move_make(Board *board, Move *move, Undo *undo) {
+  int orig_pos = move->from;
+  int dest_pos = move->to;
+  int piece = move->piece;
+  int capture = board_get(board, dest_pos);
 
-  int orig_pos = move.from;
-  int dest_pos = move.to;
-  int piece = move.piece;
+  undo->castle = board->castle;
+  undo->capture = capture;
+  undo->ep = board->ep;
 
   // En passant and castling
-  if (PIECE(piece) == PAWN && board_get(board, dest_pos) == EMPTY &&
+  if (PIECE(piece) == PAWN && capture == EMPTY &&
       (orig_pos & 7) != (dest_pos & 7)) {
     int captured_rank = orig_pos >> 3;
     board_set(board, (dest_pos & 7) + captured_rank * 8, EMPTY);
@@ -247,19 +246,19 @@ int move(Board *orig_board, Move move) {
   // Promotion
   if (PIECE(piece) == PAWN) {
     if (COLOR(piece) == WHITE && (dest_pos >> 3) == 7) {
-      board_set(board, dest_pos, move.promote);
+      board_set(board, dest_pos, move->promote);
     } else if (COLOR(piece) == BLACK && (dest_pos >> 3) == 0) {
-      board_set(board, dest_pos, move.promote);
+      board_set(board, dest_pos, move->promote);
     }
   }
 
   // Switch side
   board->color ^= BLACK;
 
-  /// Check if previous king is still in check
+  // Check if previous king is still in check
   threat_board_update(board);
   if (threat_check(board)) {
-    board_free(board);
+    move_undo(board, move, undo);
     return -1;
   }
 
@@ -285,10 +284,66 @@ int move(Board *orig_board, Move move) {
     }
   }
 
+  // Update en passant flags
+  if (PIECE(piece) == PAWN && abs((orig_pos >> 3) - (dest_pos >> 3)) == 2) {
+    int ep_square = (orig_pos + dest_pos) / 2;
+    board->ep = 0;
+    SET_BIT(board->ep, ep_square);
+  } else {
+    board->ep = 0;
+  }
+
   // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing
   // depth)
-  *orig_board = *board; // this is plain disgusting
-  board_free(board);
+  return 0;
+}
+
+// Undo a move
+int move_undo(Board *board, Move *move, Undo *undo) {
+  int orig_pos = move->from;
+  int dest_pos = move->to;
+  int piece = move->piece;
+  int capture = undo->capture;
+
+  // Switch side
+  board->color ^= BLACK;
+
+  // Depromotion
+  if (move->promote != EMPTY) {
+    piece = (COLOR(piece) == WHITE) ? WHITE_PAWN : BLACK_PAWN;
+  }
+
+  // Restore original positions
+  board_set(board, orig_pos, piece);
+  board_set(board, dest_pos, capture);
+
+  // Handle en passant capture
+  if (PIECE(piece) == PAWN && capture == EMPTY &&
+      (orig_pos & 7) != (dest_pos & 7)) {
+    int captured_rank = orig_pos >> 3;
+    int captured_piece = (board->color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+    board_set(board, (dest_pos & 7) + captured_rank * 8, captured_piece);
+  }
+  // Handle castling
+  else if (PIECE(piece) == KING && abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
+    int rook_orig, rook_dest;
+    if ((dest_pos & 7) == 5) { // Queen-side castling
+      rook_orig = 7 + (orig_pos >> 3) * 8;
+      rook_dest = 4 + (orig_pos >> 3) * 8;
+    } else { // King-side castling
+      rook_orig = 0 + (orig_pos >> 3) * 8;
+      rook_dest = 2 + (orig_pos >> 3) * 8;
+    }
+    board_set(board, rook_orig, board_get(board, rook_dest));
+    board_set(board, rook_dest, EMPTY);
+  }
+
+  // Restore castle flags
+  board->castle = undo->castle;
+
+  // Restore en passant flags
+  board->ep = undo->ep;
+
   return 0;
 }
 
@@ -383,21 +438,60 @@ void bishop_possible_move(Board *board, int pos, MoveList *list) {
 }
 
 void pawn_possible_move(Board *board, int pos, MoveList *list) {
-  int offset[8] = {8, 16, 9, 7, -8, -16, -9, -7};
-  for (int i = 0; i < 8; i++) {
-    int dest = pos + offset[i];
-    if (dest < 0 || dest >= 64) // TODO: why does check_pawn not check this?
-      continue;
-    if (check_pawn(board, pos, dest)) {
-      if (dest & (board->color == WHITE ? 7 : 0)) {
-        Move moveq = {board_get(board, pos), pos, dest,
-                      board->color == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
-        add_move(list, moveq);
-        Move moven = {board_get(board, pos), pos, dest,
-                      board->color == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
-        add_move(list, moven);
-      } else {
-        Move move = {board_get(board, pos), pos, dest, EMPTY};
+  int piece = board_get(board, pos);
+  int direction = (COLOR(piece) == WHITE) ? 1 : -1;
+  int start_rank = (COLOR(piece) == WHITE) ? 1 : 6;
+  int promote_rank = (COLOR(piece) == WHITE) ? 7 : 0;
+
+  // One Square
+  int forward = pos + (direction * 8);
+  if (forward >= 0 && forward < 64 && board_get(board, forward) == EMPTY) {
+    if ((forward >> 3) == promote_rank) {
+      Move moveq = {piece, pos, forward,
+                    COLOR(piece) == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
+      Move moven = {piece, pos, forward,
+                    COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
+      add_move(list, moveq);
+      add_move(list, moven);
+    } else {
+      Move move = {piece, pos, forward, EMPTY};
+      add_move(list, move);
+    }
+
+    // Two squares
+    if ((pos >> 3) == start_rank) {
+      int double_forward = forward + (direction * 8);
+      if (board_get(board, double_forward) == EMPTY) {
+        Move move = {piece, pos, double_forward, EMPTY};
+        add_move(list, move);
+      }
+    }
+  }
+
+  // Captures
+  for (int side = -1; side <= 1; side += 2) {
+    int capture = forward + side;
+    if (capture >= 0 && capture < 64 && abs((pos & 7) - (capture & 7)) == 1) {
+
+      // Normal capture
+      int target = board_get(board, capture);
+      if (target != EMPTY && COLOR(target) != COLOR(piece)) {
+        if ((capture >> 3) == promote_rank) {
+          Move moveq = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
+          Move moven = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
+          add_move(list, moveq);
+          add_move(list, moven);
+        } else {
+          Move move = {piece, pos, capture, EMPTY};
+          add_move(list, move);
+        }
+      }
+
+      // En passant
+      if (IS_BIT_SET(board->ep, capture)) {
+        Move move = {piece, pos, capture, EMPTY};
         add_move(list, move);
       }
     }

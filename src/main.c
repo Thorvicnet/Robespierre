@@ -22,6 +22,8 @@ void test_print_moves(MoveList l) {
 
 bool player1 = true;
 bool player2 = true;
+Move move;
+Undo undo;
 
 int command(char *strmove, Board **board) {
   if (!strncmp(strmove, "init", 4)) {
@@ -56,7 +58,8 @@ int command(char *strmove, Board **board) {
     board_free(*board);
     exit(EXIT_SUCCESS);
   } else {
-    return move(*board, algebric_to_move(strmove, *board));
+    move = algebric_to_move(strmove, *board);
+    return move_make(*board, &move, &undo);
   }
 }
 
@@ -67,7 +70,7 @@ int bot_turn(Board *board) {
   wprintf(L"%s\n", mv);
   free(mv);
 
-  return move(board, bot);
+  return move_make(board, &bot, &undo);
 }
 
 int main(void) {

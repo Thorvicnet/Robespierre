@@ -20,7 +20,7 @@ char *move_to_algebric(Move move) {
   else if ((PIECE(move.promote)) == ROOK)
     strcat(ret, "r");
   else if ((PIECE(move.promote)) == KNIGHT)
-    strcat(ret, "k");
+    strcat(ret, "n");
 
   return ret;
 }
@@ -37,7 +37,7 @@ Move algebric_to_move(char *ch, Board *board) {
       promot = (BISHOP | board->color);
     if (ch[4] == 'r')
       promot = (ROOK | board->color);
-    if (ch[4] == 'k')
+    if (ch[4] == 'n')
       promot = (KNIGHT | board->color);
   }
 
