@@ -154,7 +154,9 @@ Move choose(Board *board) {
 Move choose2(MoveTree *tree){
   //Chooses the best move according to the evaluation
   //Used to replace choose with garden management
-  int eval = choose_with_trees(tree, 5, -10000, 10000); //Depth should not be too big at the beginning
+  int max_depth = 5;
+  int eval;
+  for (int i=0; i<max_depth; i++) eval = choose_with_trees(tree, i, -10000, 10000);
   wprintf(L"- eval: %d\n", eval);
   return tree -> moves -> moves[0];
 }

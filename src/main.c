@@ -80,6 +80,8 @@ int main(void) {
     // Player turn
     if (1 == 1){
       board_info(board);
+      test_print_moves(move_possible(board));
+      if (!tree -> children_filled) create_tree_children(tree);
       int res = -1;
       Move m;
       while (res) {
@@ -89,10 +91,7 @@ int main(void) {
           res = move(board, m);
         }
       }
-      wprintf(L"test0\n");
       int k = search_move_in_tree(tree, m);
-      wprintf(L"%s\n", move_to_algebric(tree->moves->moves[k]));
-      board_info(tree -> children[k] -> board);
       tree_swap(tree, k);
       tree = partially_free_tree(tree);
     }

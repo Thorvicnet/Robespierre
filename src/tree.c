@@ -10,8 +10,8 @@ MoveTree* create_tree(Board *board){
   
   MoveList *moves = (MoveList*)malloc(sizeof(MoveList));
   moves -> count = list_moves.count;
-  moves -> capacity = list_moves.count;
-  Move *tab_moves = (Move*)malloc(moves->count*sizeof(Move));
+  moves -> capacity = list_moves.capacity;
+  Move *tab_moves = (Move*)malloc(moves->capacity*sizeof(Move));
   for (int i = 0; i < moves -> count; i++) tab_moves[i] = list_moves.moves[i];
   moves -> moves = tab_moves;
   tree -> moves = moves;
@@ -80,9 +80,12 @@ int search_move_in_tree(MoveTree *tree, Move m){
   //Peut potentiellement y avoir des erreurs avec les promotions
   for (int i=0; i<tree->moves->count; i++){
     Move mt = tree -> moves -> moves[i];
-    if (m.orig[0]==mt.orig[0] && m.dest[1]==mt.dest[1] && m.promote==mt.promote){
+    if (m.orig[0]==mt.orig[0] && m.orig[1]==mt.orig[1] 
+    && m.dest[0]==mt.dest[0] && m.dest[1]==mt.dest[1] 
+    && m.promote==mt.promote){
       return i;
     }
   }
+  wprintf(L"move not found in tree\n");
   exit(1);
 }
