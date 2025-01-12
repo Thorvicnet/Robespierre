@@ -63,8 +63,8 @@ MoveTree* partially_free_tree(MoveTree *tree){
 
 void tree_swap(MoveTree *tree, int k){
   //Swaps the positions of tree -> children[0] and tree -> children[k]
+  if (!(tree -> children_filled) || k >= tree -> moves -> count) exit(1);
   if (k == 0) return;
-  if (k >= tree -> moves -> count) exit(1);
 
   MoveTree *ptemp = tree -> children[0];
   tree -> children[0] = tree -> children[k];
@@ -76,8 +76,7 @@ void tree_swap(MoveTree *tree, int k){
 }
 
 int search_move_in_tree(MoveTree *tree, Move m){
-  //Renvoie l'indice du move m dans tree
-  //Peut potentiellement y avoir des erreurs avec les promotions
+  //Returns the index of m in tree -> moves -> moves
   for (int i=0; i<tree->moves->count; i++){
     Move mt = tree -> moves -> moves[i];
     if (m.orig[0]==mt.orig[0] && m.orig[1]==mt.orig[1] 
@@ -88,4 +87,11 @@ int search_move_in_tree(MoveTree *tree, Move m){
   }
   wprintf(L"move not found in tree\n");
   exit(1);
+}
+
+void tree_rotation(MoveTree *tree, int k){
+  //Rotates all moves in tree->moves->moves until rank k
+  //So that move k goes in first, the previous best move in second, etc.
+  if (!(tree -> children_filled) || k >= tree -> moves -> count) exit(1);
+  for (int i=1; i<=k; i++) tree_swap(tree, i);
 }

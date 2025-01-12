@@ -103,28 +103,30 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   return (Vmove){best_move, best_eval};
 }
 
-int choose_with_trees(MoveTree *tree, int depth, int alpha, int beta) {
+int choose_with_trees(MoveTree *tree, int depth, int alpha, int beta, time_t time_at_start, double max_allowed) {
   // Returns the best evaluation of the position, modifies tree while doing so
   // pruning Currently checks if the move is possible even though we know it is
   // - kinda beta is greater than alpha (or else the branch is pruned)
-  // Work in progress to implement trees
+  // Stops if too much time has passed
 
-  if (depth == 0){
+  time_t current_time;
+  time(&current_time);
+  if (depth == 0 || difftime(current_time, time_at_start) > max_allowed){
     //Checks here if it is checkmate/draw (for later)
     return evaluate(tree -> board);
   }
   if (!tree -> children_filled) create_tree_children(tree);
 
-  int best_index = 0;
   int best_eval = tree->board->color == WHITE ? -10000 : 10000;
 
   for (int i = 0; i < tree -> moves -> count; i++) {
-    int eval = choose_with_trees(tree -> children[i], depth - 1, alpha, beta);
+
+    int eval = choose_with_trees(tree -> children[i], depth - 1, alpha, beta, time_at_start, max_allowed);
 
     if ((tree->board->color == WHITE && eval > best_eval) ||
         (tree->board->color == BLACK && eval < best_eval)) {
-      best_index = i;
       best_eval = eval;
+      tree_rotation(tree, i);
       //if (abs(eval) >= 4000) best_eval = board->color == WHITE ? eval-1:eval+1;
     }
 
@@ -136,7 +138,6 @@ int choose_with_trees(MoveTree *tree, int depth, int alpha, int beta) {
       break;
   }
 
-  tree_swap(tree, best_index);
   return best_eval;
 }
 
@@ -154,9 +155,20 @@ Move choose(Board *board) {
 Move choose2(MoveTree *tree){
   //Chooses the best move according to the evaluation
   //Used to replace choose with garden management
-  int max_depth = 5;
   int eval;
-  for (int i=0; i<max_depth; i++) eval = choose_with_trees(tree, i, -10000, 10000);
-  wprintf(L"- eval: %d\n", eval);
+
+  time_t time_at_start;
+  time(&time_at_start);
+  time_t current_time = time_at_start;
+  double max_allowed = 2;
+
+  int i = 1;
+  while (difftime(current_time, time_at_start) < max_allowed){
+    eval = choose_with_trees(tree, i, -10000, 10000, time_at_start, max_allowed);
+    i++;
+    time(&current_time);
+  }
+
+  wprintf(L"- depth : %d\n- eval : %d\n", i, eval);
   return tree -> moves -> moves[0];
 }

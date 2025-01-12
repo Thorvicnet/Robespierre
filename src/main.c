@@ -35,7 +35,8 @@ int main(void) {
       wprintf(L"BOT WHITE\n");
       board_info(board);
 
-      test_print_moves(move_possible(board));
+      //test_print_moves(move_possible(board));
+      test_print_moves(*(tree -> moves));
       
       //Move bot = choose(board);
       Move bot = choose2(tree);
@@ -59,7 +60,8 @@ int main(void) {
       wprintf(L"BOT BLACK\n");
       board_info(board);
 
-      test_print_moves(move_possible(board));
+      //test_print_moves(move_possible(board));
+      test_print_moves(*(tree -> moves));
 
       //Move bot = choose(board);
       Move bot = choose2(tree);
@@ -80,7 +82,8 @@ int main(void) {
     // Player turn
     if (1 == 1){
       board_info(board);
-      test_print_moves(move_possible(board));
+      //test_print_moves(move_possible(board));
+      test_print_moves(*(tree -> moves));
       if (!tree -> children_filled) create_tree_children(tree);
       int res = -1;
       Move m;

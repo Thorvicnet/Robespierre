@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
 
 int evaluate(Board *board);
 Move choose(Board *board);

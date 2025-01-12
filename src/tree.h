@@ -8,8 +8,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "uci.h"
-
 typedef struct t {
   bool children_filled;
   MoveList *moves;
@@ -23,5 +21,6 @@ void free_tree(MoveTree *tree);
 MoveTree* partially_free_tree(MoveTree *tree);
 void tree_swap(MoveTree *tree, int k);
 int search_move_in_tree(MoveTree *tree, Move m);
+void tree_rotation(MoveTree *tree, int k);
 
 #endif // TREE_H
