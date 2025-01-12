@@ -59,6 +59,11 @@ int command(char *strmove, Board **board) {
     exit(EXIT_SUCCESS);
   } else {
     move = algebric_to_move(strmove, *board);
+    int res = move_check_validity(*board, move.from, move.to);
+    if (!res) {
+      wprintf(L"Invalid move\n");
+      return -1;
+    }
     return move_make(*board, &move, &undo);
   }
 }

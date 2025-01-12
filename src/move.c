@@ -54,32 +54,6 @@ bool check_queen(Board *board, int orig, int dest) {
   return check_bishop(board, orig, dest) || check_rook(board, orig, dest);
 }
 
-bool can_enpassant(Board *board, int orig_pos, int dest_pos) {
-  if (board->history->last_move == 0)
-    return false;
-
-  Move last_move = board_last_move(board);
-  int orig_file = orig_pos & 7;
-  int orig_rank = orig_pos >> 3;
-  int dest_file = dest_pos & 7;
-
-  if (PIECE(last_move.piece) != PAWN)
-    return false;
-  if (abs((last_move.from >> 3) - (last_move.to >> 3)) != 2)
-    return false;
-
-  int correct_rank = ((board->color == WHITE) ? 4 : 3);
-  if (orig_rank != correct_rank)
-    return false;
-
-  if (dest_file != (last_move.to & 7))
-    return false;
-  if (abs(orig_file - (last_move.to & 7)) != 1)
-    return false;
-
-  return true;
-}
-
 bool check_pawn(Board *board, int orig, int dest) {
   int piece = board_get(board, orig);
   int direction = (COLOR(piece) == WHITE) ? 1 : -1;
@@ -121,7 +95,7 @@ bool check_pawn(Board *board, int orig, int dest) {
     }
 #endif
     // en passant
-    if (can_enpassant(board, orig, dest)) {
+    if (board->ep & (1ULL << dest) && board_get(board, dest) == EMPTY) {
       return true;
     }
   }
@@ -520,6 +494,37 @@ void king_possible_move(Board *board, int pos, MoveList *list) {
 
     valid &= valid - 1;
   }
+
+  // Castling
+  if ((board->color == WHITE && pos == 3) || 
+        (board->color == BLACK && pos == 59)) {
+        
+        Bb threats = (board->color == WHITE) ? board->black_threat 
+                                            : board->white_threat;
+        int rank = pos >> 3;
+        
+        // Kingside castle
+        if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE 
+                                                    : BLACK_CASTLE_KINGSIDE))) {
+            Bb kingside_path = ((3ULL) << (rank * 8 + 1));
+            if (!(board->all & kingside_path) && 
+                !(threats & kingside_path)) {
+                Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
+                add_move(list, move);
+            }
+        }
+        
+        // Queenside castle
+        if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE 
+                                                    : BLACK_CASTLE_QUEENSIDE))) {
+            Bb queenside_path = ((7ULL) << (rank * 8 + 4));
+            if (!(board->all & queenside_path) && 
+                !(threats & (queenside_path >> 1))) {
+                Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
+                add_move(list, move);
+            }
+        }
+    }
 }
 
 void any_possible_move(Board *board, int pos, int piece, MoveList *list) {
