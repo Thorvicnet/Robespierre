@@ -47,6 +47,7 @@ Board *board_init(void);
 void board_empty(Board *board);
 void board_print(Board *board);
 void board_info(Board *board);
+void board_set_empty(Board *board, int sq, int capture);
 void board_set(Board *board, int sq, int piece);
 int board_get(Board *board, int sq);
 Move board_last_move(Board *board);

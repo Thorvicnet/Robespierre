@@ -200,7 +200,7 @@ int move_make(Board *board, Move *move, Undo *undo) {
   if (PIECE(piece) == PAWN && capture == EMPTY &&
       (orig_pos & 7) != (dest_pos & 7)) {
     int captured_rank = orig_pos >> 3;
-    board_set(board, (dest_pos & 7) + captured_rank * 8, EMPTY);
+    board_set_empty(board, (dest_pos & 7) + captured_rank * 8, piece ^ 0xF0);
   } else if (PIECE(piece) == KING &&
              abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
     int rook_orig, rook_dest;
@@ -211,11 +211,12 @@ int move_make(Board *board, Move *move, Undo *undo) {
       rook_orig = 0 + (orig_pos >> 3) * 8;
       rook_dest = 2 + (orig_pos >> 3) * 8;
     }
-    board_set(board, rook_dest, board_get(board, rook_orig));
-    board_set(board, rook_orig, EMPTY);
+    int rook = board_get(board, rook_orig);
+    board_set(board, rook_dest, rook);
+    board_set_empty(board, rook_orig, rook);
   }
   board_set(board, dest_pos, piece);
-  board_set(board, orig_pos, EMPTY);
+  board_set_empty(board, orig_pos, piece);
 
   // Promotion
   if (PIECE(piece) == PAWN) {
@@ -308,8 +309,9 @@ int move_undo(Board *board, Move *move, Undo *undo) {
       rook_orig = 0 + (orig_pos >> 3) * 8;
       rook_dest = 2 + (orig_pos >> 3) * 8;
     }
-    board_set(board, rook_orig, board_get(board, rook_dest));
-    board_set(board, rook_dest, EMPTY);
+    int rook = board_get(board, rook_dest);
+    board_set(board, rook_orig, rook);
+    board_set_empty(board, rook_dest, rook);
   }
 
   // Restore castle flags
@@ -496,35 +498,34 @@ void king_possible_move(Board *board, int pos, MoveList *list) {
   }
 
   // Castling
-  if ((board->color == WHITE && pos == 3) || 
-        (board->color == BLACK && pos == 59)) {
-        
-        Bb threats = (board->color == WHITE) ? board->black_threat 
-                                            : board->white_threat;
-        int rank = pos >> 3;
-        
-        // Kingside castle
-        if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE 
-                                                    : BLACK_CASTLE_KINGSIDE))) {
-            Bb kingside_path = ((3ULL) << (rank * 8 + 1));
-            if (!(board->all & kingside_path) && 
-                !(threats & kingside_path)) {
-                Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
-                add_move(list, move);
-            }
-        }
-        
-        // Queenside castle
-        if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE 
-                                                    : BLACK_CASTLE_QUEENSIDE))) {
-            Bb queenside_path = ((7ULL) << (rank * 8 + 4));
-            if (!(board->all & queenside_path) && 
-                !(threats & (queenside_path >> 1))) {
-                Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
-                add_move(list, move);
-            }
-        }
+  if ((board->color == WHITE && pos == 3) ||
+      (board->color == BLACK && pos == 59)) {
+
+    Bb threats =
+        (board->color == WHITE) ? board->black_threat : board->white_threat;
+    int rank = pos >> 3;
+
+    // Kingside castle
+    if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE
+                                                 : BLACK_CASTLE_KINGSIDE))) {
+      Bb kingside_path = ((3ULL) << (rank * 8 + 1));
+      if (!(board->all & kingside_path) && !(threats & kingside_path)) {
+        Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
+        add_move(list, move);
+      }
     }
+
+    // Queenside castle
+    if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE
+                                                 : BLACK_CASTLE_QUEENSIDE))) {
+      Bb queenside_path = ((7ULL) << (rank * 8 + 4));
+      if (!(board->all & queenside_path) &&
+          !(threats & (queenside_path >> 1))) {
+        Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
+        add_move(list, move);
+      }
+    }
+  }
 }
 
 void any_possible_move(Board *board, int pos, int piece, MoveList *list) {
