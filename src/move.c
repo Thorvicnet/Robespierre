@@ -327,7 +327,7 @@ int move_undo(Board *board, Move *move, Undo *undo) {
 
 void init_move_list(MoveList *list) {
   list->count = 0;
-  list->capacity = 20;
+  list->capacity = 40;
   list->moves = (Move *)malloc(sizeof(Move) * list->capacity);
   if (list->moves == NULL) {
     wprintf(L"Your memory is doomed...\n");
@@ -480,14 +480,9 @@ void queen_possible_move(Board *board, int pos, MoveList *list) {
 }
 
 void king_possible_move(Board *board, int pos, MoveList *list) {
-#ifdef MENACE
   Bb valid = KING_MASKS[pos] &
-             (board->color == WHITE ? ~board->white | board->black_threat
-                                    : ~board->black | board->white_threat);
-#else
-  Bb valid =
-      KING_MASKS[pos] & ~(board->color == WHITE ? board->white : board->black);
-#endif
+             ~(board->color == WHITE ? board->white | board->black_threat
+                                     : board->black | board->white_threat);
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 

@@ -25,6 +25,7 @@ int count_moves(Board *board, int depth) {
     count += count_moves(board, depth - 1);
     move_undo(board, &(l.moves[i]), &undo);
   }
+  free(l.moves);
   return count;
 }
 
@@ -40,7 +41,7 @@ int main() {
     count[depth] = count_moves(board, depth);
     diff = clock() - start;
     int msec = diff * 1000 / CLOCKS_PER_SEC;
-    wprintf(L"- depth %d: %d, took %ds %dms\n", depth, count[depth],
+    wprintf(L"- depth %d: %d, took %ds %dms, %d clocks\n", depth, count[depth],
             msec / 1000, msec % 1000);
   }
 

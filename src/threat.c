@@ -9,13 +9,13 @@ void threat_board_update(Board *board) {
     board->white_threat |= PAWN_ATTACK_MASKS_WHITE[sq];
     bb &= (bb - 1); // "POP" the LSB
   }
-  bb = board->white_rooks;
+  bb = board->white_rooks | board->white_queens;
   while (bb) {
     int sq = __builtin_ctzll(bb);
     board->white_threat |= bb_rook_attacks(board->all, sq);
     bb &= (bb - 1);
   }
-  bb = board->white_bishops;
+  bb = board->white_bishops | board->white_queens;
   while (bb) {
     int sq = __builtin_ctzll(bb);
     board->white_threat |= bb_bishop_attacks(board->all, sq);
@@ -25,13 +25,6 @@ void threat_board_update(Board *board) {
   while (bb) {
     int sq = __builtin_ctzll(bb);
     board->white_threat |= KNIGHT_MASKS[sq];
-    bb &= (bb - 1);
-  }
-  bb = board->white_queens;
-  while (bb) {
-    int sq = __builtin_ctzll(bb);
-    board->white_threat |= bb_rook_attacks(board->all, sq);
-    board->white_threat |= bb_bishop_attacks(board->all, sq);
     bb &= (bb - 1);
   }
   bb = board->white_kings; // I assume there is only one king (pretty safe)
@@ -45,13 +38,13 @@ void threat_board_update(Board *board) {
     board->black_threat |= PAWN_ATTACK_MASKS_BLACK[sq];
     bb &= (bb - 1); // "POP" the LSB
   }
-  bb = board->black_rooks;
+  bb = board->black_rooks | board->black_queens;
   while (bb) {
     int sq = __builtin_ctzll(bb);
     board->black_threat |= bb_rook_attacks(board->all, sq);
     bb &= (bb - 1);
   }
-  bb = board->black_bishops;
+  bb = board->black_bishops | board->black_queens;
   while (bb) {
     int sq = __builtin_ctzll(bb);
     board->black_threat |= bb_bishop_attacks(board->all, sq);
@@ -61,13 +54,6 @@ void threat_board_update(Board *board) {
   while (bb) {
     int sq = __builtin_ctzll(bb);
     board->black_threat |= KNIGHT_MASKS[sq];
-    bb &= (bb - 1);
-  }
-  bb = board->black_queens;
-  while (bb) {
-    int sq = __builtin_ctzll(bb);
-    board->black_threat |= bb_rook_attacks(board->all, sq);
-    board->black_threat |= bb_bishop_attacks(board->all, sq);
     bb &= (bb - 1);
   }
   bb = board->black_kings; // I assume there is only one king (pretty safe)

@@ -161,50 +161,58 @@ void board_set_empty(Board *board, int sq, int capture) {
   board->squares[sq] = EMPTY;
 
   board->all &= ~bit;
-  if (COLOR(capture) == WHITE) {
+  switch (capture) {
+  // White pieces
+  case WHITE_PAWN:
     board->white &= ~bit;
-    switch (capture) {
-    case WHITE_PAWN:
-      board->white_pawns &= ~bit;
-      break;
-    case WHITE_KNIGHT:
-      board->white_knights &= ~bit;
-      break;
-    case WHITE_BISHOP:
-      board->white_bishops &= ~bit;
-      break;
-    case WHITE_ROOK:
-      board->white_rooks &= ~bit;
-      break;
-    case WHITE_QUEEN:
-      board->white_queens &= ~bit;
-      break;
-    case WHITE_KING:
-      board->white_kings &= ~bit;
-      break;
-    }
-  } else {
+    board->white_pawns &= ~bit;
+    break;
+  case WHITE_KNIGHT:
+    board->white &= ~bit;
+    board->white_knights &= ~bit;
+    break;
+  case WHITE_BISHOP:
+    board->white &= ~bit;
+    board->white_bishops &= ~bit;
+    break;
+  case WHITE_ROOK:
+    board->white &= ~bit;
+    board->white_rooks &= ~bit;
+    break;
+  case WHITE_QUEEN:
+    board->white &= ~bit;
+    board->white_queens &= ~bit;
+    break;
+  case WHITE_KING:
+    board->white &= ~bit;
+    board->white_kings &= ~bit;
+    break;
+
+  // Black pieces
+  case BLACK_PAWN:
     board->black &= ~bit;
-    switch (capture) {
-    case BLACK_PAWN:
-      board->black_pawns &= ~bit;
-      break;
-    case BLACK_KNIGHT:
-      board->black_knights &= ~bit;
-      break;
-    case BLACK_BISHOP:
-      board->black_bishops &= ~bit;
-      break;
-    case BLACK_ROOK:
-      board->black_rooks &= ~bit;
-      break;
-    case BLACK_QUEEN:
-      board->black_queens &= ~bit;
-      break;
-    case BLACK_KING:
-      board->black_kings &= ~bit;
-      break;
-    }
+    board->black_pawns &= ~bit;
+    break;
+  case BLACK_KNIGHT:
+    board->black &= ~bit;
+    board->black_knights &= ~bit;
+    break;
+  case BLACK_BISHOP:
+    board->black &= ~bit;
+    board->black_bishops &= ~bit;
+    break;
+  case BLACK_ROOK:
+    board->black &= ~bit;
+    board->black_rooks &= ~bit;
+    break;
+  case BLACK_QUEEN:
+    board->black &= ~bit;
+    board->black_queens &= ~bit;
+    break;
+  case BLACK_KING:
+    board->black &= ~bit;
+    board->black_kings &= ~bit;
+    break;
   }
 }
 
@@ -217,50 +225,58 @@ void board_set(Board *board, int sq, int piece) {
 
   if (capture != EMPTY) {
     board->all &= ~bit;
-    if (COLOR(capture) == WHITE) {
+    switch (capture) {
+    // White pieces
+    case WHITE_PAWN:
       board->white &= ~bit;
-      switch (capture) {
-      case WHITE_PAWN:
-        board->white_pawns &= ~bit;
-        break;
-      case WHITE_KNIGHT:
-        board->white_knights &= ~bit;
-        break;
-      case WHITE_BISHOP:
-        board->white_bishops &= ~bit;
-        break;
-      case WHITE_ROOK:
-        board->white_rooks &= ~bit;
-        break;
-      case WHITE_QUEEN:
-        board->white_queens &= ~bit;
-        break;
-      case WHITE_KING:
-        board->white_kings &= ~bit;
-        break;
-      }
-    } else {
+      board->white_pawns &= ~bit;
+      break;
+    case WHITE_KNIGHT:
+      board->white &= ~bit;
+      board->white_knights &= ~bit;
+      break;
+    case WHITE_BISHOP:
+      board->white &= ~bit;
+      board->white_bishops &= ~bit;
+      break;
+    case WHITE_ROOK:
+      board->white &= ~bit;
+      board->white_rooks &= ~bit;
+      break;
+    case WHITE_QUEEN:
+      board->white &= ~bit;
+      board->white_queens &= ~bit;
+      break;
+    case WHITE_KING:
+      board->white &= ~bit;
+      board->white_kings &= ~bit;
+      break;
+
+    // Black pieces
+    case BLACK_PAWN:
       board->black &= ~bit;
-      switch (capture) {
-      case BLACK_PAWN:
-        board->black_pawns &= ~bit;
-        break;
-      case BLACK_KNIGHT:
-        board->black_knights &= ~bit;
-        break;
-      case BLACK_BISHOP:
-        board->black_bishops &= ~bit;
-        break;
-      case BLACK_ROOK:
-        board->black_rooks &= ~bit;
-        break;
-      case BLACK_QUEEN:
-        board->black_queens &= ~bit;
-        break;
-      case BLACK_KING:
-        board->black_kings &= ~bit;
-        break;
-      }
+      board->black_pawns &= ~bit;
+      break;
+    case BLACK_KNIGHT:
+      board->black &= ~bit;
+      board->black_knights &= ~bit;
+      break;
+    case BLACK_BISHOP:
+      board->black &= ~bit;
+      board->black_bishops &= ~bit;
+      break;
+    case BLACK_ROOK:
+      board->black &= ~bit;
+      board->black_rooks &= ~bit;
+      break;
+    case BLACK_QUEEN:
+      board->black &= ~bit;
+      board->black_queens &= ~bit;
+      break;
+    case BLACK_KING:
+      board->black &= ~bit;
+      board->black_kings &= ~bit;
+      break;
     }
   }
 
@@ -316,7 +332,7 @@ void board_set(Board *board, int sq, int piece) {
   }
 }
 
-int board_get(Board *board, int sq) { return board->squares[sq]; }
+inline int board_get(Board *board, int sq) { return board->squares[sq]; }
 
 Move board_last_move(Board *board) { return stack_peek(board->history); }
 

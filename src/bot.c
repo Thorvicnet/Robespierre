@@ -1,4 +1,5 @@
 #include "bot.h"
+#include "bb.h"
 #include <math.h>
 
 typedef struct {
@@ -51,6 +52,15 @@ int evaluate(Board *board) {
   change_score(&score, board->white_threat, threat_value);
   change_score(&score, board->black_threat, -threat_value);
 
+  if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->white_kings)] &
+                           board->white_pawns) >= 3) {
+    score += 7;
+  }
+  if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->black_kings)] &
+                           board->black_pawns) >= 3) {
+    score -= 7;
+  }
+
   return score;
 }
 
@@ -61,9 +71,6 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
 
   MoveList list_moves =
       move_possible(board); // Should be a list of every valid move
-  if (list_moves.count <= 0) {
-    exit(2);
-  }; // Checkmate, draw ... to be dealt with later
 
   int best_index = 0;
   int best_eval = board->color == WHITE ? -10000 : 10000;
