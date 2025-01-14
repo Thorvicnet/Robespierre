@@ -52,5 +52,9 @@ int main() {
   assert(count[4] == 197281);
   assert(count[5] == 4865609);
   wprintf(L"Everything looks good\n");
+
+  free(board->history->list_of_move);
+  free(board->history);
+  board_free(board);
   return 0;
 }

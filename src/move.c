@@ -325,31 +325,6 @@ int move_undo(Board *board, Move *move, Undo *undo) {
 
 // Beginning move enumeration //
 
-void init_move_list(MoveList *list) {
-  list->count = 0;
-  list->capacity = 40;
-  list->moves = (Move *)malloc(sizeof(Move) * list->capacity);
-  if (list->moves == NULL) {
-    wprintf(L"Your memory is doomed...\n");
-    exit(EXIT_FAILURE);
-  }
-}
-
-void add_move(MoveList *list, Move move) {
-  if (list->count == list->capacity) {
-    list->capacity *= 2;
-    list->moves = (Move *)realloc(list->moves, sizeof(Move) * list->capacity);
-  }
-  list->moves[list->count++] = move;
-}
-
-void move_list_free(MoveList *list) {
-  free(list->moves);
-  list->moves = NULL;
-  list->count = 0;
-  list->capacity = 0;
-}
-
 int knight_possible_move(Board *board, int pos, Move *list) {
   int count = 0;
   Bb valid;
@@ -534,38 +509,84 @@ int king_possible_move(Board *board, int pos, Move *list) {
 int move_possible(Board *board, Move *moves) {
   int count = 0;
   Bb pieces;
-#ifdef MENACE
-  pieces = board->color == WHITE
-               ? board->white | (board->white_threat & board->black)
-               : board->black | (board->black_threat & board->white);
-#else
-  pieces = board->color == WHITE ? board->white : board->black;
-#endif
 
+  // Queens
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_queens | (board->white_threat & board->black_queens)
+                                 : board->black_queens | (board->black_threat & board->white_queens);
+#else
+  pieces = board->color == WHITE ? board->white_queens : board->black_queens;
+#endif
   while (pieces) {
     int pos = __builtin_ctzll(pieces);
-    int piece = board_get(board, pos);
-    switch (piece & 0x0F) {
-    case QUEEN:
-      count += queen_possible_move(board, pos, &moves[count]);
-      break;
-    case ROOK:
-      count += rook_possible_move(board, pos, &moves[count]);
-      break;
-    case BISHOP:
-      count += bishop_possible_move(board, pos, &moves[count]);
-      break;
-    case KNIGHT:
-      count += knight_possible_move(board, pos, &moves[count]);
-      break;
-    case PAWN:
-      count += pawn_possible_move(board, pos, &moves[count]);
-      break;
-    case KING:
-      count += king_possible_move(board, pos, &moves[count]);
-      break;
-    }
+    count += queen_possible_move(board, pos, &moves[count]);
     pieces &= pieces - 1;
   }
+
+  // Rooks
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_rooks | (board->white_threat & board->black_rooks)
+                                 : board->black_rooks | (board->black_threat & board->white_rooks);
+#else
+  pieces = board->color == WHITE ? board->white_rooks : board->black_rooks;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += rook_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Bishops
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_bishops | (board->white_threat & board->black_bishops)
+                                 : board->black_bishops | (board->black_threat & board->white_bishops);
+#else
+  pieces = board->color == WHITE ? board->white_bishops : board->black_bishops;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += bishop_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Knights
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_knights | (board->white_threat & board->black_knights)
+                                 : board->black_knights | (board->black_threat & board->white_knights);
+#else
+  pieces = board->color == WHITE ? board->white_knights : board->black_knights;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += knight_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Pawns
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_pawns | (board->white_threat & board->black_pawns)
+                                 : board->black_pawns | (board->black_threat & board->white_pawns);
+#else
+  pieces = board->color == WHITE ? board->white_pawns : board->black_pawns;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += pawn_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Kings
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_kings | (board->white_threat & board->black_kings)
+                                 : board->black_kings | (board->black_threat & board->white_kings);
+#else
+  pieces = board->color == WHITE ? board->white_kings : board->black_kings;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += king_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
   return count;
 }
