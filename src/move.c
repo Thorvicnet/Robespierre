@@ -350,7 +350,8 @@ void move_list_free(MoveList *list) {
   list->capacity = 0;
 }
 
-void knight_possible_move(Board *board, int pos, MoveList *list) {
+int knight_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid;
 #ifdef MENACE
   valid = KNIGHT_MASKS[pos] &
@@ -365,13 +366,14 @@ void knight_possible_move(Board *board, int pos, MoveList *list) {
     int dest_sq = __builtin_ctzll(valid);
 
     Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
-
-    add_move(list, move);
+    list[count++] = move;
     valid &= valid - 1;
   }
+  return count;
 }
 
-void rook_possible_move(Board *board, int pos, MoveList *list) {
+int rook_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid;
 #ifdef MENACE
   valid = bb_rook_attacks(board->all, pos) &
@@ -386,13 +388,14 @@ void rook_possible_move(Board *board, int pos, MoveList *list) {
     int dest_sq = __builtin_ctzll(valid);
 
     Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
-    add_move(list, move);
-
+    list[count++] = move;
     valid &= valid - 1;
   }
+  return count;
 }
 
-void bishop_possible_move(Board *board, int pos, MoveList *list) {
+int bishop_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid;
 #ifdef MENACE
   valid = bb_bishop_attacks(board->all, pos) &
@@ -407,13 +410,14 @@ void bishop_possible_move(Board *board, int pos, MoveList *list) {
     int dest_sq = __builtin_ctzll(valid);
 
     Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
-    add_move(list, move);
-
+    list[count++] = move;
     valid &= valid - 1;
   }
+  return count;
 }
 
-void pawn_possible_move(Board *board, int pos, MoveList *list) {
+int pawn_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   int piece = board_get(board, pos);
   int direction = (COLOR(piece) == WHITE) ? 1 : -1;
   int start_rank = (COLOR(piece) == WHITE) ? 1 : 6;
@@ -427,11 +431,11 @@ void pawn_possible_move(Board *board, int pos, MoveList *list) {
                     COLOR(piece) == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
       Move moven = {piece, pos, forward,
                     COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
-      add_move(list, moveq);
-      add_move(list, moven);
+      list[count++] = moveq;
+      list[count++] = moven;
     } else {
       Move move = {piece, pos, forward, EMPTY};
-      add_move(list, move);
+      list[count++] = move;
     }
 
     // Two squares
@@ -439,7 +443,7 @@ void pawn_possible_move(Board *board, int pos, MoveList *list) {
       int double_forward = forward + (direction * 8);
       if (board_get(board, double_forward) == EMPTY) {
         Move move = {piece, pos, double_forward, EMPTY};
-        add_move(list, move);
+        list[count++] = move;
       }
     }
   }
@@ -457,29 +461,33 @@ void pawn_possible_move(Board *board, int pos, MoveList *list) {
                         COLOR(piece) == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
           Move moven = {piece, pos, capture,
                         COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
-          add_move(list, moveq);
-          add_move(list, moven);
+          list[count++] = moveq;
+          list[count++] = moven;
         } else {
           Move move = {piece, pos, capture, EMPTY};
-          add_move(list, move);
+          list[count++] = move;
         }
       }
 
       // En passant
       if (IS_BIT_SET(board->ep, capture)) {
         Move move = {piece, pos, capture, EMPTY};
-        add_move(list, move);
+        list[count++] = move;
       }
     }
   }
+  return count;
 }
 
-void queen_possible_move(Board *board, int pos, MoveList *list) {
-  rook_possible_move(board, pos, list);
-  bishop_possible_move(board, pos, list);
+int queen_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
+  count += rook_possible_move(board, pos, list);
+  count += bishop_possible_move(board, pos, &list[count]);
+  return count;
 }
 
-void king_possible_move(Board *board, int pos, MoveList *list) {
+int king_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid = KING_MASKS[pos] &
              ~(board->color == WHITE ? board->white | board->black_threat
                                      : board->black | board->white_threat);
@@ -487,8 +495,7 @@ void king_possible_move(Board *board, int pos, MoveList *list) {
     int dest_sq = __builtin_ctzll(valid);
 
     Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
-    add_move(list, move);
-
+    list[count++] = move;
     valid &= valid - 1;
   }
 
@@ -506,7 +513,7 @@ void king_possible_move(Board *board, int pos, MoveList *list) {
       Bb kingside_path = ((3ULL) << (rank * 8 + 1));
       if (!(board->all & kingside_path) && !(threats & kingside_path)) {
         Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
-        add_move(list, move);
+        list[count++] = move;
       }
     }
 
@@ -517,52 +524,48 @@ void king_possible_move(Board *board, int pos, MoveList *list) {
       if (!(board->all & queenside_path) &&
           !(threats & (queenside_path >> 1))) {
         Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
-        add_move(list, move);
+        list[count++] = move;
       }
     }
   }
+  return count;
 }
 
-void any_possible_move(Board *board, int pos, int piece, MoveList *list) {
-  switch (piece & 0x0F) {
-  case QUEEN:
-    queen_possible_move(board, pos, list);
-    break;
-  case ROOK:
-    rook_possible_move(board, pos, list);
-    break;
-  case BISHOP:
-    bishop_possible_move(board, pos, list);
-    break;
-  case KNIGHT:
-    knight_possible_move(board, pos, list);
-    break;
-  case PAWN:
-    pawn_possible_move(board, pos, list);
-    break;
-  case KING:
-    king_possible_move(board, pos, list);
-    break;
-  }
-}
-
-MoveList move_possible(Board *board) {
-  MoveList ret;
-  init_move_list(&ret);
-  for (int i = 0; i < 64; i++) {
-    int piece = board_get(board, i);
+int move_possible(Board *board, Move *moves) {
+  int count = 0;
+  Bb pieces;
 #ifdef MENACE
-    if (IS_BIT_SET(board->color == WHITE
-                       ? board->white | (board->white_threat & board->black)
-                       : board->black | (board->black_threat & board->white),
-                   i)) {
-      any_possible_move(board, i, piece, &ret);
-    }
+  pieces = board->color == WHITE
+               ? board->white | (board->white_threat & board->black)
+               : board->black | (board->black_threat & board->white);
 #else
-    if (IS_BIT_SET(board->color == WHITE ? board->white : board->black, i)) {
-      any_possible_move(board, i, piece, &ret);
-    }
+  pieces = board->color == WHITE ? board->white : board->black;
 #endif
+
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    int piece = board_get(board, pos);
+    switch (piece & 0x0F) {
+    case QUEEN:
+      count += queen_possible_move(board, pos, &moves[count]);
+      break;
+    case ROOK:
+      count += rook_possible_move(board, pos, &moves[count]);
+      break;
+    case BISHOP:
+      count += bishop_possible_move(board, pos, &moves[count]);
+      break;
+    case KNIGHT:
+      count += knight_possible_move(board, pos, &moves[count]);
+      break;
+    case PAWN:
+      count += pawn_possible_move(board, pos, &moves[count]);
+      break;
+    case KING:
+      count += king_possible_move(board, pos, &moves[count]);
+      break;
+    }
+    pieces &= pieces - 1;
   }
-  return ret;
+  return count;
 }
