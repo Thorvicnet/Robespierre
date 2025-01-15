@@ -12,9 +12,9 @@
 #include <string.h>
 #include <wchar.h>
 
-void test_print_moves(MoveList l) {
-  for (int i = 0; i < l.count; i++) {
-    char *mv = move_to_algebric(l.moves[i]);
+void test_print_moves(Move *l, int count) {
+  for (int i = 0; i < count; i++) {
+    char *mv = move_to_algebric(l[i]);
     wprintf(L"%s ", mv);
     free(mv);
   }
@@ -23,6 +23,8 @@ void test_print_moves(MoveList l) {
 
 bool player1 = true;
 bool player2 = true;
+Move move;
+Undo undo;
 
 int command(char *strmove, Board **board) {
   if (!strncmp(strmove, "init", 4)) {
@@ -49,7 +51,9 @@ int command(char *strmove, Board **board) {
     board_bb_info(*board);
     return -1;
   } else if (!strncmp(strmove, "ppm", 3)) {
-    test_print_moves(move_possible(*board));
+    Move moves[MAX_MOVES];
+    int count = move_possible(*board, moves);
+    test_print_moves(moves, count);
     return -1;
   } else if (!strncmp(strmove, "efen", 4)) {
     char* fen = create_fen_from_board(*board);
@@ -95,19 +99,24 @@ int command(char *strmove, Board **board) {
     board_free(*board);
     exit(EXIT_SUCCESS);
   } else {
-    return move(*board, algebric_to_move(strmove, *board));
+    move = algebric_to_move(strmove, *board);
+    int res = move_check_validity(*board, move.from, move.to);
+    if (!res) {
+      wprintf(L"Invalid move\n");
+      return -1;
+    }
+    return move_make(*board, &move, &undo);
   }
 }
 
 int bot_turn(Board *board) {
-  board_info(board);
   Move bot = choose(board);
 
   char *mv = move_to_algebric(bot);
   wprintf(L"%s\n", mv);
   free(mv);
 
-  return move(board, bot);
+  return move_make(board, &bot, &undo);
 }
 
 int main(void) {
@@ -130,7 +139,6 @@ int main(void) {
           break;
       }
       if (res == 2) {
-        board_info(board);
         continue;
       }
     } else {
@@ -157,7 +165,6 @@ int main(void) {
           break;
       }
       if (res == 2) {
-
         continue;
       }
     } else {

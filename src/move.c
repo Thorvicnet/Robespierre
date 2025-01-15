@@ -1,4 +1,5 @@
 #include "move.h"
+#include "board.h"
 
 // Each piece checks whether the destination is allowed and whether it has moved
 // correctly
@@ -9,13 +10,17 @@ bool check_knight(Board *board, int orig, int dest) {
                           ? board->white & ~(board->black_threat)
                           : board->black & ~(board->white_threat)),
                     dest) &&
-         ((abs((orig & 7) - (dest & 7)) == 2 && abs((orig >> 3) - (dest >> 3)) == 1) ||
-          (abs((orig & 7) - (dest & 7)) == 1 && abs((orig >> 3) - (dest >> 3)) == 2));
+         ((abs((orig & 7) - (dest & 7)) == 2 &&
+           abs((orig >> 3) - (dest >> 3)) == 1) ||
+          (abs((orig & 7) - (dest & 7)) == 1 &&
+           abs((orig >> 3) - (dest >> 3)) == 2));
 #else
   return IS_BIT_SET(~(board->color == WHITE ? board->white : board->black),
                     dest) &&
-         ((abs((orig & 7) - (dest & 7)) == 2 && abs((orig >> 3) - (dest >> 3)) == 1) ||
-          (abs((orig & 7) - (dest & 7)) == 1 && abs((orig >> 3) - (dest >> 3)) == 2));
+         ((abs((orig & 7) - (dest & 7)) == 2 &&
+           abs((orig >> 3) - (dest >> 3)) == 1) ||
+          (abs((orig & 7) - (dest & 7)) == 1 &&
+           abs((orig >> 3) - (dest >> 3)) == 2));
 #endif
 }
 
@@ -47,32 +52,6 @@ bool check_bishop(Board *board, int orig, int dest) {
 
 bool check_queen(Board *board, int orig, int dest) {
   return check_bishop(board, orig, dest) || check_rook(board, orig, dest);
-}
-
-bool can_enpassant(Board *board, int orig_pos, int dest_pos) {
-  if (board->history->last_move == 0)
-    return false;
-
-  Move last_move = board_last_move(board);
-  int orig_file = orig_pos & 7;
-  int orig_rank = orig_pos >> 3;
-  int dest_file = dest_pos & 7;
-
-  if (PIECE(last_move.piece) != PAWN)
-    return false;
-  if (abs((last_move.from >> 3) - (last_move.to >> 3)) != 2)
-    return false;
-
-  int correct_rank = ((board->color == WHITE) ? 4 : 3);
-  if (orig_rank != correct_rank)
-    return false;
-
-  if (dest_file != (last_move.to & 7))
-    return false;
-  if (abs(orig_file - (last_move.to & 7)) != 1)
-    return false;
-
-  return true;
 }
 
 bool check_pawn(Board *board, int orig, int dest) {
@@ -116,31 +95,7 @@ bool check_pawn(Board *board, int orig, int dest) {
     }
 #endif
     // en passant
-    if (can_enpassant(board, orig, dest)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool king_moved(Board *board, int color) {
-  // Returns true if the king of the given color has moved
-  for (int i = 0; i < board->history->last_move; i++) {
-    int piece = board->history->list_of_move[i].piece;
-    if (PIECE(piece) == KING && COLOR(piece) == color) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool rook_moved(Board *board, int color, int orig) {
-  // Returns true if the king of the given color has moved
-  for (int i = 0; i < board->history->last_move; i++) {
-    Move move = board->history->list_of_move[i];
-    int piece = move.piece;
-    if (PIECE(piece) == ROOK && COLOR(piece) == color &&
-        move.from == orig) {
+    if (board->ep & (1ULL << dest) && board_get(board, dest) == EMPTY) {
       return true;
     }
   }
@@ -149,7 +104,13 @@ bool rook_moved(Board *board, int color, int orig) {
 
 bool check_king(Board *board, int orig, int dest) {
   if (IS_BIT_SET(KING_MASKS[orig], dest)) {
+#ifdef MENACE
+    Bb friendly_pieces = (board->color == WHITE)
+                             ? board->white & ~board->black_threat
+                             : board->black & ~board->white_threat;
+#else
     Bb friendly_pieces = (board->color == WHITE) ? board->white : board->black;
+#endif
     return !IS_BIT_SET(friendly_pieces, dest);
   }
 
@@ -158,25 +119,21 @@ bool check_king(Board *board, int orig, int dest) {
     if ((orig >> 3) != (board->color == WHITE ? 0 : 7) || (orig & 7) != 3)
       return false;
 
-    if (king_moved(board, board->color))
-      return false;
-
     bool kingside = ((dest & 7) == 1);
-    int rook_file = kingside ? 0 : 7;
-    int rook_rank = board->color == WHITE ? 0 : 7;
-    int rook_sq = rook_file + rook_rank * 8;
-
-    int rook_piece = board_get(board, rook_sq);
-    if (PIECE(rook_piece) != ROOK || COLOR(rook_piece) != board->color ||
-        rook_moved(board, board->color, rook_sq))
-      return false;
 
     Bb path = 0ULL;
     if (kingside) {
+      if (board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE
+                                                 : BLACK_CASTLE_KINGSIDE)) {
+        return false;
+      }
       path = (1ULL << (orig - 1)) | (1ULL << (orig - 2));
     } else {
-      path = (1ULL << (orig + 1)) | (1ULL << (orig + 2)) |
-             (1ULL << (orig + 3));
+      if (board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE
+                                                 : BLACK_CASTLE_QUEENSIDE)) {
+        return false;
+      }
+      path = (1ULL << (orig + 1)) | (1ULL << (orig + 2)) | (1ULL << (orig + 3));
     }
     if (board->all & path)
       return false;
@@ -228,90 +185,148 @@ bool move_check_validity(Board *board, int orig, int dest) {
   }
 }
 
-int move(Board *orig_board, Move move) {
-  Board *board = board_copy(
-      orig_board); // TODO: there HAS to be a better way but ATM it works
-  if (!move_check_validity(board, move.from, move.to)) {
-    board_free(board);
-    return -1;
-  }
+// Move a piece on the board
+int move_make(Board *board, Move *move, Undo *undo) {
+  int orig_pos = move->from;
+  int dest_pos = move->to;
+  int piece = move->piece;
+  int capture = board_get(board, dest_pos);
 
-  int orig_pos = move.from;
-  int dest_pos = move.to;
-  int piece = move.piece;
+  undo->castle = board->castle;
+  undo->capture = capture;
+  undo->ep = board->ep;
 
   // En passant and castling
-  if (PIECE(piece) == PAWN && board_get(board, dest_pos) == EMPTY &&
+  if (PIECE(piece) == PAWN && capture == EMPTY &&
       (orig_pos & 7) != (dest_pos & 7)) {
     int captured_rank = orig_pos >> 3;
-    board_set(board, (dest_pos & 7) + captured_rank * 8, EMPTY);
-  } else if (PIECE(piece) == KING && abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
+    board_set_empty(board, (dest_pos & 7) + captured_rank * 8, piece ^ 0xF0);
+  } else if (PIECE(piece) == KING &&
+             abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
     int rook_orig, rook_dest;
     if ((dest_pos & 7) == 5) { // Queen-side castling
       rook_orig = 7 + (orig_pos >> 3) * 8;
       rook_dest = 4 + (orig_pos >> 3) * 8;
-    } else if ((dest_pos & 7) == 1) { // King-side castling
+    } else { // King-side castling
       rook_orig = 0 + (orig_pos >> 3) * 8;
       rook_dest = 2 + (orig_pos >> 3) * 8;
     }
-    board_set(board, rook_dest,
-              board_get(board, rook_orig));
-    board_set(board, rook_orig, EMPTY);
+    int rook = board_get(board, rook_orig);
+    board_set(board, rook_dest, rook);
+    board_set_empty(board, rook_orig, rook);
   }
   board_set(board, dest_pos, piece);
-  board_set(board, orig_pos, EMPTY);
+  board_set_empty(board, orig_pos, piece);
 
   // Promotion
   if (PIECE(piece) == PAWN) {
     if (COLOR(piece) == WHITE && (dest_pos >> 3) == 7) {
-      board_set(board, dest_pos, WHITE_QUEEN);
+      board_set(board, dest_pos, move->promote);
     } else if (COLOR(piece) == BLACK && (dest_pos >> 3) == 0) {
-      board_set(board, dest_pos, BLACK_QUEEN);
+      board_set(board, dest_pos, move->promote);
     }
   }
 
+  // Switch side
   board->color ^= BLACK;
 
+  // Check if previous king is still in check
   threat_board_update(board);
   if (threat_check(board)) {
-    board_free(board);
+    move_undo(board, move, undo);
     return -1;
   }
+
+  // Update castle flags
+  if (piece == WHITE_KING) {
+    board->castle |= WHITE_CASTLE;
+  } else if (piece == BLACK_KING) {
+    board->castle |= BLACK_CASTLE;
+  } else if (PIECE(piece) == ROOK) {
+    switch (orig_pos) {
+    case 0:
+      board->castle |= WHITE_CASTLE_KINGSIDE;
+      break;
+    case 7:
+      board->castle |= WHITE_CASTLE_QUEENSIDE;
+      break;
+    case 56:
+      board->castle |= BLACK_CASTLE_KINGSIDE;
+      break;
+    case 63:
+      board->castle |= BLACK_CASTLE_QUEENSIDE;
+      break;
+    }
+  }
+
+  // Update en passant flags
+  if (PIECE(piece) == PAWN && abs((orig_pos >> 3) - (dest_pos >> 3)) == 2) {
+    int ep_square = (orig_pos + dest_pos) / 2;
+    board->ep = 0;
+    SET_BIT(board->ep, ep_square);
+  } else {
+    board->ep = 0;
+  }
+
   // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing
   // depth)
-  *orig_board = *board; // this is plain disgusting
-  board_free(board);
+  return 0;
+}
+
+// Undo a move
+int move_undo(Board *board, Move *move, Undo *undo) {
+  int orig_pos = move->from;
+  int dest_pos = move->to;
+  int piece = move->piece;
+  int capture = undo->capture;
+
+  // Switch side
+  board->color ^= BLACK;
+
+  // Depromotion
+  if (move->promote != EMPTY) {
+    piece = (COLOR(piece) == WHITE) ? WHITE_PAWN : BLACK_PAWN;
+  }
+
+  // Restore original positions
+  board_set(board, orig_pos, piece);
+  board_set(board, dest_pos, capture);
+
+  // Handle en passant capture
+  if (PIECE(piece) == PAWN && capture == EMPTY &&
+      (orig_pos & 7) != (dest_pos & 7)) {
+    int captured_rank = orig_pos >> 3;
+    int captured_piece = (board->color == WHITE) ? BLACK_PAWN : WHITE_PAWN;
+    board_set(board, (dest_pos & 7) + captured_rank * 8, captured_piece);
+  }
+  // Handle castling
+  else if (PIECE(piece) == KING && abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
+    int rook_orig, rook_dest;
+    if ((dest_pos & 7) == 5) { // Queen-side castling
+      rook_orig = 7 + (orig_pos >> 3) * 8;
+      rook_dest = 4 + (orig_pos >> 3) * 8;
+    } else { // King-side castling
+      rook_orig = 0 + (orig_pos >> 3) * 8;
+      rook_dest = 2 + (orig_pos >> 3) * 8;
+    }
+    int rook = board_get(board, rook_dest);
+    board_set(board, rook_orig, rook);
+    board_set_empty(board, rook_dest, rook);
+  }
+
+  // Restore castle flags
+  board->castle = undo->castle;
+
+  // Restore en passant flags
+  board->ep = undo->ep;
+
   return 0;
 }
 
 // Beginning move enumeration //
 
-void init_move_list(MoveList *list) {
-  list->count = 0;
-  list->capacity = 20;
-  list->moves = (Move *)malloc(sizeof(Move) * list->capacity);
-  if (list->moves == NULL) {
-    wprintf(L"Your memory is doomed...\n");
-    exit(EXIT_FAILURE);
-  }
-}
-
-void add_move(MoveList *list, Move move) {
-  if (list->count == list->capacity) {
-    list->capacity *= 2;
-    list->moves = (Move *)realloc(list->moves, sizeof(Move) * list->capacity);
-  }
-  list->moves[list->count++] = move;
-}
-
-void move_list_free(MoveList *list) {
-  free(list->moves);
-  list->moves = NULL;
-  list->count = 0;
-  list->capacity = 0;
-}
-
-void knight_possible_move(Board *board, int pos, MoveList *list) {
+int knight_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid;
 #ifdef MENACE
   valid = KNIGHT_MASKS[pos] &
@@ -325,17 +340,15 @@ void knight_possible_move(Board *board, int pos, MoveList *list) {
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
-
-    add_move(list, move);
+    Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
+    list[count++] = move;
     valid &= valid - 1;
   }
+  return count;
 }
 
-void rook_possible_move(Board *board, int pos, MoveList *list) {
+int rook_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid;
 #ifdef MENACE
   valid = bb_rook_attacks(board->all, pos) &
@@ -349,17 +362,15 @@ void rook_possible_move(Board *board, int pos, MoveList *list) {
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
-    add_move(list, move);
-
+    Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
+    list[count++] = move;
     valid &= valid - 1;
   }
+  return count;
 }
 
-void bishop_possible_move(Board *board, int pos, MoveList *list) {
+int bishop_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid;
 #ifdef MENACE
   valid = bb_bishop_attacks(board->all, pos) &
@@ -373,99 +384,209 @@ void bishop_possible_move(Board *board, int pos, MoveList *list) {
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
-    add_move(list, move);
-
+    Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
+    list[count++] = move;
     valid &= valid - 1;
   }
+  return count;
 }
 
-void pawn_possible_move(Board *board, int pos, MoveList *list) {
-  int offset[8] = {8, 16, 9, 7, -8, -16, -9, -7};
-  for (int i = 0; i < 8; i++) {
-    int dest = pos + offset[i];
-    if (dest < 0 || dest >= 64) // TODO: why does check_pawn not check this?
-      continue;
-    if (check_pawn(board, pos, dest)) {
-      Move move = {board_get(board, pos),
-                   pos,
-                   dest,
-                   board_get(board, dest) != EMPTY};
-      add_move(list, move);
+int pawn_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
+  int piece = board_get(board, pos);
+  int direction = (COLOR(piece) == WHITE) ? 1 : -1;
+  int start_rank = (COLOR(piece) == WHITE) ? 1 : 6;
+  int promote_rank = (COLOR(piece) == WHITE) ? 7 : 0;
+
+  // One Square
+  int forward = pos + (direction * 8);
+  if (forward >= 0 && forward < 64 && board_get(board, forward) == EMPTY) {
+    if ((forward >> 3) == promote_rank) {
+      Move moveq = {piece, pos, forward,
+                    COLOR(piece) == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
+      Move moven = {piece, pos, forward,
+                    COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
+      list[count++] = moveq;
+      list[count++] = moven;
+    } else {
+      Move move = {piece, pos, forward, EMPTY};
+      list[count++] = move;
+    }
+
+    // Two squares
+    if ((pos >> 3) == start_rank) {
+      int double_forward = forward + (direction * 8);
+      if (board_get(board, double_forward) == EMPTY) {
+        Move move = {piece, pos, double_forward, EMPTY};
+        list[count++] = move;
+      }
     }
   }
+
+  // Captures
+  for (int side = -1; side <= 1; side += 2) {
+    int capture = forward + side;
+    if (capture >= 0 && capture < 64 && abs((pos & 7) - (capture & 7)) == 1) {
+
+      // Normal capture
+      int target = board_get(board, capture);
+      if (target != EMPTY && COLOR(target) != COLOR(piece)) {
+        if ((capture >> 3) == promote_rank) {
+          Move moveq = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_QUEEN : BLACK_QUEEN};
+          Move moven = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
+          list[count++] = moveq;
+          list[count++] = moven;
+        } else {
+          Move move = {piece, pos, capture, EMPTY};
+          list[count++] = move;
+        }
+      }
+
+      // En passant
+      if (IS_BIT_SET(board->ep, capture)) {
+        Move move = {piece, pos, capture, EMPTY};
+        list[count++] = move;
+      }
+    }
+  }
+  return count;
 }
 
-void queen_possible_move(Board *board, int pos, MoveList *list) {
-  rook_possible_move(board, pos, list);
-  bishop_possible_move(board, pos, list);
+int queen_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
+  count += rook_possible_move(board, pos, list);
+  count += bishop_possible_move(board, pos, &list[count]);
+  return count;
 }
 
-void king_possible_move(Board *board, int pos, MoveList *list) {
-  #ifdef MENACE
+int king_possible_move(Board *board, int pos, Move *list) {
+  int count = 0;
   Bb valid = KING_MASKS[pos] &
-             (board->color == WHITE ? ~board->white | board->black_threat
-                                    : ~board->black | board->white_threat);
-#else
-  Bb valid = KING_MASKS[pos] &
-             ~(board->color == WHITE ? board->white : board->black);
-#endif
+             ~(board->color == WHITE ? board->white | board->black_threat
+                                     : board->black | board->white_threat);
   while (valid) {
     int dest_sq = __builtin_ctzll(valid);
 
-    Move move = {board_get(board, pos),
-                 pos,
-                 dest_sq,
-                 board_get(board, dest_sq) != EMPTY};
-    add_move(list, move);
-
+    Move move = {board_get(board, pos), pos, dest_sq, EMPTY};
+    list[count++] = move;
     valid &= valid - 1;
   }
-}
 
-void any_possible_move(Board *board, int pos, int piece, MoveList *list) {
-  switch (piece & 0x0F) {
-  case QUEEN:
-    queen_possible_move(board, pos, list);
-    break;
-  case ROOK:
-    rook_possible_move(board, pos, list);
-    break;
-  case BISHOP:
-    bishop_possible_move(board, pos, list);
-    break;
-  case KNIGHT:
-    knight_possible_move(board, pos, list);
-    break;
-  case PAWN:
-    pawn_possible_move(board, pos, list);
-    break;
-  case KING:
-    king_possible_move(board, pos, list);
-    break;
+  // Castling
+  if ((board->color == WHITE && pos == 3) ||
+      (board->color == BLACK && pos == 59)) {
+
+    Bb threats =
+        (board->color == WHITE) ? board->black_threat : board->white_threat;
+    int rank = pos >> 3;
+
+    // Kingside castle
+    if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE
+                                                 : BLACK_CASTLE_KINGSIDE))) {
+      Bb kingside_path = ((3ULL) << (rank * 8 + 1));
+      if (!(board->all & kingside_path) && !(threats & kingside_path)) {
+        Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
+        list[count++] = move;
+      }
+    }
+
+    // Queenside castle
+    if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE
+                                                 : BLACK_CASTLE_QUEENSIDE))) {
+      Bb queenside_path = ((7ULL) << (rank * 8 + 4));
+      if (!(board->all & queenside_path) &&
+          !(threats & (queenside_path >> 1))) {
+        Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
+        list[count++] = move;
+      }
+    }
   }
+  return count;
 }
 
-MoveList move_possible(Board *board) {
-  MoveList ret;
-  init_move_list(&ret);
-  for (int i = 0; i < 64; i++) {
-    int piece = board_get(board, i);
+int move_possible(Board *board, Move *moves) {
+  int count = 0;
+  Bb pieces;
+
+  // Queens
 #ifdef MENACE
-    if (IS_BIT_SET(board->color == WHITE
-                       ? board->white | (board->white_threat & board->black)
-                       : board->black | (board->black_threat & board->white),
-                   i)) {
-      any_possible_move(board, i, piece, &ret);
-    }
+  pieces = board->color == WHITE ? board->white_queens | (board->white_threat & board->black_queens)
+                                 : board->black_queens | (board->black_threat & board->white_queens);
 #else
-    if (IS_BIT_SET(board->color == WHITE ? board->white : board->black, i)) {
-      any_possible_move(board, i, piece, &ret);
-    }
+  pieces = board->color == WHITE ? board->white_queens : board->black_queens;
 #endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += queen_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
   }
-  return ret;
+
+  // Rooks
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_rooks | (board->white_threat & board->black_rooks)
+                                 : board->black_rooks | (board->black_threat & board->white_rooks);
+#else
+  pieces = board->color == WHITE ? board->white_rooks : board->black_rooks;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += rook_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Bishops
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_bishops | (board->white_threat & board->black_bishops)
+                                 : board->black_bishops | (board->black_threat & board->white_bishops);
+#else
+  pieces = board->color == WHITE ? board->white_bishops : board->black_bishops;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += bishop_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Knights
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_knights | (board->white_threat & board->black_knights)
+                                 : board->black_knights | (board->black_threat & board->white_knights);
+#else
+  pieces = board->color == WHITE ? board->white_knights : board->black_knights;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += knight_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Pawns
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_pawns | (board->white_threat & board->black_pawns)
+                                 : board->black_pawns | (board->black_threat & board->white_pawns);
+#else
+  pieces = board->color == WHITE ? board->white_pawns : board->black_pawns;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += pawn_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  // Kings
+#ifdef MENACE
+  pieces = board->color == WHITE ? board->white_kings | (board->white_threat & board->black_kings)
+                                 : board->black_kings | (board->black_threat & board->white_kings);
+#else
+  pieces = board->color == WHITE ? board->white_kings : board->black_kings;
+#endif
+  while (pieces) {
+    int pos = __builtin_ctzll(pieces);
+    count += king_possible_move(board, pos, &moves[count]);
+    pieces &= pieces - 1;
+  }
+
+  return count;
 }

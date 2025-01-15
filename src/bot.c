@@ -1,4 +1,5 @@
 #include "bot.h"
+#include "bb.h"
 #include <math.h>
 
 typedef struct {
@@ -51,6 +52,15 @@ int evaluate(Board *board) {
   change_score(&score, board->white_threat, threat_value);
   change_score(&score, board->black_threat, -threat_value);
 
+  if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->white_kings)] &
+                           board->white_pawns) >= 3) {
+    score += 7;
+  }
+  if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->black_kings)] &
+                           board->black_pawns) >= 3) {
+    score -= 7;
+  }
+
   return score;
 }
 
@@ -59,18 +69,18 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   // pruning Currently checks if the move is possible even though we know it is
   // - kinda beta is greater than alpha (or else the branch is pruned)
 
-  MoveList list_moves =
-      move_possible(board); // Should be a list of every valid move
-  if (list_moves.count <= 0) {
-    exit(2);
-  }; // Checkmate, draw ... to be dealt with later
+  Move list_moves[MAX_MOVES];
+  int moves_count = move_possible(board, list_moves);
 
   int best_index = 0;
   int best_eval = board->color == WHITE ? -10000 : 10000;
 
-  for (int i = 0; i < list_moves.count; i++) {
+  for (int i = 0; i < moves_count; i++) {
     Board *new_board = board_copy(board);
-    int res = move(new_board, list_moves.moves[i]);
+    Undo undo;
+    int res = move_make(new_board, &(list_moves[i]),
+                        &undo); // FIXME: NEED TO UNDO THE MOVE NOT CREATE A NEW
+                                // BOARD AND FREE IT
     if (res) { // Move not allowed (could lead to discovered check...)
       board_free(new_board);
       continue;
@@ -90,8 +100,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
       best_eval = eval;
       if (abs(best_eval) > 5000) {
         best_eval += board->color == WHITE ? depth : -depth;
-        Move best_move = list_moves.moves[best_index];
-        move_list_free(&list_moves);
+        Move best_move = list_moves[best_index];
         return (Vmove){best_move, best_eval};
       }
     }
@@ -104,8 +113,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
       break;
   }
 
-  Move best_move = list_moves.moves[best_index];
-  move_list_free(&list_moves);
+  Move best_move = list_moves[best_index];
   return (Vmove){best_move, best_eval};
 }
 

@@ -13,12 +13,17 @@
 typedef unsigned long long Bb;
 
 typedef struct {
-  int piece;
-  int from;
-  int to;
-  bool capture;
-  int promote;
+  unsigned char piece;
+  unsigned char from;
+  unsigned char to;
+  unsigned char promote;
 } Move;
+
+typedef struct {
+  int castle;
+  int capture;
+  Bb ep;
+} Undo;
 
 typedef struct {
   Move *moves;
@@ -35,6 +40,9 @@ typedef struct {
   int squares[64];
   int color;
   Stack *history;
+
+  int castle;
+  Bb ep;
 
   Bb all;
   Bb white;
