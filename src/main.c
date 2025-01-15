@@ -11,9 +11,9 @@
 #include <string.h>
 #include <wchar.h>
 
-void test_print_moves(MoveList l) {
-  for (int i = 0; i < l.count; i++) {
-    char *mv = move_to_algebric(l.moves[i]);
+void test_print_moves(Move *l, int count) {
+  for (int i = 0; i < count; i++) {
+    char *mv = move_to_algebric(l[i]);
     wprintf(L"%s ", mv);
     free(mv);
   }
@@ -50,7 +50,9 @@ int command(char *strmove, Board **board) {
     board_bb_info(*board);
     return -1;
   } else if (!strncmp(strmove, "ppm", 3)) {
-    test_print_moves(move_possible(*board));
+    Move moves[MAX_MOVES];
+    int count = move_possible(*board, moves);
+    test_print_moves(moves, count);
     return -1;
   } else if (!strncmp(strmove, "exit", 4)) {
     free((*board)->history->list_of_move);

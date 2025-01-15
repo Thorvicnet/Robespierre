@@ -13,10 +13,10 @@
 typedef unsigned long long Bb;
 
 typedef struct {
-  int piece;
-  int from;
-  int to;
-  int promote;
+  unsigned char piece;
+  unsigned char from;
+  unsigned char to;
+  unsigned char promote;
 } Move;
 
 typedef struct {

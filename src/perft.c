@@ -8,24 +8,24 @@
 #include <time.h>
 #include <wchar.h>
 
-const int DEPTH = 6;
+const int DEPTH = 7;
 
 int count_moves(Board *board, int depth) {
   if (depth == 0) {
     return 1;
   }
-  MoveList l = move_possible(board);
+  Move l[MAX_MOVES];
+  int moves_count = move_possible(board, l);
   Undo undo;
   int count = 0;
-  for (int i = 0; i < l.count; i++) {
-    int res = move_make(board, &(l.moves[i]), &undo);
+  for (int i = 0; i < moves_count; i++) {
+    int res = move_make(board, &(l[i]), &undo);
     if (res) {
       continue;
     }
     count += count_moves(board, depth - 1);
-    move_undo(board, &(l.moves[i]), &undo);
+    move_undo(board, &(l[i]), &undo);
   }
-  free(l.moves);
   return count;
 }
 
@@ -42,7 +42,7 @@ int main() {
     diff = clock() - start;
     int msec = diff * 1000 / CLOCKS_PER_SEC;
     wprintf(L"- depth %d: %d, took %ds %dms, %d clocks\n", depth, count[depth],
-            msec / 1000, msec % 1000);
+            msec / 1000, msec % 1000, diff);
   }
 
   assert(count[0] == 1);
@@ -52,5 +52,9 @@ int main() {
   assert(count[4] == 197281);
   assert(count[5] == 4865609);
   wprintf(L"Everything looks good\n");
+
+  free(board->history->list_of_move);
+  free(board->history);
+  board_free(board);
   return 0;
 }
