@@ -111,8 +111,7 @@ void test_move_check_validity_pawn(void) {
   board_set(board, 4 + 4 * 8, WHITE_PAWN);
   board_set(board, 5 + 4 * 8, BLACK_PAWN);
 
-  Move last_move = {BLACK_PAWN, 5 + 6 * 8, 5 + 4 * 8};
-  board_add_move(board, last_move);
+  board->ep = 1ULL << (5 + 5 * 8);
 
   assert(move_check_validity(board, 4 + 4 * 8, 5 + 5 * 8));
   assert(!move_check_validity(board, 4 + 4 * 8, 3 + 5 * 8));

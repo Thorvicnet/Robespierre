@@ -15,7 +15,7 @@ PERFT_FILE := perft.c
 
 # -MMD generates dependencies while compiling, add pg for profiling
 CFLAGS += -MMD
-CC := gcc
+CC := clang
 
 # Add paths after defining the variables
 OBJFILES := $(patsubst %.c, $(OBJ_DIR)/%.o, $(CFILES))
