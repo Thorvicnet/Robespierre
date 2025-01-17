@@ -133,10 +133,7 @@ Move choose(Board *board) {
 
   int depth = floor(45.4 / log2((double)movement_potential));
 
-  wprintf(L"- depth: %d\n", depth);
   Vmove t = choose_with_depth(board, depth, -10000, 10000);
-
-  wprintf(L"- eval: %d\n", t.value);
 
   return t.mo; // currently arbitrary depth of 5
 }

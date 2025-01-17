@@ -49,36 +49,77 @@ Move algebric_to_move(char *ch, Board *board) {
                 dest[0] + dest[1] * 8, promot};
 }
 
-
-int transform_board_from_fen(char* fen, Board *board){
+int transform_board_from_fen(char *fen, Board *board) {
   board_empty(board);
   int i = 0;
   int j = 0;
-  for (; i < 64;j++){
+  for (; i < 64; j++) {
     char c = fen[j];
-    wprintf(L"%c", c);
-    if (c == '1') i+=1;
-    if (c == '2') i+=2;
-    if (c == '3') i+=3;
-    if (c == '4') i+=4;
-    if (c == '5') i+=5;
-    if (c == '6') i+=6;
-    if (c == '7') i+=7;
-    if (c == '8') i+=8;
-    if (c == 'n') board_set(board, 63-i++, BLACK_KNIGHT);
-    if (c == 'N') board_set(board, 63-i++, WHITE_KNIGHT);
-    if (c == 'p') board_set(board, 63-i++, BLACK_PAWN);
-    if (c == 'P') board_set(board, 63-i++, WHITE_PAWN);
-    if (c == 'r') board_set(board, 63-i++, BLACK_ROOK);
-    if (c == 'R') board_set(board, 63-i++, WHITE_ROOK);
-    if (c == 'b') board_set(board, 63-i++, BLACK_BISHOP);
-    if (c == 'B') board_set(board, 63-i++, WHITE_BISHOP);
-    if (c == 'q') board_set(board, 63-i++, BLACK_QUEEN);
-    if (c == 'Q') board_set(board, 63-i++, WHITE_QUEEN);
-    if (c == 'k') board_set(board, 63-i++, BLACK_KING);
-    if (c == 'K') board_set(board, 63-i++, WHITE_KING);
+    switch (c) {
+    case '1':
+      i += 1;
+      break;
+    case '2':
+      i += 2;
+      break;
+    case '3':
+      i += 3;
+      break;
+    case '4':
+      i += 4;
+      break;
+    case '5':
+      i += 5;
+      break;
+    case '6':
+      i += 6;
+      break;
+    case '7':
+      i += 7;
+      break;
+    case '8':
+      i += 8;
+      break;
+
+    case 'n':
+      board_set(board, 63 - i++, BLACK_KNIGHT);
+      break;
+    case 'N':
+      board_set(board, 63 - i++, WHITE_KNIGHT);
+      break;
+    case 'p':
+      board_set(board, 63 - i++, BLACK_PAWN);
+      break;
+    case 'P':
+      board_set(board, 63 - i++, WHITE_PAWN);
+      break;
+    case 'r':
+      board_set(board, 63 - i++, BLACK_ROOK);
+      break;
+    case 'R':
+      board_set(board, 63 - i++, WHITE_ROOK);
+      break;
+    case 'b':
+      board_set(board, 63 - i++, BLACK_BISHOP);
+      break;
+    case 'B':
+      board_set(board, 63 - i++, WHITE_BISHOP);
+      break;
+    case 'q':
+      board_set(board, 63 - i++, BLACK_QUEEN);
+      break;
+    case 'Q':
+      board_set(board, 63 - i++, WHITE_QUEEN);
+      break;
+    case 'k':
+      board_set(board, 63 - i++, BLACK_KING);
+      break;
+    case 'K':
+      board_set(board, 63 - i++, WHITE_KING);
+      break;
+    }
   }
-  j+=2;
+  j += 2;
   if (fen[j] == 'b') {
     board->color = BLACK;
     return BLACK;
@@ -86,51 +127,160 @@ int transform_board_from_fen(char* fen, Board *board){
   return WHITE;
 }
 
-char* create_fen_from_board(Board *board){
-  char* fen = (char*)malloc(sizeof(char) * 100);
+char *create_fen_from_board(Board *board) {
+  char *fen = (char *)malloc(sizeof(char) * 100);
 
   int empty_case = 0;
   int p = 0;
-  for (int i = 7; i >= 0; i--){
-    for (int j = 7;j >= 0; j--){
+  for (int i = 7; i >= 0; i--) {
+    for (int j = 7; j >= 0; j--) {
       int piece = board_get(board, j + i * 8);
-      wprintf(L"%s %d\n", fen, piece);
-      if (piece == EMPTY){
+      if (piece == EMPTY) {
         empty_case += 1;
       } else {
-        if (empty_case != 0){
+        if (empty_case != 0) {
           fen[p] = (char)(empty_case + 48);
-          wprintf(L"%c %d aaaaaaaaaaa\n", fen[p], empty_case);
-          p+=1;
+          p += 1;
           empty_case = 0;
         }
-        if (piece == BLACK_KNIGHT)  fen[p++] = 'n';
-        else if (piece == WHITE_KNIGHT)  fen[p++] = 'N';
-        else if (piece == BLACK_ROOK)  fen[p++] = 'r';
-        else if (piece == WHITE_ROOK)  fen[p++] = 'R';
-        else if (piece == BLACK_BISHOP)  fen[p++] = 'b';
-        else if (piece == WHITE_BISHOP)  fen[p++] = 'B';
-        else if (piece == BLACK_PAWN)  fen[p++] = 'p';
-        else if (piece == WHITE_PAWN)  fen[p++] = 'P';
-        else if (piece == BLACK_QUEEN)  fen[p++] = 'q';
-        else if (piece == WHITE_QUEEN)  fen[p++] = 'Q';
-        else if (piece == BLACK_KING)  fen[p++] = 'k';
-        else if (piece == WHITE_KING)  fen[p++] = 'K';
+        switch (piece) {
+        case BLACK_KNIGHT:
+          fen[p++] = 'n';
+          break;
+        case WHITE_KNIGHT:
+          fen[p++] = 'N';
+          break;
+        case BLACK_ROOK:
+          fen[p++] = 'r';
+          break;
+        case WHITE_ROOK:
+          fen[p++] = 'R';
+          break;
+        case BLACK_BISHOP:
+          fen[p++] = 'b';
+          break;
+        case WHITE_BISHOP:
+          fen[p++] = 'B';
+          break;
+        case BLACK_PAWN:
+          fen[p++] = 'p';
+          break;
+        case WHITE_PAWN:
+          fen[p++] = 'P';
+          break;
+        case BLACK_QUEEN:
+          fen[p++] = 'q';
+          break;
+        case WHITE_QUEEN:
+          fen[p++] = 'Q';
+          break;
+        case BLACK_KING:
+          fen[p++] = 'k';
+          break;
+        case WHITE_KING:
+          fen[p++] = 'K';
+          break;
+        }
       }
-
     }
-    if (empty_case != 0){
+    if (empty_case != 0) {
       fen[p] = (char)(empty_case + 48);
-      wprintf(L"%c %d aaaaaaaaaaa\n", empty_case+48, empty_case);
-      p+=1;
+      p += 1;
       empty_case = 0;
     }
-    if (i != 0) fen[p++] = '/';
-
+    if (i != 0)
+      fen[p++] = '/';
   }
   fen[p++] = ' ';
-  if (board->color == BLACK) fen[p++] = 'b';
-  if (board->color == WHITE) fen[p++] = 'w';
-  for (; p < 100; p++) fen[p] = ' ';
+  if (board->color == BLACK)
+    fen[p++] = 'b';
+  if (board->color == WHITE)
+    fen[p++] = 'w';
+  for (; p < 100; p++)
+    fen[p] = ' ';
   return fen;
+}
+
+void uci_loop(Board *board) {
+  char *line = NULL;
+  size_t len = 0;
+
+  setbuf(stdout, NULL);
+
+  while (1) {
+    if (getline(&line, &len, stdin) == -1) {
+      wprintf(L"Error reading line\n");
+      fflush(stdout);
+      exit(EXIT_FAILURE);
+    }
+
+    line[strcspn(line, "\n")] = 0;
+
+    if (strncmp(line, "ucinewgame", 10) == 0) {
+      // Free current history and board
+      free(board->history->list_of_move);
+      free(board->history);
+      board_free(board);
+
+      // Initialize new board
+      board = board_init();
+      threat_board_update(board);
+    } else if (strncmp(line, "uci", 3) == 0) {
+      wprintf(L"id name %s\n", ENGINE_NAME);
+      wprintf(L"id author %s\n", ENGINE_AUTHOR);
+      wprintf(L"option name Hash type spin default 1 min 1 max 1024\n");
+      wprintf(L"option name Threads type spin default 1 min 1 max 128\n");
+      wprintf(
+          L"option name Move Overhead type spin default 100 min 0 max 5000\n");
+      wprintf(L"uciok\n");
+      fflush(stdout);
+    } else if (strncmp(line, "isready", 7) == 0) {
+      wprintf(L"readyok\n");
+      fflush(stdout);
+    } else if (strncmp(line, "position", 8) == 0) {
+      char *token = strtok(line, " ");
+      token = strtok(NULL, " "); // Get next token after "position"
+
+      if (token && strcmp(token, "startpos") == 0) {
+        transform_board_from_fen(START_FEN, board);
+      } else if (token && strcmp(token, "fen") == 0) {
+        // Reconstruct FEN string from remaining tokens
+        char fen[128] = "";
+        int fen_parts = 0;
+        while ((token = strtok(NULL, " ")) != NULL &&
+               strcmp(token, "moves") != 0) {
+          strcat(fen, token);
+          strcat(fen, " ");
+          if (++fen_parts >= 6)
+            break;
+        }
+        transform_board_from_fen(fen, board);
+      }
+
+      // Handle moves if present
+      token = strtok(NULL, " ");
+      if (token && strcmp(token, "moves") == 0) {
+        while ((token = strtok(NULL, " ")) != NULL) {
+          Move move = algebric_to_move(token, board);
+          if (!move_check_validity(board, move.from, move.to)) {
+            wprintf(L"Invalid move in sequence: %s\n", token);
+            continue;
+          }
+          Undo undo;
+          move_make(board, &move, &undo);
+          threat_board_update(board);
+        }
+      }
+    } else if (strncmp(line, "go", 2) == 0) {
+      Move bot_move = choose(board);
+      char *mv = move_to_algebric(bot_move);
+      wprintf(L"bestmove %s\n", mv);
+      fflush(stdout);
+      free(mv);
+    } else if (strncmp(line, "quit", 4) == 0 || strncmp(line, "stop", 4) == 0) {
+      break;
+    }
+  }
+
+  free(line);
 }

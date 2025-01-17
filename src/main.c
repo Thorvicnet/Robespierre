@@ -119,71 +119,75 @@ int bot_turn(Board *board) {
   return move_make(board, &bot, &undo);
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
   bb_magic_init();
 
   Board *board = board_init();
-  char strmove[15];
-  int res;
 
-  while (true) {
-    board_info(board);
-    if (player1) {
-      wprintf(L"\nPlayer Turn white\n");
-      res = -1;
-      while (res) {
-        scanf("%s", strmove);
-        res = command(strmove, &board);
-        if (res == 2)
-          break;
-      }
-      if (res == 2) {
-        continue;
-      }
-    } else {
-      wprintf(L"\nBOT WHITE\n");
-      res = bot_turn(board);
-      if (res) {
-        wprintf(L"Bot fail, bot dumb\n");
+  if (argc > 1 && strcmp(argv[1], "nouci") == 0) {
+    char strmove[15];
+    int res;
+
+    while (true) {
+      board_info(board);
+      if (player1) {
+        wprintf(L"\nPlayer Turn white\n");
+        res = -1;
         while (res) {
           scanf("%s", strmove);
           res = command(strmove, &board);
+          if (res == 2)
+            break;
         }
-        continue;
+        if (res == 2) {
+          continue;
+        }
+      } else {
+        wprintf(L"\nBOT WHITE\n");
+        res = bot_turn(board);
+        if (res) {
+          wprintf(L"Bot fail, bot dumb\n");
+          while (res) {
+            scanf("%s", strmove);
+            res = command(strmove, &board);
+          }
+          continue;
+        }
       }
-    }
 
-    board_info(board);
-    if (player2) {
-      wprintf(L"\nPlayer Turn black\n");
-      res = -1;
-      while (res) {
-        scanf("%s", strmove);
-        res = command(strmove, &board);
-        if (res == 2)
-          break;
-      }
-      if (res == 2) {
-        continue;
-      }
-    } else {
-      wprintf(L"\nBOT BLACK\n");
-      res = bot_turn(board);
-      if (res) {
-        wprintf(L"Bot fail, bot dumb\n");
+      board_info(board);
+      if (player2) {
+        wprintf(L"\nPlayer Turn black\n");
+        res = -1;
         while (res) {
           scanf("%s", strmove);
           res = command(strmove, &board);
+          if (res == 2)
+            break;
         }
-        continue;
+        if (res == 2) {
+          continue;
+        }
+      } else {
+        wprintf(L"\nBOT BLACK\n");
+        res = bot_turn(board);
+        if (res) {
+          wprintf(L"Bot fail, bot dumb\n");
+          while (res) {
+            scanf("%s", strmove);
+            res = command(strmove, &board);
+          }
+          continue;
+        }
       }
     }
+  } else {
+    uci_loop(board);
   }
 
   free(board->history->list_of_move);
   free(board->history);
   board_free(board);
-
   return EXIT_SUCCESS;
 }
