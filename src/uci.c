@@ -129,6 +129,10 @@ int transform_board_from_fen(char *fen, Board *board) {
 
 char *create_fen_from_board(Board *board) {
   char *fen = (char *)malloc(sizeof(char) * 100);
+  if (fen == NULL) {
+    wprintf(L"Your memory is doomed...\n");
+    exit(EXIT_FAILURE);
+  }
 
   int empty_case = 0;
   int p = 0;
@@ -202,6 +206,7 @@ char *create_fen_from_board(Board *board) {
 }
 
 void uci_loop(Board *board) {
+  // Main loop in uci mode
   char *line = NULL;
   size_t len = 0;
 

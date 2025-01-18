@@ -3,6 +3,7 @@ bin/
 debug/
 
 *.out
+*.key
 venv/
 tmp/
 

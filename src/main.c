@@ -12,7 +12,7 @@
 #include <string.h>
 #include <wchar.h>
 
-void test_print_moves(Move *l, int count) {
+void print_moves(Move *l, int count) {
   for (int i = 0; i < count; i++) {
     char *mv = move_to_algebric(l[i]);
     wprintf(L"%s ", mv);
@@ -53,43 +53,43 @@ int command(char *strmove, Board **board) {
   } else if (!strncmp(strmove, "ppm", 3)) {
     Move moves[MAX_MOVES];
     int count = move_possible(*board, moves);
-    test_print_moves(moves, count);
+    print_moves(moves, count);
     return -1;
   } else if (!strncmp(strmove, "efen", 4)) {
-    char* fen = create_fen_from_board(*board);
+    char *fen = create_fen_from_board(*board);
     wprintf(L"Le fen de cette postion : %s\n", fen);
     free(fen);
     return -1;
   } else if (!strncmp(strmove, "ifen", 4)) {
     char fen[80];
-    wprintf(L"Enter fen : ");        
-    
+    wprintf(L"Enter fen : ");
+
     scanf("%s", fen);
     int ret = transform_board_from_fen(fen, *board);
 
-    while(1){
+    while (1) {
       wprintf(L"\nenter mode (bb/pb/bp/pp) : ");
       scanf("%s", fen);
-      if (strncmp(fen, "bb", 2) == 0){
+      if (strncmp(fen, "bb", 2) == 0) {
         player1 = false;
         player2 = false;
         break;
-      } else if (strncmp(fen, "pb", 2) == 0){
+      } else if (strncmp(fen, "pb", 2) == 0) {
         player1 = true;
         player2 = false;
         break;
-      } else if (strncmp(fen, "bp", 2) == 0){
+      } else if (strncmp(fen, "bp", 2) == 0) {
         player1 = false;
         player2 = true;
         break;
-      } else if (strncmp(fen, "pp", 2) == 0){
+      } else if (strncmp(fen, "pp", 2) == 0) {
         player1 = true;
         player2 = true;
         break;
       }
     }
-    
-    if (ret == WHITE){
+
+    if (ret == WHITE) {
       return 2;
     }
     return 0;
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
       }
     }
   } else {
-    uci_loop(board);
+    uci_loop(board); // starts uci mode
   }
 
   free(board->history->list_of_move);

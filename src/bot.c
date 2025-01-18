@@ -15,6 +15,7 @@ void change_score(int *score, Bb bb, int value) {
 
 int evaluate(Board *board) {
   // Returns an evaluation of the position, without depth
+  // ATM it is very basic
 
   // Values attributed to different pieces (could be modified according to the
   // state of the game)
@@ -66,8 +67,7 @@ int evaluate(Board *board) {
 
 Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   // Chooses the best move, according to a minimax search with alpha-beta
-  // pruning Currently checks if the move is possible even though we know it is
-  // - kinda beta is greater than alpha (or else the branch is pruned)
+  // pruning, beta should be greater than alpha (or else the branch is pruned)
 
   Move list_moves[MAX_MOVES];
   int moves_count = move_possible(board, list_moves);
@@ -119,7 +119,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
 
 Move choose(Board *board) {
   // Chooses the best move according to the evaluation
-  // Currently lacks : iterative deepening
+  // TODO: Currently lacks : iterative deepening
 
   int sliding_movement = 12;
   int movement_potential =
@@ -135,5 +135,5 @@ Move choose(Board *board) {
 
   Vmove t = choose_with_depth(board, depth, -10000, 10000);
 
-  return t.mo; // currently arbitrary depth of 5
+  return t.mo;
 }

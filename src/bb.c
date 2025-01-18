@@ -327,6 +327,8 @@ Bb batt(int sq, Bb block) { // bishop attacks
 }
 
 void bb_magic_init(void) {
+  // Inits the attacks masks for bishops and rooks, should be called at the
+  // start of the main program
   for (int sq = 0; sq < 64; sq++) {
     Bb rmask_sq = ROOK_MASKS[sq];
     int rbits = RBits[sq];
@@ -365,6 +367,7 @@ Bb bb_bishop_attacks(Bb occ, int sq) {
 }
 
 void bb_print(Bb bb) {
+  // Prints a bitboard
   for (int rank = 0; rank < 8; rank++) {
     for (int file = 0; file < 8; file++) {
       int square = rank * 8 + file; // Map rank/file to square index

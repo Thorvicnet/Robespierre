@@ -6,7 +6,7 @@ const wchar_t piece_chars[] = {
     [ROOK] = L'♜',  [QUEEN] = L'♛', [KING] = L'♚'};
 
 Board *board_init(void) {
-  // Returns a board in the default position
+  // Returns a board pointer to a board in the default position
   Board *board = (Board *)malloc(sizeof(Board));
   if (board == NULL) {
     wprintf(L"Your memory is doomed...\n");

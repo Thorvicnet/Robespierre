@@ -8,6 +8,9 @@
 #include <time.h>
 #include <wchar.h>
 
+// Perft program, checks if the bot generate moves correctly
+// TODO: start from different FEN
+
 const int DEPTH = 7;
 
 int count_moves(Board *board, int depth) {

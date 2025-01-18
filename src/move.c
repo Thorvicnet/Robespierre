@@ -1,8 +1,9 @@
 #include "move.h"
 #include "board.h"
 
-// Each piece checks whether the destination is allowed and whether it has moved
-// correctly
+// The first part of this file is for move validation and should only be used
+// when playing locally against a player, the second part is for possible move
+// enumeration for the bot
 
 bool check_knight(Board *board, int orig, int dest) {
 #ifdef MENACE
@@ -24,7 +25,6 @@ bool check_knight(Board *board, int orig, int dest) {
 #endif
 }
 
-// Rook: Validate vertical or horizontal moves and check for obstructions
 bool check_rook(Board *board, int orig, int dest) {
 #ifdef MENACE
   Bb valid = bb_rook_attacks(board->all, orig) &
@@ -37,7 +37,6 @@ bool check_rook(Board *board, int orig, int dest) {
   return IS_BIT_SET(valid, dest);
 }
 
-// Bishop: Validate diagonal moves and check for obstructions
 bool check_bishop(Board *board, int orig, int dest) {
 #ifdef MENACE
   Bb valid = bb_bishop_attacks(board->all, orig) &
@@ -185,8 +184,9 @@ bool move_check_validity(Board *board, int orig, int dest) {
   }
 }
 
-// Move a piece on the board
 int move_make(Board *board, Move *move, Undo *undo) {
+  // Move a piece on the board, returns -1 if the move is invalid (king still in
+  // check)
   int orig_pos = move->from;
   int dest_pos = move->to;
   int piece = move->piece;
@@ -268,13 +268,11 @@ int move_make(Board *board, Move *move, Undo *undo) {
     board->ep = 0;
   }
 
-  // board_add_move(orig_board, move); // FIXME: REMOVE THIS (just for testing
-  // depth)
   return 0;
 }
 
-// Undo a move
 int move_undo(Board *board, Move *move, Undo *undo) {
+  // Undo a move
   int orig_pos = move->from;
   int dest_pos = move->to;
   int piece = move->piece;
@@ -507,13 +505,17 @@ int king_possible_move(Board *board, int pos, Move *list) {
 }
 
 int move_possible(Board *board, Move *moves) {
+  // Fill the move array with all possible moves (pseudo legal generation) and
+  // returns the move count
   int count = 0;
   Bb pieces;
 
   // Queens
 #ifdef MENACE
-  pieces = board->color == WHITE ? board->white_queens | (board->white_threat & board->black_queens)
-                                 : board->black_queens | (board->black_threat & board->white_queens);
+  pieces =
+      board->color == WHITE
+          ? board->white_queens | (board->white_threat & board->black_queens)
+          : board->black_queens | (board->black_threat & board->white_queens);
 #else
   pieces = board->color == WHITE ? board->white_queens : board->black_queens;
 #endif
@@ -525,8 +527,10 @@ int move_possible(Board *board, Move *moves) {
 
   // Rooks
 #ifdef MENACE
-  pieces = board->color == WHITE ? board->white_rooks | (board->white_threat & board->black_rooks)
-                                 : board->black_rooks | (board->black_threat & board->white_rooks);
+  pieces =
+      board->color == WHITE
+          ? board->white_rooks | (board->white_threat & board->black_rooks)
+          : board->black_rooks | (board->black_threat & board->white_rooks);
 #else
   pieces = board->color == WHITE ? board->white_rooks : board->black_rooks;
 #endif
@@ -538,8 +542,10 @@ int move_possible(Board *board, Move *moves) {
 
   // Bishops
 #ifdef MENACE
-  pieces = board->color == WHITE ? board->white_bishops | (board->white_threat & board->black_bishops)
-                                 : board->black_bishops | (board->black_threat & board->white_bishops);
+  pieces =
+      board->color == WHITE
+          ? board->white_bishops | (board->white_threat & board->black_bishops)
+          : board->black_bishops | (board->black_threat & board->white_bishops);
 #else
   pieces = board->color == WHITE ? board->white_bishops : board->black_bishops;
 #endif
@@ -551,8 +557,10 @@ int move_possible(Board *board, Move *moves) {
 
   // Knights
 #ifdef MENACE
-  pieces = board->color == WHITE ? board->white_knights | (board->white_threat & board->black_knights)
-                                 : board->black_knights | (board->black_threat & board->white_knights);
+  pieces =
+      board->color == WHITE
+          ? board->white_knights | (board->white_threat & board->black_knights)
+          : board->black_knights | (board->black_threat & board->white_knights);
 #else
   pieces = board->color == WHITE ? board->white_knights : board->black_knights;
 #endif
@@ -564,8 +572,10 @@ int move_possible(Board *board, Move *moves) {
 
   // Pawns
 #ifdef MENACE
-  pieces = board->color == WHITE ? board->white_pawns | (board->white_threat & board->black_pawns)
-                                 : board->black_pawns | (board->black_threat & board->white_pawns);
+  pieces =
+      board->color == WHITE
+          ? board->white_pawns | (board->white_threat & board->black_pawns)
+          : board->black_pawns | (board->black_threat & board->white_pawns);
 #else
   pieces = board->color == WHITE ? board->white_pawns : board->black_pawns;
 #endif
@@ -577,8 +587,10 @@ int move_possible(Board *board, Move *moves) {
 
   // Kings
 #ifdef MENACE
-  pieces = board->color == WHITE ? board->white_kings | (board->white_threat & board->black_kings)
-                                 : board->black_kings | (board->black_threat & board->white_kings);
+  pieces =
+      board->color == WHITE
+          ? board->white_kings | (board->white_threat & board->black_kings)
+          : board->black_kings | (board->black_threat & board->white_kings);
 #else
   pieces = board->color == WHITE ? board->white_kings : board->black_kings;
 #endif
