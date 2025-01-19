@@ -199,8 +199,8 @@ int move_make(Board *board, Move *move, Undo *undo) {
   // En passant and castling
   if (PIECE(piece) == PAWN && capture == EMPTY &&
       (orig_pos & 7) != (dest_pos & 7)) {
-    int captured_rank = orig_pos >> 3;
-    board_set_empty(board, (dest_pos & 7) + captured_rank * 8, piece ^ 0xF0);
+    board_set_empty(board, (dest_pos & 7) + (orig_pos >> 3) * 8,
+                    COLOR(piece) == WHITE ? BLACK_PAWN : WHITE_PAWN);
   } else if (PIECE(piece) == KING &&
              abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
     int rook_orig, rook_dest;
@@ -436,6 +436,14 @@ int pawn_possible_move(Board *board, int pos, Move *list) {
                         COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
           list[count++] = moveq;
           list[count++] = moven;
+#ifdef ALLPROMOTION
+          Move moveb = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_BISHOP : BLACK_BISHOP};
+          Move mover = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_ROOK : BLACK_ROOK};
+          list[count++] = moveb;
+          list[count++] = mover;
+#endif
         } else {
           Move move = {piece, pos, capture, EMPTY};
           list[count++] = move;

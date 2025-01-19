@@ -122,9 +122,38 @@ int transform_board_from_fen(char *fen, Board *board) {
   j += 2;
   if (fen[j] == 'b') {
     board->color = BLACK;
-    return BLACK;
+  } else {
+    board->color = WHITE;
   }
-  return WHITE;
+  j++;
+
+  // Castling
+  j++;
+  board->castle = WHITE_CASTLE | BLACK_CASTLE;
+  if (fen[j] == '-') {
+    j++;
+  } else {
+    while (fen[j] != ' ') {
+      switch(fen[j]) {
+        case 'K': board->castle &= ~WHITE_CASTLE_KINGSIDE; break;
+        case 'Q': board->castle &= ~WHITE_CASTLE_QUEENSIDE; break;
+        case 'k': board->castle &= ~BLACK_CASTLE_KINGSIDE; break;
+        case 'q': board->castle &= ~BLACK_CASTLE_QUEENSIDE; break;
+      }
+      j++;
+    }
+  }
+
+  // En passant
+  j++;
+  board->ep = 0ULL;
+  if (fen[j] != '-') {
+    int file = 7 - (fen[j] - 'a');
+    int rank = fen[j+1] - '1';
+    SET_BIT(board->ep, file + rank * 8);
+  }
+
+  return board->color;
 }
 
 char *create_fen_from_board(Board *board) {
@@ -200,6 +229,40 @@ char *create_fen_from_board(Board *board) {
     fen[p++] = 'b';
   if (board->color == WHITE)
     fen[p++] = 'w';
+  fen[p++] = ' ';
+  
+  // Castling
+  bool hasCastling = false;
+  if (!(board->castle & WHITE_CASTLE_KINGSIDE)) {
+    fen[p++] = 'K';
+    hasCastling = true;
+  }
+  if (!(board->castle & WHITE_CASTLE_QUEENSIDE)) {
+    fen[p++] = 'Q';
+    hasCastling = true;
+  }
+  if (!(board->castle & BLACK_CASTLE_KINGSIDE)) {
+    fen[p++] = 'k';
+    hasCastling = true;
+  }
+  if (!(board->castle & BLACK_CASTLE_QUEENSIDE)) {
+    fen[p++] = 'q';
+    hasCastling = true;
+  }
+  if (!hasCastling) {
+    fen[p++] = '-';
+  }
+  
+  // En passant
+  fen[p++] = ' ';
+  if (board->ep) {
+    int ep_square = __builtin_ctzll(board->ep);
+    fen[p++] = 'a' + (7 - (ep_square & 7));
+    fen[p++] = '1' + (ep_square >> 3);
+  } else {
+    fen[p++] = '-';
+  }
+  
   for (; p < 100; p++)
     fen[p] = ' ';
   return fen;
