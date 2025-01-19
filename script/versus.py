@@ -7,7 +7,7 @@ import re
 def start_engine(engine_path, init_command):
     """Start the chess engine and init it"""
     engine = subprocess.Popen(
-        ["stdbuf", "-oL", engine_path],
+        ["stdbuf", "-oL", engine_path, "nouci"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,

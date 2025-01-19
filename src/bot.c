@@ -2,6 +2,78 @@
 #include "bb.h"
 #include <math.h>
 
+const int white_bishop_eval[64] = {-20,-10,-10,-10,-10,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5, 10, 10,  5,  0,-10,
+-10,  5,  5, 10, 10,  5,  5,-10,
+-10,  0, 10, 10, 10, 10,  0,-10,
+-10, 10, 10, 10, 10, 10, 10,-10,
+-10,  5,  0,  0,  0,  0,  5,-10,
+-20,-10,-10,-10,-10,-10,-10,-20};
+
+const int black_bishop_eval[64] = {-20,-10,-10,-10,-10,-10,-10,-20,
+-10,  5,  0,  0,  0,  0,  5,-10,
+-10, 10, 10, 10, 10, 10, 10,-10,
+-10,  0, 10, 10, 10, 10,  0,-10,
+-10,  5,  5, 10, 10,  5,  5,-10,
+-10,  0,  5, 10, 10,  5,  0,-10,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-20,-10,-10,-10,-10,-10,-10,-20};
+
+const int white_knight_eval[64] = {-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50};
+
+const int black_knight_eval[64] = {-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50};
+
+const int whire_rook_eval[64] = { 0,  0,  0,  0,  0,  0,  0,  0,
+  10, 10, 10, 10, 10, 10, 10,  10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+  0,  0,  0,  10,  10,  0,  0,  0};
+
+const int black_rook_eval[64] = {  0,  0,  0,  10,  10,  0,  0,  0,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+ -10,  0,  0,  0,  0,  0,  0, -10,
+  10, 10, 10, 10, 10, 10, 10,  10,
+0,  0,  0,  0,  0,  0,  0,  0};
+
+const int white_queen_eval[64] = {-20,-10,-10, -5, -5,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5,  5,  5,  5,  0,-10,
+ -5,  0,  5,  5,  5,  5,  0, -5,
+  0,  0,  5,  5,  5,  5,  0, -5,
+-10,  5,  5,  5,  5,  5,  0,-10,
+-10,  0,  5,  0,  0,  0,  0,-10,
+-20,-10,-10, -5, -5,-10,-10,-20};
+
+const int black_queen_eval[64]= {-20,-10,-10, -5, -5,-10,-10,-20,
+-10,  0,  5,  0,  0,  0,  0,-10,
+-10,  5,  5,  5,  5,  5,  0,-10,
+  0,  0,  5,  5,  5,  5,  0, -5,
+ -5,  0,  5,  5,  5,  5,  0, -5,
+-10,  0,  5,  5,  5,  5,  0,-10,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-20,-10,-10, -5, -5,-10,-10,-20};
+
 typedef struct {
   Move mo;
   int value;
@@ -12,6 +84,16 @@ void change_score(int *score, Bb bb, int value) {
   int count = __builtin_popcountll(bb);
   *score += count * value;
 }
+
+void attribute_score_from_pose(int *score, Bb bb, const int pos_value[64]){
+  //fastest way i found
+  if (bb == 0)return;
+  int first_pieces =  __builtin_ctzll(bb);
+  int second_pieces = 63- __builtin_clzll(bb);
+  if (first_pieces <= 63 && first_pieces >= 0) *score+=pos_value[first_pieces]/10;
+  if (second_pieces <= 63 && second_pieces >= 0 && first_pieces!=second_pieces) *score+=pos_value[first_pieces]/10;
+}
+
 
 int evaluate(Board *board) {
   // Returns an evaluation of the position, without depth
@@ -52,6 +134,15 @@ int evaluate(Board *board) {
 
   change_score(&score, board->white_threat, threat_value);
   change_score(&score, board->black_threat, -threat_value);
+
+  attribute_score_from_pose(&score, board->black_bishops, black_bishop_eval);
+  attribute_score_from_pose(&score, board->white_bishops, white_bishop_eval);
+  attribute_score_from_pose(&score, board->black_knights, black_knight_eval);
+  attribute_score_from_pose(&score, board->white_knights, white_knight_eval);
+  attribute_score_from_pose(&score, board->black_rooks, black_rook_eval);
+  attribute_score_from_pose(&score, board->white_rooks, whire_rook_eval);
+  attribute_score_from_pose(&score, board->black_queens, black_queen_eval);
+  attribute_score_from_pose(&score, board->white_queens, white_queen_eval);
 
   if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->white_kings)] &
                            board->white_pawns) >= 3) {
