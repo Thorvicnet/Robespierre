@@ -8,107 +8,187 @@
 #include "tree.h"
 #include <locale.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 
-void test_print_moves(MoveList l) {
-  for (int i = 0; i < l.count; i++) {
-    char *mv = move_to_algebric(l.moves[i]);
+void print_moves(Move *l, int count) {
+  for (int i = 0; i < count; i++) {
+    char *mv = move_to_algebric(l[i]);
     wprintf(L"%s ", mv);
     free(mv);
   }
   wprintf(L"\n");
 }
 
-int main(void) {
+bool player1 = true;
+bool player2 = true;
+Move move;
+Undo undo;
+
+int command(char *strmove, Board **board) {
+  if (!strncmp(strmove, "init", 4)) {
+    if (!strcmp(strmove, "initpp")) {
+      player1 = true;
+      player2 = true;
+    } else if (!strcmp(strmove, "initbp")) {
+      player1 = false;
+      player2 = true;
+    } else if (!strcmp(strmove, "initpb")) {
+      player1 = true;
+      player2 = false;
+    } else if (!strcmp(strmove, "initbb")) {
+      player1 = false;
+      player2 = false;
+    }
+    free((*board)->history->list_of_move);
+    free((*board)->history);
+    board_free(*board);
+    *board = board_init();
+    threat_board_update(*board);
+    return 2;
+  } else if (!strncmp(strmove, "pbb", 3)) {
+    board_bb_info(*board);
+    return -1;
+  } else if (!strncmp(strmove, "ppm", 3)) {
+    Move moves[MAX_MOVES];
+    int count = move_possible(*board, moves);
+    print_moves(moves, count);
+    return -1;
+  } else if (!strncmp(strmove, "efen", 4)) {
+    char *fen = create_fen_from_board(*board);
+    wprintf(L"Le fen de cette postion : %s\n", fen);
+    free(fen);
+    return -1;
+  } else if (!strncmp(strmove, "ifen", 4)) {
+    char fen[80];
+    wprintf(L"Enter fen : ");
+
+    scanf("%s", fen);
+    int ret = transform_board_from_fen(fen, *board);
+
+    while (1) {
+      wprintf(L"\nenter mode (bb/pb/bp/pp) : ");
+      scanf("%s", fen);
+      if (strncmp(fen, "bb", 2) == 0) {
+        player1 = false;
+        player2 = false;
+        break;
+      } else if (strncmp(fen, "pb", 2) == 0) {
+        player1 = true;
+        player2 = false;
+        break;
+      } else if (strncmp(fen, "bp", 2) == 0) {
+        player1 = false;
+        player2 = true;
+        break;
+      } else if (strncmp(fen, "pp", 2) == 0) {
+        player1 = true;
+        player2 = true;
+        break;
+      }
+    }
+
+    if (ret == WHITE) {
+      return 2;
+    }
+    return 0;
+  } else if (!strncmp(strmove, "exit", 4)) {
+    free((*board)->history->list_of_move);
+    free((*board)->history);
+    board_free(*board);
+    exit(EXIT_SUCCESS);
+  } else {
+    move = algebric_to_move(strmove, *board);
+    int res = move_check_validity(*board, move.from, move.to);
+    if (!res) {
+      wprintf(L"Invalid move\n");
+      return -1;
+    }
+    return move_make(*board, &move, &undo);
+  }
+}
+
+int bot_turn(Board *board) {
+  Move bot = choose(board);
+
+  char *mv = move_to_algebric(bot);
+  wprintf(L"%s\n", mv);
+  free(mv);
+
+  return move_make(board, &bot, &undo);
+}
+
+int main(int argc, char *argv[]) {
   setlocale(LC_ALL, ""); // Enable Unicode Handling
   bb_magic_init();
 
   Board *board = board_init();
-  threat_board_update(board);
-  MoveTree* tree = create_tree(board);
-  //choose2(tree);
-  //free_tree(tree); //Used for testing purposes, should not fill the RAM (does it anyways)
-  char strmove[6];
-  int res;
-  while (true) {
-    // Bot turn
-    if (true){
-      wprintf(L"BOT WHITE\n");
+
+  if (argc > 1 && strcmp(argv[1], "nouci") == 0) {
+    char strmove[15];
+    int res;
+
+    while (true) {
       board_info(board);
-
-      //test_print_moves(move_possible(board));
-      test_print_moves(tree -> moves);
-      
-      //Move bot = choose(board);
-      Move bot = choose2(tree);
-
-      char *mv = move_to_algebric(bot);
-      wprintf(L"%s\n", mv);
-      free(mv);
-
-      res = move(board, bot);
-      if (res) {
-        wprintf(L"Bot fail, bot dumb\n");
-        break;
-      }
-
-      tree = partially_free_tree(tree);
-      //tree = tree -> children[0];
-    }
-    
-
-    // Bot turn
-    if (true){
-      wprintf(L"BOT BLACK\n");
-      board_info(board);
-
-      //test_print_moves(move_possible(board));
-      test_print_moves(tree -> moves);
-
-      //Move bot = choose(board);
-      Move bot = choose2(tree);
-
-      char *mv = move_to_algebric(bot);
-      wprintf(L"%s\n", mv);
-      free(mv);
-
-      res = move(board, bot);
-      if (res) {
-        wprintf(L"Bot fail, bot dumb\n");
-        break;
-      }
-
-      tree = partially_free_tree(tree);
-      //tree = tree -> children[0];
-    }
-    
-    // Player turn
-    if (false){
-      board_info(board);
-      //test_print_moves(move_possible(board));
-      test_print_moves(tree -> moves);
-      if (!tree -> children_filled) create_tree_children(tree);
-      int res = -1;
-      Move m;
-      while (res) {
-        scanf("%s", strmove);
-        m = algebric_to_move(strmove, board);
-        if (move_check_validity(board, m.orig, m.dest)) {
-          res = move(board, m);
+      if (player1) {
+        wprintf(L"\nPlayer Turn white\n");
+        res = -1;
+        while (res) {
+          scanf("%s", strmove);
+          res = command(strmove, &board);
+          if (res == 2)
+            break;
+        }
+        if (res == 2) {
+          continue;
+        }
+      } else {
+        wprintf(L"\nBOT WHITE\n");
+        res = bot_turn(board);
+        if (res) {
+          wprintf(L"Bot fail, bot dumb\n");
+          while (res) {
+            scanf("%s", strmove);
+            res = command(strmove, &board);
+          }
+          continue;
         }
       }
-      int k = search_move_in_tree(tree, m);
-      tree_swap(tree, k);
-      //tree = tree -> children[0];
-      tree = partially_free_tree(tree);
+
+      board_info(board);
+      if (player2) {
+        wprintf(L"\nPlayer Turn black\n");
+        res = -1;
+        while (res) {
+          scanf("%s", strmove);
+          res = command(strmove, &board);
+          if (res == 2)
+            break;
+        }
+        if (res == 2) {
+          continue;
+        }
+      } else {
+        wprintf(L"\nBOT BLACK\n");
+        res = bot_turn(board);
+        if (res) {
+          wprintf(L"Bot fail, bot dumb\n");
+          while (res) {
+            scanf("%s", strmove);
+            res = command(strmove, &board);
+          }
+          continue;
+        }
+      }
     }
+  } else {
+    uci_loop(board); // starts uci mode
   }
 
   free(board->history->list_of_move);
   free(board->history);
   board_free(board);
-  free_tree(tree);
-
   return EXIT_SUCCESS;
 }

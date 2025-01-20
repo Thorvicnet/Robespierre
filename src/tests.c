@@ -1,8 +1,10 @@
 #include "bb.h"
 #include "board.h"
+#include "bot.h"
 #include "move.h"
 #include "threat.h"
 #include "types.h"
+#include "uci.h"
 #include <assert.h>
 #include <locale.h>
 #include <stdbool.h>
@@ -18,10 +20,10 @@ void test_move_check_validity_bishop(void) {
   board_set(board, 3 + 3 * 8, WHITE_BISHOP);
   board_set(board, 2 + 2 * 8, BLACK_PAWN);
 
-  assert(!move_check_validity(board, (int[]){3, 3}, (int[]){0, 0}));
-  assert(move_check_validity(board, (int[]){3, 3}, (int[]){2, 4}));
-  assert(!move_check_validity(board, (int[]){3, 3}, (int[]){7, -1}));
-  assert(!move_check_validity(board, (int[]){3, 3}, (int[]){3, 3}));
+  assert(!move_check_validity(board, 3 + 3 * 8, 0 + 0 * 8));
+  assert(move_check_validity(board, 3 + 3 * 8, 2 + 4 * 8));
+  assert(!move_check_validity(board, 3 + 3 * 8, 7 + -1 * 8));
+  assert(!move_check_validity(board, 3 + 3 * 8, 3 + 3 * 8));
 }
 
 void test_move_check_validity_rook(void) {
@@ -33,16 +35,16 @@ void test_move_check_validity_rook(void) {
   board_set(board, 3 + 5 * 8, WHITE_ROOK);
   board_set(board, 3 + 7 * 8, BLACK_KNIGHT);
 
-  assert(move_check_validity(board, (int[]){3, 5}, (int[]){3, 6}));
-  assert(move_check_validity(board, (int[]){3, 5}, (int[]){3, 7}));
-  assert(move_check_validity(board, (int[]){3, 5}, (int[]){3, 4}));
-  assert(move_check_validity(board, (int[]){3, 5}, (int[]){2, 5}));
-  assert(move_check_validity(board, (int[]){3, 5}, (int[]){4, 5}));
-  assert(move_check_validity(board, (int[]){3, 5}, (int[]){3, 3}));
-  assert(!move_check_validity(board, (int[]){3, 5}, (int[]){4, 6}));
-  assert(!move_check_validity(board, (int[]){3, 5}, (int[]){1, 7}));
+  assert(move_check_validity(board, 3 + 5 * 8, 3 + 6 * 8));
+  assert(move_check_validity(board, 3 + 5 * 8, 3 + 7 * 8));
+  assert(move_check_validity(board, 3 + 5 * 8, 3 + 4 * 8));
+  assert(move_check_validity(board, 3 + 5 * 8, 2 + 5 * 8));
+  assert(move_check_validity(board, 3 + 5 * 8, 4 + 5 * 8));
+  assert(move_check_validity(board, 3 + 5 * 8, 3 + 3 * 8));
+  assert(!move_check_validity(board, 3 + 5 * 8, 4 + 6 * 8));
+  assert(!move_check_validity(board, 3 + 5 * 8, 1 + 7 * 8));
   board_set(board, 3 + 6 * 8, BLACK_PAWN);
-  assert(!move_check_validity(board, (int[]){3, 5}, (int[]){3, 7}));
+  assert(!move_check_validity(board, 3 + 5 * 8, 3 + 7 * 8));
 }
 
 void test_move_check_validity_knight(void) {
@@ -55,17 +57,17 @@ void test_move_check_validity_knight(void) {
   board_set(board, 2 + 5 * 8, BLACK_PAWN);
   board_set(board, 6 + 3 * 8, BLACK_KING);
 
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){2, 5}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){6, 3}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){5, 6}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){3, 6}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){2, 3}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){3, 2}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){5, 2}));
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){6, 5}));
-  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){4, 5}));
-  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){4, 4}));
-  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){7, 7}));
+  assert(move_check_validity(board, 4 + 4 * 8, 2 + 5 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 6 + 3 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 5 + 6 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 3 + 6 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 2 + 3 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 3 + 2 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 5 + 2 * 8));
+  assert(move_check_validity(board, 4 + 4 * 8, 6 + 5 * 8));
+  assert(!move_check_validity(board, 4 + 4 * 8, 4 + 5 * 8));
+  assert(!move_check_validity(board, 4 + 4 * 8, 4 + 4 * 8));
+  assert(!move_check_validity(board, 4 + 4 * 8, 7 + 7 * 8));
 }
 
 void test_move_check_validity_pawn(void) {
@@ -80,24 +82,19 @@ void test_move_check_validity_pawn(void) {
   threat_board_update(board);
 
   // Regular moves
-  assert(move_check_validity(board, (int[]){4, 1},
-                             (int[]){4, 2})); // Single advance
-  assert(move_check_validity(board, (int[]){4, 1},
-                             (int[]){4, 3})); // Double advance
-  assert(move_check_validity(board, (int[]){4, 1}, (int[]){5, 2})); // Capture
+  assert(move_check_validity(board, 4 + 1 * 8, 4 + 2 * 8)); // Single advance
+  assert(move_check_validity(board, 4 + 1 * 8, 4 + 3 * 8)); // Double advance
+  assert(move_check_validity(board, 4 + 1 * 8, 5 + 2 * 8)); // Capture
 
   // Invalid moves
-  assert(!move_check_validity(board, (int[]){4, 1}, (int[]){4, 0})); // Backward
-  assert(!move_check_validity(board, (int[]){4, 1},
-                              (int[]){3, 2})); // Empty diagonal
-  assert(!move_check_validity(board, (int[]){4, 1}, (int[]){4, 4})); // Too far
+  assert(!move_check_validity(board, 4 + 1 * 8, 4 + 0 * 8)); // Backward
+  assert(!move_check_validity(board, 4 + 1 * 8, 3 + 2 * 8)); // Empty diagonal
+  assert(!move_check_validity(board, 4 + 1 * 8, 4 + 4 * 8)); // Too far
 
   // Test blocked moves
   board_set(board, 4 + 2 * 8, BLACK_PAWN);
-  assert(!move_check_validity(board, (int[]){4, 1},
-                              (int[]){4, 2})); // Blocked single
-  assert(!move_check_validity(board, (int[]){4, 1},
-                              (int[]){4, 3})); // Blocked double
+  assert(!move_check_validity(board, 4 + 1 * 8, 4 + 2 * 8)); // Blocked single
+  assert(!move_check_validity(board, 4 + 1 * 8, 4 + 3 * 8)); // Blocked double
 
   // Test black pawn moves
   board_empty(board);
@@ -105,33 +102,31 @@ void test_move_check_validity_pawn(void) {
   board_set(board, 4 + 6 * 8, BLACK_PAWN);
   board_set(board, 3 + 5 * 8, WHITE_PAWN);
 
-  assert(move_check_validity(board, (int[]){4, 6},
-                             (int[]){4, 5})); // Single advance
-  assert(move_check_validity(board, (int[]){4, 6},
-                             (int[]){4, 4})); // Double advance
-  assert(move_check_validity(board, (int[]){4, 6}, (int[]){3, 5})); // Capture
+  assert(move_check_validity(board, 4 + 6 * 8, 4 + 5 * 8)); // Single advance
+  assert(move_check_validity(board, 4 + 6 * 8, 4 + 4 * 8)); // Double advance
+  assert(move_check_validity(board, 4 + 6 * 8, 3 + 5 * 8)); // Capture
 
   // Test en passant
   board_empty(board);
   board_set(board, 4 + 4 * 8, WHITE_PAWN);
   board_set(board, 5 + 4 * 8, BLACK_PAWN);
 
-  Move last_move = {BLACK_PAWN, {5, 6}, {5, 4}};
-  board_add_move(board, last_move);
+  board->ep = 1ULL << (5 + 5 * 8);
 
-  assert(move_check_validity(board, (int[]){4, 4}, (int[]){5, 5}));
-  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){3, 5}));
-  assert(!move_check_validity(board, (int[]){4, 4}, (int[]){5, 3}));
+  assert(move_check_validity(board, 4 + 4 * 8, 5 + 5 * 8));
+  assert(!move_check_validity(board, 4 + 4 * 8, 3 + 5 * 8));
+  assert(!move_check_validity(board, 4 + 4 * 8, 5 + 3 * 8));
 }
 
 void test_move_check_validity_king(void) {
   wprintf(L"- move_king\n");
   Board *board = board_init();
   board_empty(board);
+  Undo undo;
 
   board_set(board, 3 + 4 * 8, WHITE_KING);
-  Move move_data = {WHITE_KING, {3, 4}, {3, 5}};
-  move(board, move_data);
+  Move move_data = {WHITE_KING, 3 + 4 * 8, 3 + 5 * 8};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 3 + 4 * 8) == EMPTY);
   assert(board_get(board, 3 + 5 * 8) == WHITE_KING);
   assert(board->color == BLACK);
@@ -140,8 +135,8 @@ void test_move_check_validity_king(void) {
   board_set(board, 3 + 0 * 8, WHITE_KING);
   board_set(board, 0 + 0 * 8, WHITE_ROOK);
   board_set(board, 7 + 0 * 8, WHITE_ROOK);
-  move_data = (Move){WHITE_KING, {3, 0}, {1, 0}};
-  move(board, move_data);
+  move_data = (Move){WHITE_KING, 3 + 0 * 8, 1 + 0 * 8};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 3 + 0 * 8) == EMPTY);
   assert(board_get(board, 1 + 0 * 8) == WHITE_KING);
   assert(board_get(board, 2 + 0 * 8) == WHITE_ROOK);
@@ -150,8 +145,8 @@ void test_move_check_validity_king(void) {
   board_set(board, 3 + 0 * 8, WHITE_KING);
   board_set(board, 0 + 0 * 8, WHITE_ROOK);
   board_set(board, 7 + 0 * 8, WHITE_ROOK);
-  move_data = (Move){WHITE_KING, {3, 0}, {5, 0}};
-  move(board, move_data);
+  move_data = (Move){WHITE_KING, 3 + 0 * 8, 5 + 0 * 8};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 3 + 0 * 8) == EMPTY);
   assert(board_get(board, 5 + 0 * 8) == WHITE_KING);
   assert(board_get(board, 4 + 0 * 8) == WHITE_ROOK);
@@ -164,9 +159,11 @@ void test_move_basic(void) {
   Board *board = board_init();
   board_empty(board);
 
+  Undo undo;
+
   board_set(board, 4 + 4 * 8, WHITE_ROOK);
-  Move move_data = {WHITE_ROOK, {4, 4}, {4, 6}};
-  move(board, move_data);
+  Move move_data = {WHITE_ROOK, 4 + 4 * 8, 4 + 6 * 8};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 4 + 4 * 8) == EMPTY);
   assert(board_get(board, 4 + 6 * 8) == WHITE_ROOK);
   assert(board->color == BLACK);
@@ -177,10 +174,12 @@ void test_move_capture(void) {
   Board *board = board_init();
   board_empty(board);
 
+  Undo undo;
+
   board_set(board, 3 + 3 * 8, WHITE_BISHOP);
   board_set(board, 5 + 5 * 8, BLACK_PAWN);
-  Move move_data = {WHITE_BISHOP, {3, 3}, {5, 5}};
-  move(board, move_data);
+  Move move_data = {WHITE_BISHOP, 3 + 3 * 8, 5 + 5 * 8};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 3 + 3 * 8) == EMPTY);
   assert(board_get(board, 5 + 5 * 8) == WHITE_BISHOP);
 }
@@ -190,13 +189,15 @@ void test_move_enpassant(void) {
   Board *board = board_init();
   board_empty(board);
 
+  Undo undo;
+
   board_set(board, 4 + 4 * 8, WHITE_PAWN);
   board_set(board, 5 + 4 * 8, BLACK_PAWN);
-  Move last_move = {BLACK_PAWN, {5, 6}, {5, 4}};
+  Move last_move = {BLACK_PAWN, 5 + 6 * 8, 5 + 4 * 8};
   board_add_move(board, last_move);
 
-  Move move_data = {WHITE_PAWN, {4, 4}, {5, 5}};
-  move(board, move_data);
+  Move move_data = {WHITE_PAWN, 4 + 4 * 8, 5 + 5 * 8};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 4 + 4 * 8) == EMPTY);
   assert(board_get(board, 5 + 4 * 8) == EMPTY);
   assert(board_get(board, 5 + 5 * 8) == WHITE_PAWN);
@@ -207,15 +208,17 @@ void test_move_promotion(void) {
   Board *board = board_init();
   board_empty(board);
 
+  Undo undo;
+
   board_set(board, 3 + 6 * 8, WHITE_PAWN);
-  Move move_data = {WHITE_PAWN, {3, 6}, {3, 7}};
-  move(board, move_data);
+  Move move_data = {WHITE_PAWN, 3 + 6 * 8, 3 + 7 * 8, WHITE_QUEEN};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 3 + 7 * 8) == WHITE_QUEEN);
 
   board->color = BLACK;
   board_set(board, 4 + 1 * 8, BLACK_PAWN);
-  move_data = (Move){BLACK_PAWN, {4, 1}, {4, 0}};
-  move(board, move_data);
+  move_data = (Move){BLACK_PAWN, 4 + 1 * 8, 4 + 0 * 8, BLACK_QUEEN};
+  move_make(board, &move_data, &undo);
   assert(board_get(board, 4 + 0 * 8) == BLACK_QUEEN);
 }
 
@@ -223,20 +226,36 @@ void test_move_castling(void) {
   wprintf(L"- move_castling\n");
   Board *board = board_init();
   threat_board_update(board);
-  move(board, (Move){board_get(board, 1 + 1 * 8), {1, 1}, {1, 2}});
-  move(board, (Move){board_get(board, 6 + 7 * 8), {6, 7}, {7, 5}});
-  move(board, (Move){board_get(board, 1 + 0 * 8), {1, 0}, {2, 2}});
-  move(board, (Move){board_get(board, 6 + 6 * 8), {6, 6}, {6, 5}});
-  move(board, (Move){board_get(board, 2 + 0 * 8), {2, 0}, {0, 2}});
-  move(board, (Move){board_get(board, 5 + 7 * 8), {5, 7}, {6, 6}});
-  move(board, (Move){board_get(board, 3 + 1 * 8), {3, 1}, {3, 3}});
-  move(board, (Move){board_get(board, 6 + 6 * 8), {6, 6}, {5, 5}});
-  move(board, (Move){board_get(board, 3 + 0 * 8), {3, 0}, {1, 0}});
-  move(board, (Move){board_get(board, 4 + 7 * 8), {4, 7}, {5, 7}});
-  move(board, (Move){board_get(board, 7 + 1 * 8), {7, 1}, {7, 2}});
-  move(board, (Move){board_get(board, 5 + 7 * 8), {5, 7}, {6, 6}});
-  move(board, (Move){board_get(board, 7 + 0 * 8), {7, 0}, {7, 1}});
-  move(board, (Move){board_get(board, 3 + 7 * 8), {3, 7}, {5, 7}});
+
+  Undo undo;
+  move_make(board, &(Move){board_get(board, 1 + 1 * 8), 1 + 1 * 8, 1 + 2 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 6 + 7 * 8), 6 + 7 * 8, 7 + 5 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 1 + 0 * 8), 1 + 0 * 8, 2 + 2 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 6 + 6 * 8), 6 + 6 * 8, 6 + 5 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 2 + 0 * 8), 2 + 0 * 8, 0 + 2 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 5 + 7 * 8), 5 + 7 * 8, 6 + 6 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 3 + 1 * 8), 3 + 1 * 8, 3 + 3 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 6 + 6 * 8), 6 + 6 * 8, 5 + 5 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 3 + 0 * 8), 3 + 0 * 8, 1 + 0 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 4 + 7 * 8), 4 + 7 * 8, 5 + 7 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 7 + 1 * 8), 7 + 1 * 8, 7 + 2 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 5 + 7 * 8), 5 + 7 * 8, 6 + 6 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 7 + 0 * 8), 7 + 0 * 8, 7 + 1 * 8},
+            &undo);
+  move_make(board, &(Move){board_get(board, 3 + 7 * 8), 3 + 7 * 8, 5 + 7 * 8},
+            &undo);
   assert(board_get(board, 5 + 7 * 8) == BLACK_KING);
   assert(board_get(board, 4 + 7 * 8) == BLACK_ROOK);
   assert(board_get(board, 2) == WHITE_ROOK);

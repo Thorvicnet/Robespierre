@@ -1,41 +1,34 @@
-# Menace Chess Engine
+<div align="center">
+  
+# Robespierre
 
-<!--toc:start-->
-- [Menace Chess Engine](#menace-chess-engine)
-  - [Board positions](#board-positions)
-  - [TODO](#todo)
-<!--toc:end-->
+</div>
 
-## Board positions
+Robespierre is a chess engine designed to support both standard chess gameplay and, when the MENACE flag is activated, a "Menace Mode".
 
-The top line is for WHITE at the start. (board->squares[0] == WHITE_ROOK)\
-If the functions takes a tuple as a position, pos\[0] is the column and pos\[1] the lines.\
-If the functions just takes a pos then pos = col + line * 8 (to get the correct index in the 1D board).
+### Rules of menace
 
-♜♞♝♛♚♝♞♜\
-♟♟♟♟♟♟♟♟\
-\
-\
-\
-♙♙♙♙♙♙♙♙\
-♖♘♗♕♔♗♘♖
+When you threaten an opponent's piece, you can choose to control it instead of your own. While controlling the opponent's piece, you can even capture other pieces belonging to your opponent. Pawns still move in their original direction.
 
-## TODO
+### Why Robespierre
 
-- [x] debug MENACE
-- [ ] promotion (long)
-- [ ] draw (long)
-- [x] still incorrect castle
-- [ ] UCI (ça passe)
+Under the rules of Menace, the bot, when its king was threatened, would prioritize capturing its own king to avoid check. The game would then continue without a king—a truly revolutionary act. (This bug has since been resolved.)
+
+### TODO
+
+- [ ] draw
+- [x] UCI
 - [ ] Search management
   - [x] Minimax
   - [x] Alpha-beta
-  - [ ] Iterative deepening
-- [ ] IA génétique deep learning Nono
-- [ ] eval (dur)
-  - [ ] by position on board ?
+  - [x] Iterative deepening
+  - [ ] Quiescence search
+  - [ ] Apiration window
+- [ ] eval
+  - [ ] by position on board
   - [ ] threat
-  - [ ] mate -inf
+  - [ ] checkmate -inf
   - [ ] check
-
-- [ ] book (avec alpha beta)
+  - [ ] 0.1 of random eval (to make it more interesting)
+  - [ ] passed pawn
+  - [ ] pawn structure
