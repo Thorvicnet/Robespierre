@@ -5,6 +5,19 @@ typedef struct {
   int value;
 } Vmove; // Valued move, useful for the search
 
+int check_endgame(MoveTree *tree){
+  //Returns 0, 5000, -5000 or 1 if the current static tree is a draw/checkmate/other
+  //For now, draw only means stalemate
+  //This function should only be called on certified leafs (positions that don't have any children)
+  if (!tree -> children_filled || tree -> moves.count > 0) {
+    wprintf(L"Not an endgame position\n");
+    exit(1);
+  }
+  if (tree->board.white_threat & tree->board.black_kings) return 5000;
+  if (tree->board.black_threat & tree->board.white_kings) return -5000;
+  return 0;
+}
+
 void change_score(int *score, Bb bb, int value) {
   // Modifies the score according to the pieces in bb
   int count = __builtin_popcountll(bb);
@@ -12,7 +25,7 @@ void change_score(int *score, Bb bb, int value) {
 }
 
 int evaluate(Board *board) {
-  // Returns an evaluation of the position, without depth
+  // Returns a static evaluation of the position (without depth)
 
   // Values attributed to different pieces (could be modified according to the
   // state of the game)
@@ -61,6 +74,7 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   MoveList list_moves =
       move_possible(board); // Should be a list of every valid move
   if (list_moves.count <= 0) {
+    move_list_free(&list_moves);
     exit(2);
   }; // Checkmate, draw ... to be dealt with later
 
@@ -105,37 +119,41 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
 
 int choose_with_trees(MoveTree *tree, int depth, int alpha, int beta, time_t time_at_start, double max_allowed) {
   // Returns the best evaluation of the position, modifies tree while doing so
-  // pruning Currently checks if the move is possible even though we know it is
-  // - kinda beta is greater than alpha (or else the branch is pruned)
+  // pruning Currently checks if the move is possible even though we know it is - knida
+  // beta is greater than alpha (or else the branch is pruned)
   // Stops if too much time has passed
 
-  time_t current_time;
-  time(&current_time);
-  if (depth == 0 || difftime(current_time, time_at_start) > max_allowed){
-    //Checks here if it is checkmate/draw (for later)
-    return evaluate(tree -> board);
+  if (depth == 0){
+    return evaluate(&tree -> board);
   }
+
   if (!tree -> children_filled) create_tree_children(tree);
+  if (tree -> moves.count == 0) return check_endgame(tree);
 
-  int best_eval = tree->board->color == WHITE ? -10000 : 10000;
+  int best_eval = tree->board.color == WHITE ? -10000 : 10000;
 
-  for (int i = 0; i < tree -> moves -> count; i++) {
+  for (int i = 0; i < tree -> moves.count; i++) {
 
     int eval = choose_with_trees(tree -> children[i], depth - 1, alpha, beta, time_at_start, max_allowed);
 
-    if ((tree->board->color == WHITE && eval > best_eval) ||
-        (tree->board->color == BLACK && eval < best_eval)) {
+    if ((tree->board.color == WHITE && eval > best_eval) ||
+        (tree->board.color == BLACK && eval < best_eval)) {
       best_eval = eval;
       tree_rotation(tree, i);
       //if (abs(eval) >= 4000) best_eval = board->color == WHITE ? eval-1:eval+1;
     }
 
-    if (tree->board->color == WHITE)
+    if (tree->board.color == WHITE)
       alpha = alpha > eval ? alpha : eval;
     else
       beta = beta < eval ? beta : eval;
     if (beta <= alpha)
       break;
+
+    time_t current_time;
+    time(&current_time);
+    if (difftime(current_time, time_at_start) > 5) exit(1);
+    if (difftime(current_time, time_at_start) > max_allowed) break;
   }
 
   return best_eval;
@@ -145,7 +163,7 @@ Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // Currently lacks : iterative deepening
 
-  Vmove t = choose_with_depth(board, 4, -10000, 10000);
+  Vmove t = choose_with_depth(board, 7, -10000, 10000);
 
   wprintf(L"- eval: %d\n", t.value);
 
@@ -170,5 +188,5 @@ Move choose2(MoveTree *tree){
   }
 
   wprintf(L"- depth : %d\n- eval : %d\n", i, eval);
-  return tree -> moves -> moves[0];
+  return tree -> moves.moves[0];
 }

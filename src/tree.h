@@ -10,8 +10,8 @@
 
 typedef struct t {
   bool children_filled;
-  MoveList *moves;
-  Board *board;
+  MoveList moves;
+  Board board;
   struct t **children;
 } MoveTree;
 

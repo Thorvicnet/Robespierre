@@ -27,16 +27,18 @@ int main(void) {
   Board *board = board_init();
   threat_board_update(board);
   MoveTree* tree = create_tree(board);
+  //choose2(tree);
+  //free_tree(tree); //Used for testing purposes, should not fill the RAM (does it anyways)
   char strmove[6];
   int res;
   while (true) {
     // Bot turn
-    if (1 == 1){
+    if (true){
       wprintf(L"BOT WHITE\n");
       board_info(board);
 
       //test_print_moves(move_possible(board));
-      test_print_moves(*(tree -> moves));
+      test_print_moves(tree -> moves);
       
       //Move bot = choose(board);
       Move bot = choose2(tree);
@@ -52,16 +54,17 @@ int main(void) {
       }
 
       tree = partially_free_tree(tree);
+      //tree = tree -> children[0];
     }
     
 
     // Bot turn
-    if (0 == 1){
+    if (true){
       wprintf(L"BOT BLACK\n");
       board_info(board);
 
       //test_print_moves(move_possible(board));
-      test_print_moves(*(tree -> moves));
+      test_print_moves(tree -> moves);
 
       //Move bot = choose(board);
       Move bot = choose2(tree);
@@ -77,13 +80,14 @@ int main(void) {
       }
 
       tree = partially_free_tree(tree);
+      //tree = tree -> children[0];
     }
     
     // Player turn
-    if (1 == 1){
+    if (false){
       board_info(board);
       //test_print_moves(move_possible(board));
-      test_print_moves(*(tree -> moves));
+      test_print_moves(tree -> moves);
       if (!tree -> children_filled) create_tree_children(tree);
       int res = -1;
       Move m;
@@ -96,6 +100,7 @@ int main(void) {
       }
       int k = search_move_in_tree(tree, m);
       tree_swap(tree, k);
+      //tree = tree -> children[0];
       tree = partially_free_tree(tree);
     }
   }
