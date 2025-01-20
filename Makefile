@@ -1,5 +1,5 @@
 #########################
-CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c
+CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c tree.c
 PROG := main
 DEBUG_PROG := main
 CFLAGS := -Wall -Wextra -pedantic -O3#-DMENACE

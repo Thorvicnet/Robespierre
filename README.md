@@ -18,10 +18,10 @@ Under the rules of Menace, the bot, when its king was threatened, would prioriti
 
 - [ ] draw
 - [x] UCI
-- [ ] Search gestion
+- [ ] Search management
   - [x] Minimax
   - [x] Alpha-beta
-  - [ ] Iterative deepening
+  - [x] Iterative deepening
   - [ ] Quiescence search
   - [ ] Apiration window
 - [ ] eval

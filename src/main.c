@@ -5,6 +5,7 @@
 #include "threat.h"
 #include "types.h"
 #include "uci.h"
+#include "tree.h"
 #include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>

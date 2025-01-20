@@ -79,6 +79,19 @@ typedef struct {
   int value;
 } Vmove; // Valued move, useful for the search
 
+int check_endgame(MoveTree *tree){
+  //Returns 0, 5000, -5000 or 1 if the current static tree is a draw/checkmate/other
+  //For now, draw only means stalemate
+  //This function should only be called on certified leafs (positions that don't have any children)
+  if (!tree -> children_filled || tree -> moves.count > 0) {
+    wprintf(L"Not an endgame position\n");
+    exit(1);
+  }
+  if (tree->board.white_threat & tree->board.black_kings) return 5000;
+  if (tree->board.black_threat & tree->board.white_kings) return -5000;
+  return 0;
+}
+
 void change_score(int *score, Bb bb, int value) {
   // Modifies the score according to the pieces in bb
   int count = __builtin_popcountll(bb);
@@ -96,7 +109,7 @@ void attribute_score_from_pose(int *score, Bb bb, const int pos_value[64]){
 
 
 int evaluate(Board *board) {
-  // Returns an evaluation of the position, without depth
+  // Returns a static evaluation of the position, without depth
   // ATM it is very basic
 
   // Values attributed to different pieces (could be modified according to the
@@ -208,6 +221,48 @@ Vmove choose_with_depth(Board *board, int depth, int alpha, int beta) {
   return (Vmove){best_move, best_eval};
 }
 
+int choose_with_trees(MoveTree *tree, int depth, int alpha, int beta, time_t time_at_start, double max_allowed) {
+  // Returns the best evaluation of the position, modifies tree while doing so
+  // pruning Currently checks if the move is possible even though we know it is - knida
+  // beta is greater than alpha (or else the branch is pruned)
+  // Stops if too much time has passed
+
+  if (depth == 0){
+    return evaluate(&tree -> board);
+  }
+
+  if (!tree -> children_filled) create_tree_children(tree);
+  if (tree -> moves.count == 0) return check_endgame(tree);
+
+  int best_eval = tree->board.color == WHITE ? -10000 : 10000;
+
+  for (int i = 0; i < tree -> moves.count; i++) {
+
+    int eval = choose_with_trees(tree -> children[i], depth - 1, alpha, beta, time_at_start, max_allowed);
+
+    if ((tree->board.color == WHITE && eval > best_eval) ||
+        (tree->board.color == BLACK && eval < best_eval)) {
+      best_eval = eval;
+      tree_rotation(tree, i);
+      //if (abs(eval) >= 4000) best_eval = board->color == WHITE ? eval-1:eval+1;
+    }
+
+    if (tree->board.color == WHITE)
+      alpha = alpha > eval ? alpha : eval;
+    else
+      beta = beta < eval ? beta : eval;
+    if (beta <= alpha)
+      break;
+
+    time_t current_time;
+    time(&current_time);
+    if (difftime(current_time, time_at_start) > 5) exit(1);
+    if (difftime(current_time, time_at_start) > max_allowed) break;
+  }
+
+  return best_eval;
+}
+
 Move choose(Board *board) {
   // Chooses the best move according to the evaluation
   // TODO: Currently lacks : iterative deepening
@@ -227,4 +282,25 @@ Move choose(Board *board) {
   Vmove t = choose_with_depth(board, depth, -10000, 10000);
 
   return t.mo;
+}
+
+Move choose2(MoveTree *tree){
+  //Chooses the best move according to the evaluation
+  //Used to replace choose with garden management
+  int eval;
+
+  time_t time_at_start;
+  time(&time_at_start);
+  time_t current_time = time_at_start;
+  double max_allowed = 2;
+
+  int i = 1;
+  while (difftime(current_time, time_at_start) < max_allowed){
+    eval = choose_with_trees(tree, i, -10000, 10000, time_at_start, max_allowed);
+    i++;
+    time(&current_time);
+  }
+
+  wprintf(L"- depth : %d\n- eval : %d\n", i, eval);
+  return tree -> moves.moves[0];
 }
