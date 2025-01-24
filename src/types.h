@@ -26,15 +26,17 @@ typedef struct {
 } Undo;
 
 typedef struct {
-  Move *moves;
-  int count;
-  int capacity;
-} MoveList;
-
-typedef struct {
   int last_move;
   Move *list_of_move;
 } Stack;
+
+typedef struct t {
+  bool children_filled;
+  Move *moves;
+  int moves_count;
+  struct t **children;
+} MoveTree;
+
 
 typedef struct {
   int squares[64];

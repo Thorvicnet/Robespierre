@@ -3,9 +3,9 @@
 #include "bot.h"
 #include "move.h"
 #include "threat.h"
+#include "tree.h"
 #include "types.h"
 #include "uci.h"
-#include "tree.h"
 #include <locale.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -24,8 +24,6 @@ void print_moves(Move *l, int count) {
 
 bool player1 = true;
 bool player2 = true;
-Move move;
-Undo undo;
 
 int command(char *strmove, Board **board) {
   if (!strncmp(strmove, "init", 4)) {
@@ -100,6 +98,8 @@ int command(char *strmove, Board **board) {
     board_free(*board);
     exit(EXIT_SUCCESS);
   } else {
+    Move move;
+    Undo undo;
     move = algebric_to_move(strmove, *board);
     int res = move_check_validity(*board, move.from, move.to);
     if (!res) {
@@ -110,14 +110,17 @@ int command(char *strmove, Board **board) {
   }
 }
 
-int bot_turn(Board *board) {
-  Move bot = choose(board);
+void bot_turn(MoveTree **tree, Board *board) {
+  Move bot = choose(*tree, board);
+  Undo undo;
+
+  partially_free_tree(tree);
+
+  move_make(board, &bot, &undo);
 
   char *mv = move_to_algebric(bot);
   wprintf(L"%s\n", mv);
   free(mv);
-
-  return move_make(board, &bot, &undo);
 }
 
 int main(int argc, char *argv[]) {
@@ -125,6 +128,7 @@ int main(int argc, char *argv[]) {
   bb_magic_init();
 
   Board *board = board_init();
+  MoveTree *tree = create_tree(board);
 
   if (argc > 1 && strcmp(argv[1], "nouci") == 0) {
     char strmove[15];
@@ -146,15 +150,7 @@ int main(int argc, char *argv[]) {
         }
       } else {
         wprintf(L"\nBOT WHITE\n");
-        res = bot_turn(board);
-        if (res) {
-          wprintf(L"Bot fail, bot dumb\n");
-          while (res) {
-            scanf("%s", strmove);
-            res = command(strmove, &board);
-          }
-          continue;
-        }
+        bot_turn(&tree, board);
       }
 
       board_info(board);
@@ -172,15 +168,7 @@ int main(int argc, char *argv[]) {
         }
       } else {
         wprintf(L"\nBOT BLACK\n");
-        res = bot_turn(board);
-        if (res) {
-          wprintf(L"Bot fail, bot dumb\n");
-          while (res) {
-            scanf("%s", strmove);
-            res = command(strmove, &board);
-          }
-          continue;
-        }
+        bot_turn(&tree, board);
       }
     }
   } else {
@@ -190,5 +178,6 @@ int main(int argc, char *argv[]) {
   free(board->history->list_of_move);
   free(board->history);
   board_free(board);
+  free_tree(tree);
   return EXIT_SUCCESS;
 }

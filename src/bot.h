@@ -3,8 +3,8 @@
 
 #include "board.h"
 #include "move.h"
-#include "types.h"
 #include "tree.h"
+#include "types.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -14,7 +14,6 @@
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
 int evaluate(Board *board);
-Move choose(Board *board);
-Move choose2(MoveTree *tree);
+Move choose(MoveTree *tree, Board *board);
 
 #endif // BOT_H

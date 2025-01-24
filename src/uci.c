@@ -206,9 +206,9 @@ char *create_fen_from_board(Board *board) {
 }
 
 void uci_loop(Board *board) {
-  // Main loop in uci mode
   char *line = NULL;
   size_t len = 0;
+  MoveTree *tree = create_tree(board); // Create initial tree
 
   setbuf(stdout, NULL);
 
@@ -222,13 +222,15 @@ void uci_loop(Board *board) {
     line[strcspn(line, "\n")] = 0;
 
     if (strncmp(line, "ucinewgame", 10) == 0) {
-      // Free current history and board
+      // Free current history, board and tree
       free(board->history->list_of_move);
       free(board->history);
+      free_tree(tree);
       board_free(board);
 
-      // Initialize new board
+      // Initialize new board and tree
       board = board_init();
+      tree = create_tree(board);
       threat_board_update(board);
     } else if (strncmp(line, "uci", 3) == 0) {
       wprintf(L"id name %s\n", ENGINE_NAME);
@@ -244,12 +246,14 @@ void uci_loop(Board *board) {
       fflush(stdout);
     } else if (strncmp(line, "position", 8) == 0) {
       char *token = strtok(line, " ");
-      token = strtok(NULL, " "); // Get next token after "position"
+      token = strtok(NULL, " ");
+
+      // Free old tree since we're setting up a new position
+      free_tree(tree);
 
       if (token && strcmp(token, "startpos") == 0) {
         transform_board_from_fen(START_FEN, board);
       } else if (token && strcmp(token, "fen") == 0) {
-        // Reconstruct FEN string from remaining tokens
         char fen[128] = "";
         int fen_parts = 0;
         while ((token = strtok(NULL, " ")) != NULL &&
@@ -262,6 +266,9 @@ void uci_loop(Board *board) {
         transform_board_from_fen(fen, board);
       }
 
+      // Create new tree for initial position
+      tree = create_tree(board);
+
       // Handle moves if present
       token = strtok(NULL, " ");
       if (token && strcmp(token, "moves") == 0) {
@@ -271,21 +278,48 @@ void uci_loop(Board *board) {
             wprintf(L"Invalid move in sequence: %s\n", token);
             continue;
           }
+          
+          // Create children before searching
+          if (!tree->children_filled) {
+            create_tree_children(tree, board);
+          }
+
+          // Find move and update tree
+          int move_index = search_move_in_tree(tree, move);
+          
+          // Make move on board
           Undo undo;
           move_make(board, &move, &undo);
+
+          // Update tree using tree_swap and partially_free_tree
+          tree_swap(tree, move_index);
+          partially_free_tree(&tree);
+          
           threat_board_update(board);
         }
       }
     } else if (strncmp(line, "go", 2) == 0) {
-      Move bot_move = choose(board);
+      Move bot_move = choose(tree, board);
       char *mv = move_to_algebric(bot_move);
       wprintf(L"bestmove %s\n", mv);
       fflush(stdout);
       free(mv);
+
+      // Update tree to point to chosen move's subtree
+      if (!tree->children_filled) {
+        create_tree_children(tree, board);
+      }
+      
+      partially_free_tree(&tree);
+
+      Undo undo;
+      move_make(board, &bot_move, &undo);
+      threat_board_update(board);
     } else if (strncmp(line, "quit", 4) == 0 || strncmp(line, "stop", 4) == 0) {
       break;
     }
   }
 
+  free_tree(tree);
   free(line);
 }
