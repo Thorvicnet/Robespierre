@@ -53,24 +53,29 @@ const int black_queen_eval[64] = {
     -10, 0,   0,   0,  0,  0,   0,   -10, -20, -10, -10, -5, -5, -10, -10, -20};
 
 typedef struct {
-  Move mo;
-  int value;
-} Vmove; // Valued move, useful for the search
+  Move moves[MAX_MOVES];
+  int move_count;
+} MoveBranch;
 
-int check_endgame(MoveTree *tree, Board *board) {
+int check_endgame(Board *board) {
   // Returns 0, 5000, -5000 or 1 if the current static tree is a
   // draw/checkmate/other For now, draw only means stalemate This function
   // should only be called on certified leafs (positions that don't have any
   // children)
-  if (!tree->children_filled || tree->moves_count > 0) {
+  Move moves[MAX_MOVES];
+  int move_count = move_possible(board, moves);
+
+  if (move_count > 0) {
     wprintf(L"Not an endgame position\n");
     exit(1);
   }
-  if (board->white_threat & board->black_kings)
-    return 5000;
-  if (board->black_threat & board->white_kings)
-    return -5000;
-  return 0;
+
+  if ((board->color == WHITE && (board->white_threat & board->black_kings)) ||
+      (board->color == BLACK && (board->black_threat & board->white_kings))) {
+    return (board->color == WHITE) ? -5000 : 5000;
+  }
+
+  return 1;
 }
 
 void change_score(int *score, Bb bb, int value) {
@@ -132,14 +137,14 @@ int evaluate(Board *board) {
   change_score(&score, board->white_threat, threat_value);
   change_score(&score, board->black_threat, -threat_value);
 
-  // attribute_score_from_pose(&score, board->black_bishops, black_bishop_eval);
-  // attribute_score_from_pose(&score, board->white_bishops, white_bishop_eval);
-  // attribute_score_from_pose(&score, board->black_knights, black_knight_eval);
-  // attribute_score_from_pose(&score, board->white_knights, white_knight_eval);
-  // attribute_score_from_pose(&score, board->black_rooks, black_rook_eval);
-  // attribute_score_from_pose(&score, board->white_rooks, whire_rook_eval);
-  // attribute_score_from_pose(&score, board->black_queens, black_queen_eval);
-  // attribute_score_from_pose(&score, board->white_queens, white_queen_eval);
+  attribute_score_from_pose(&score, board->black_bishops, black_bishop_eval);
+  attribute_score_from_pose(&score, board->white_bishops, white_bishop_eval);
+  attribute_score_from_pose(&score, board->black_knights, black_knight_eval);
+  attribute_score_from_pose(&score, board->white_knights, white_knight_eval);
+  attribute_score_from_pose(&score, board->black_rooks, black_rook_eval);
+  attribute_score_from_pose(&score, board->white_rooks, whire_rook_eval);
+  attribute_score_from_pose(&score, board->black_queens, black_queen_eval);
+  attribute_score_from_pose(&score, board->white_queens, white_queen_eval);
 
   if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->white_kings)] &
                            board->white_pawns) >= 3) {
@@ -153,68 +158,79 @@ int evaluate(Board *board) {
   return score;
 }
 
-int choose_with_trees(MoveTree *tree, Board *board, int depth, int alpha,
-                      int beta, time_t time_at_start, double max_allowed) {
+int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
+               time_t start_time, double max_allowed) {
   if (depth == 0) {
     return evaluate(board);
   }
 
-  if (!tree->children_filled) {
-    create_tree_children(tree, board);
-  }
-
-  if (tree->moves_count == 0) {
-    return check_endgame(tree, board);
+  MoveBranch branch;
+  branch.move_count = move_possible(board, branch.moves);
+  if (branch.move_count == 0) {
+    return check_endgame(board);
   }
 
   int best_eval = board->color == WHITE ? -10000 : 10000;
+  Move best_move;
 
-  for (int i = 0; i < tree->moves_count; i++) {
+  for (int i = 0; i < branch.move_count; i++) {
     Undo undo;
-    int res = move_make(board, &tree->moves[i], &undo);
-    if (res) {
-      continue;
+    if (move_make(board, &branch.moves[i], &undo)) {
+      continue; // Skip invalid moves
     }
 
-    int eval = choose_with_trees(tree->children[i], board, depth - 1, alpha,
-                                 beta, time_at_start, max_allowed);
-
-    move_undo(board, &tree->moves[i], &undo);
+    Move line[MAX_DEPTH];
+    int eval = alpha_beta(board, depth - 1, alpha, beta, line, start_time,
+                          max_allowed);
+    move_undo(board, &branch.moves[i], &undo);
 
     if ((board->color == WHITE && eval > best_eval) ||
         (board->color == BLACK && eval < best_eval)) {
       best_eval = eval;
-      tree_rotation(tree, i);
+      best_move = branch.moves[i];
+      pv[0] = branch.moves[i];
+      memcpy(&pv[1], line, (depth - 1) * sizeof(Move));
     }
 
-    if (board->color == WHITE)
+    if (board->color == WHITE) {
       alpha = alpha > eval ? alpha : eval;
-    else
+    } else {
       beta = beta < eval ? beta : eval;
-    if (beta <= alpha)
-      break;
+    }
 
+    if (beta <= alpha) {
+      break;
+    }
+
+    // Check if time has run out
     time_t current_time;
     time(&current_time);
-    if (difftime(current_time, time_at_start) > max_allowed)
+    if (difftime(current_time, start_time) > max_allowed) {
       break;
+    }
   }
 
   return best_eval;
 }
 
-Move choose(MoveTree *tree, Board *board) {
+int iterative_deepening(Board *board, Move *best_move, double max_allowed) {
+  Move pv[MAX_DEPTH];
   int eval;
-  time_t time_at_start;
-  time(&time_at_start);
-  double max_allowed = 3;
-  int i = 1;
+  time_t start_time;
+  time(&start_time);
 
-  while (difftime(time(NULL), time_at_start) < max_allowed) {
-    eval = choose_with_trees(tree, board, i, -10000, 10000, time_at_start,
-                             max_allowed);
-    i++;
+  for (int depth = 1; depth < MAX_DEPTH; depth++) {
+    eval = alpha_beta(board, depth, -10000, 10000, pv, start_time, max_allowed);
+
+    *best_move = pv[0];
+
+    // Check if time has run out
+    time_t current_time;
+    time(&current_time);
+    if (difftime(current_time, start_time) > max_allowed) {
+      break;
+    }
   }
 
-  return tree->moves[0];
+  return eval;
 }

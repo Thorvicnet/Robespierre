@@ -3,7 +3,6 @@
 #include "bot.h"
 #include "move.h"
 #include "threat.h"
-#include "tree.h"
 #include "types.h"
 #include "uci.h"
 #include <locale.h>
@@ -110,25 +109,24 @@ int command(char *strmove, Board **board) {
   }
 }
 
-void bot_turn(MoveTree **tree, Board *board) {
-  Move bot = choose(*tree, board);
+void bot_turn(Board *board) {
+  Move best_move;
+  double max_time = 10.0;
+  iterative_deepening(board, &best_move, max_time);
+
   Undo undo;
+  move_make(board, &best_move, &undo);
 
-  partially_free_tree(tree);
-
-  move_make(board, &bot, &undo);
-
-  char *mv = move_to_algebric(bot);
+  char *mv = move_to_algebric(best_move);
   wprintf(L"%s\n", mv);
   free(mv);
 }
 
 int main(int argc, char *argv[]) {
-  setlocale(LC_ALL, ""); // Enable Unicode Handling
+  setlocale(LC_ALL, "");
   bb_magic_init();
 
   Board *board = board_init();
-  MoveTree *tree = create_tree(board);
 
   if (argc > 1 && strcmp(argv[1], "nouci") == 0) {
     char strmove[15];
@@ -150,7 +148,7 @@ int main(int argc, char *argv[]) {
         }
       } else {
         wprintf(L"\nBOT WHITE\n");
-        bot_turn(&tree, board);
+        bot_turn(board);
       }
 
       board_info(board);
@@ -168,7 +166,7 @@ int main(int argc, char *argv[]) {
         }
       } else {
         wprintf(L"\nBOT BLACK\n");
-        bot_turn(&tree, board);
+        bot_turn(board);
       }
     }
   } else {
@@ -178,6 +176,5 @@ int main(int argc, char *argv[]) {
   free(board->history->list_of_move);
   free(board->history);
   board_free(board);
-  free_tree(tree);
   return EXIT_SUCCESS;
 }

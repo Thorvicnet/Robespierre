@@ -13,7 +13,9 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
 
+#define MAX_DEPTH 64
+
 int evaluate(Board *board);
-Move choose(MoveTree *tree, Board *board);
+int iterative_deepening(Board *board, Move *best_move, double max_allowed);
 
 #endif // BOT_H
