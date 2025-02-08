@@ -28,7 +28,7 @@ const int black_knight_eval[64] = {
     -30, -30, 0,   10,  15,  15,  10,  0,   -30, -40, -20, 0,   0,
     0,   0,   -20, -40, -50, -40, -30, -30, -30, -30, -40, -50};
 
-const int whire_rook_eval[64] = {
+const int white_rook_eval[64] = {
     0,   0, 0, 0, 0, 0, 0, 0,   10,  10, 10, 10, 10, 10, 10, 10,
     -10, 0, 0, 0, 0, 0, 0, -10, -10, 0,  0,  0,  0,  0,  0,  -10,
     -10, 0, 0, 0, 0, 0, 0, -10, -10, 0,  0,  0,  0,  0,  0,  -10,
@@ -57,44 +57,18 @@ typedef struct {
   int move_count;
 } MoveBranch;
 
-int check_endgame(Board *board) {
-  // Returns 0, 5000, -5000 or 1 if the current static tree is a
-  // draw/checkmate/other For now, draw only means stalemate This function
-  // should only be called on certified leafs (positions that don't have any
-  // children)
-  Move moves[MAX_MOVES];
-  int move_count = move_possible(board, moves);
-
-  if (move_count > 0) {
-    wprintf(L"Not an endgame position\n");
-    exit(1);
-  }
-
-  if ((board->color == WHITE && (board->white_threat & board->black_kings)) ||
-      (board->color == BLACK && (board->black_threat & board->white_kings))) {
-    return (board->color == WHITE) ? -5000 : 5000;
-  }
-
-  return 1;
-}
-
 void change_score(int *score, Bb bb, int value) {
   // Modifies the score according to the pieces in bb
   int count = __builtin_popcountll(bb);
   *score += count * value;
 }
 
-void attribute_score_from_pose(int *score, Bb bb, const int pos_value[64]) {
-  // fastest way i found
-  if (bb == 0)
-    return;
-  int first_pieces = __builtin_ctzll(bb);
-  int second_pieces = 63 - __builtin_clzll(bb);
-  if (first_pieces <= 63 && first_pieces >= 0)
-    *score += pos_value[first_pieces] / 10;
-  if (second_pieces <= 63 && second_pieces >= 0 &&
-      first_pieces != second_pieces)
-    *score += pos_value[first_pieces] / 10;
+void change_score_from_pos(int *score, Bb bb, const int pos_value[64]) {
+  while (bb) {
+    int square = __builtin_ctzll(bb);
+    *score += pos_value[square];
+    bb &= bb - 1;
+  }
 }
 
 int evaluate(Board *board) {
@@ -103,22 +77,13 @@ int evaluate(Board *board) {
 
   // Values attributed to different pieces (could be modified according to the
   // state of the game)
-  int pawn_value = 10;
-  int knight_value = 30;
-  int bishop_value = 50;
-  int rook_value = 60;
-  int queen_value = 110;
+  int pawn_value = 100;
+  int knight_value = 300;
+  int bishop_value = 500;
+  int rook_value = 600;
+  int queen_value = 1100;
 
-  int king_value = 5000;
-
-  int threat_value = 2;
-
-  if (board->color == WHITE &&
-      ((board->white_threat & board->black_kings) != 0))
-    return king_value;
-  if (board->color == BLACK &&
-      ((board->black_threat & board->white_kings) != 0))
-    return -king_value;
+  int threat_value = 10;
 
   int score = 0;
 
@@ -137,23 +102,25 @@ int evaluate(Board *board) {
   change_score(&score, board->white_threat, threat_value);
   change_score(&score, board->black_threat, -threat_value);
 
-  attribute_score_from_pose(&score, board->black_bishops, black_bishop_eval);
-  attribute_score_from_pose(&score, board->white_bishops, white_bishop_eval);
-  attribute_score_from_pose(&score, board->black_knights, black_knight_eval);
-  attribute_score_from_pose(&score, board->white_knights, white_knight_eval);
-  attribute_score_from_pose(&score, board->black_rooks, black_rook_eval);
-  attribute_score_from_pose(&score, board->white_rooks, whire_rook_eval);
-  attribute_score_from_pose(&score, board->black_queens, black_queen_eval);
-  attribute_score_from_pose(&score, board->white_queens, white_queen_eval);
+  change_score_from_pos(&score, board->black_bishops, black_bishop_eval);
+  change_score_from_pos(&score, board->white_bishops, white_bishop_eval);
+  change_score_from_pos(&score, board->black_knights, black_knight_eval);
+  change_score_from_pos(&score, board->white_knights, white_knight_eval);
+  change_score_from_pos(&score, board->black_rooks, black_rook_eval);
+  change_score_from_pos(&score, board->white_rooks, white_rook_eval);
+  change_score_from_pos(&score, board->black_queens, black_queen_eval);
+  change_score_from_pos(&score, board->white_queens, white_queen_eval);
 
   if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->white_kings)] &
                            board->white_pawns) >= 3) {
-    score += 7;
+    score += 60;
   }
   if (__builtin_popcountll(KING_MASKS[__builtin_ctzll(board->black_kings)] &
                            board->black_pawns) >= 3) {
-    score -= 7;
+    score -= -60;
   }
+
+  score += (rand() % 11) - 5;
 
   return score;
 }
@@ -166,18 +133,19 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
 
   MoveBranch branch;
   branch.move_count = move_possible(board, branch.moves);
-  if (branch.move_count == 0) {
-    return check_endgame(board);
-  }
 
   int best_eval = board->color == WHITE ? -10000 : 10000;
   Move best_move;
+
+  bool foundmove = false;
 
   for (int i = 0; i < branch.move_count; i++) {
     Undo undo;
     if (move_make(board, &branch.moves[i], &undo)) {
       continue; // Skip invalid moves
     }
+
+    foundmove = true;
 
     Move line[MAX_DEPTH];
     int eval = alpha_beta(board, depth - 1, alpha, beta, line, start_time,
@@ -210,6 +178,19 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
     }
   }
 
+  if (!foundmove) {
+    if ((board->color == WHITE && (board->white_kings & board->black_threat)) ||
+        (board->color == BLACK && (board->black_kings & board->white_threat))) {
+      // Checkmate
+      best_eval = (board->color == WHITE) ? -5000 - depth : 5000 + depth;
+    } else {
+      // Stalemate
+      best_eval = 0;
+    }
+
+    memset(pv, 0, depth * sizeof(Move));
+  }
+
   return best_eval;
 }
 
@@ -218,11 +199,10 @@ int iterative_deepening(Board *board, Move *best_move, double max_allowed) {
   int eval;
   time_t start_time;
   time(&start_time);
+  srand(time(NULL));
 
   for (int depth = 1; depth < MAX_DEPTH; depth++) {
     eval = alpha_beta(board, depth, -10000, 10000, pv, start_time, max_allowed);
-
-    *best_move = pv[0];
 
     // Check if time has run out
     time_t current_time;
@@ -230,6 +210,8 @@ int iterative_deepening(Board *board, Move *best_move, double max_allowed) {
     if (difftime(current_time, start_time) > max_allowed) {
       break;
     }
+
+    *best_move = pv[0];
   }
 
   return eval;

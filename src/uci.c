@@ -1,8 +1,4 @@
 #include "uci.h"
-#include "board.h"
-#include "types.h"
-#include <string.h>
-#include <wchar.h>
 
 char *move_to_algebric(Move move) {
   char alphabet[] = "hgfedcba";
@@ -281,7 +277,7 @@ void uci_loop(Board *board) {
     } else if (strncmp(line, "go", 2) == 0) {
       // Use iterative deepening to find the best move
       Move bot_move;
-      double max_time = 3.0; // Default time for decision
+      double max_time = 4.0; // Default time for decision
       iterative_deepening(board, &bot_move, max_time);
 
       // Output the best move

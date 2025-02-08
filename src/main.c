@@ -111,7 +111,7 @@ int command(char *strmove, Board **board) {
 
 void bot_turn(Board *board) {
   Move best_move;
-  double max_time = 10.0;
+  double max_time = 3.0;
   iterative_deepening(board, &best_move, max_time);
 
   Undo undo;

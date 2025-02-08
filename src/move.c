@@ -1,5 +1,4 @@
 #include "move.h"
-#include "board.h"
 
 // The first part of this file is for move validation and should only be used
 // when playing locally against a player, the second part is for possible move
