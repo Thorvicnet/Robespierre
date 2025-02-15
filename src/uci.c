@@ -49,7 +49,7 @@ int transform_board_from_fen(char *fen, Board *board) {
   board_empty(board);
   int i = 0;
   int j = 0;
-    for (; i < 64; j++) {
+  for (; i < 64; j++) {
     char c = fen[j];
     switch (c) {
     case '1':
@@ -115,27 +115,50 @@ int transform_board_from_fen(char *fen, Board *board) {
       break;
     }
   }
-  
+
   j += 1; // Skip space
   if (fen[j] == 'b') {
     board->color = BLACK;
-  }
-  
-  j += 2;
-  while (fen[j] != ' ') j++;
-  j++;
-  
-  // Parse en passant square
-  if (fen[j] != '-') {
-    int file = fen[j] - 'a';
-    int rank = fen[j + 1] - '1';
-    int square = file + rank * 8;
-    board->ep = 1ULL << square;
   } else {
-    board->ep = 0;
+    board->color = WHITE;
   }
-  
-  return (board->color == BLACK) ? BLACK : WHITE;
+  j++;
+
+  // Castling
+  j++;
+  board->castle = WHITE_CASTLE | BLACK_CASTLE;
+  if (fen[j] == '-') {
+    j++;
+  } else {
+    while (fen[j] != ' ') {
+      switch (fen[j]) {
+      case 'K':
+        board->castle &= ~WHITE_CASTLE_KINGSIDE;
+        break;
+      case 'Q':
+        board->castle &= ~WHITE_CASTLE_QUEENSIDE;
+        break;
+      case 'k':
+        board->castle &= ~BLACK_CASTLE_KINGSIDE;
+        break;
+      case 'q':
+        board->castle &= ~BLACK_CASTLE_QUEENSIDE;
+        break;
+      }
+      j++;
+    }
+  }
+
+  // En passant
+  j++;
+  board->ep = 0ULL;
+  if (fen[j] != '-') {
+    int file = 7 - (fen[j] - 'a');
+    int rank = fen[j + 1] - '1';
+    SET_BIT(board->ep, file + rank * 8);
+  }
+
+  return board->color;
 }
 
 char *create_fen_from_board(Board *board) {
@@ -211,6 +234,40 @@ char *create_fen_from_board(Board *board) {
     fen[p++] = 'b';
   if (board->color == WHITE)
     fen[p++] = 'w';
+  fen[p++] = ' ';
+
+  // Castling
+  bool hasCastling = false;
+  if (!(board->castle & WHITE_CASTLE_KINGSIDE)) {
+    fen[p++] = 'K';
+    hasCastling = true;
+  }
+  if (!(board->castle & WHITE_CASTLE_QUEENSIDE)) {
+    fen[p++] = 'Q';
+    hasCastling = true;
+  }
+  if (!(board->castle & BLACK_CASTLE_KINGSIDE)) {
+    fen[p++] = 'k';
+    hasCastling = true;
+  }
+  if (!(board->castle & BLACK_CASTLE_QUEENSIDE)) {
+    fen[p++] = 'q';
+    hasCastling = true;
+  }
+  if (!hasCastling) {
+    fen[p++] = '-';
+  }
+
+  // En passant
+  fen[p++] = ' ';
+  if (board->ep) {
+    int ep_square = __builtin_ctzll(board->ep);
+    fen[p++] = 'a' + (7 - (ep_square & 7));
+    fen[p++] = '1' + (ep_square >> 3);
+  } else {
+    fen[p++] = '-';
+  }
+
   for (; p < 100; p++)
     fen[p] = ' ';
   return fen;
@@ -294,29 +351,33 @@ void uci_loop(Board *board) {
       char *token = strtok(NULL, " ");
       double max_time = 4.0; // Default time for decision
       int wtime = 0, btime = 0, winc = 0, binc = 0;
-      
+
       while (token != NULL) {
-          if (strcmp(token, "wtime") == 0) {
-              token = strtok(NULL, " ");
-              if (token) wtime = atoi(token);
-          } else if (strcmp(token, "btime") == 0) {
-              token = strtok(NULL, " ");
-              if (token) btime = atoi(token);
-          } else if (strcmp(token, "winc") == 0) {
-              token = strtok(NULL, " ");
-              if (token) winc = atoi(token);
-          } else if (strcmp(token, "binc") == 0) {
-              token = strtok(NULL, " ");
-              if (token) binc = atoi(token);
-          }
+        if (strcmp(token, "wtime") == 0) {
           token = strtok(NULL, " ");
+          if (token)
+            wtime = atoi(token);
+        } else if (strcmp(token, "btime") == 0) {
+          token = strtok(NULL, " ");
+          if (token)
+            btime = atoi(token);
+        } else if (strcmp(token, "winc") == 0) {
+          token = strtok(NULL, " ");
+          if (token)
+            winc = atoi(token);
+        } else if (strcmp(token, "binc") == 0) {
+          token = strtok(NULL, " ");
+          if (token)
+            binc = atoi(token);
+        }
+        token = strtok(NULL, " ");
       }
 
       // Calculate time to use based on remaining time and increment
       if (wtime || btime) {
-          int remaining = (board->color == WHITE) ? wtime : btime;
-          int increment = (board->color == WHITE) ? winc : binc;
-          max_time = (remaining / 20.0 + increment / 2.0) / 1000.0;
+        int remaining = (board->color == WHITE) ? wtime : btime;
+        int increment = (board->color == WHITE) ? winc : binc;
+        max_time = (remaining / 20.0 + increment / 2.0) / 1000.0;
       }
 
       Move bot_move;
