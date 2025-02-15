@@ -1,4 +1,5 @@
 #include "move.h"
+#include "threat.h"
 
 // The first part of this file is for move validation and should only be used
 // when playing locally against a player, the second part is for possible move
@@ -316,6 +317,8 @@ int move_undo(Board *board, Move *move, Undo *undo) {
 
   // Restore en passant flags
   board->ep = undo->ep;
+
+  threat_board_update(board);
 
   return 0;
 }

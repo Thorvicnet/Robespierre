@@ -105,6 +105,7 @@ int command(char *strmove, Board **board) {
       wprintf(L"Invalid move\n");
       return -1;
     }
+    board_bb_info(*board);
     return move_make(*board, &move, &undo);
   }
 }

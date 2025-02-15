@@ -474,6 +474,16 @@ void board_bb_info(Board *board) {
     }
     wprintf(L"\n");
   }
+
+  wprintf(L"\nCastling: %d\n", board->castle);
+  wprintf(L"En passant: \n");
+  for (int rank = 0; rank < 8; rank++) {
+    for (int file = 0; file < 8; file++) {
+      int square = rank * 8 + file;
+      wprintf(L"%lc", (board->ep & (1ULL << square)) ? L'1' : L'.');
+    }
+    wprintf(L"\n");
+  }
 }
 
 void board_list_moves(Board *board) {

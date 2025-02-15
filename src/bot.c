@@ -187,7 +187,6 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
       // Stalemate
       best_eval = 0;
     }
-
     memset(pv, 0, depth * sizeof(Move));
   }
 
