@@ -15,7 +15,7 @@ Board *board_init(void) {
 
   board->color = WHITE;
   board->history = stack_create();
-  int *tab = board->squares;
+  uint8_t *tab = board->squares;
 
   // Castling and En passant flags
   board->castle = 0;

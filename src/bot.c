@@ -135,7 +135,6 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
   branch.move_count = move_possible(board, branch.moves);
 
   int best_eval = board->color == WHITE ? -10000 : 10000;
-  Move best_move;
 
   bool foundmove = false;
 
@@ -155,7 +154,6 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
     if ((board->color == WHITE && eval > best_eval) ||
         (board->color == BLACK && eval < best_eval)) {
       best_eval = eval;
-      best_move = branch.moves[i];
       pv[0] = branch.moves[i];
       memcpy(&pv[1], line, (depth - 1) * sizeof(Move));
     }

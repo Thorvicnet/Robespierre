@@ -10,9 +10,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
-
 #define MAX_DEPTH 64
 
 int evaluate(Board *board);

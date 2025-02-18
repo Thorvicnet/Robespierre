@@ -8,19 +8,23 @@
 #define CLEAR_BIT(bb, square) ((bb) &= ~(1ULL << (square)))
 #define IS_BIT_SET(bb, square) ((bb) & (1ULL << (square)))
 
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef unsigned long long Bb;
 
 typedef struct {
-  unsigned char piece;
-  unsigned char from;
-  unsigned char to;
-  unsigned char promote;
+  uint8_t piece;
+  uint8_t from;
+  uint8_t to;
+  uint8_t promote;
 } Move;
 
 typedef struct {
-  int castle;
+  uint8_t castle;
   int capture;
   Bb ep;
 } Undo;
@@ -37,13 +41,12 @@ typedef struct t {
   struct t **children;
 } MoveTree;
 
-
 typedef struct {
-  int squares[64];
-  int color;
+  uint8_t squares[64];
+  uint8_t color;
   Stack *history;
 
-  int castle;
+  uint8_t castle;
   Bb ep;
 
   Bb all;

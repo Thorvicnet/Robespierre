@@ -1,5 +1,4 @@
 #include "move.h"
-#include "threat.h"
 
 // The first part of this file is for move validation and should only be used
 // when playing locally against a player, the second part is for possible move
@@ -494,7 +493,8 @@ int king_possible_move(Board *board, int pos, Move *list) {
     if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE
                                                  : BLACK_CASTLE_KINGSIDE))) {
       Bb kingside_path = ((3ULL) << (rank * 8 + 1));
-      if (!(board->all & kingside_path) && !(threats & kingside_path)) {
+      Bb kingside_threat_path = ((7ULL) << (rank * 8 + 1));
+      if (!(board->all & kingside_path) && !(threats & kingside_threat_path)) {
         Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
         list[count++] = move;
       }
@@ -503,9 +503,10 @@ int king_possible_move(Board *board, int pos, Move *list) {
     // Queenside castle
     if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE
                                                  : BLACK_CASTLE_QUEENSIDE))) {
-      Bb queenside_path = ((7ULL) << (rank * 8 + 4));
+      Bb queenside_path = (7ULL << (rank * 8 + 4));
+      Bb queenside_threat_path = (7ULL << (rank * 8 + 3));
       if (!(board->all & queenside_path) &&
-          !(threats & (queenside_path >> 1))) {
+          !(threats & queenside_threat_path)) {
         Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
         list[count++] = move;
       }
