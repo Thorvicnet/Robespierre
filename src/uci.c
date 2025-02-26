@@ -348,7 +348,9 @@ void uci_loop(Board *board) {
 
     } else if (strncmp(line, "go", 2) == 0) {
       // Parse time control parameters
-      char *token = strtok(NULL, " ");
+      char *token = strtok(line, " ");
+      token = strtok(NULL, " ");
+
       double max_time = 4.0; // Default time for decision
       int wtime = 0, btime = 0, winc = 0, binc = 0;
 
