@@ -95,6 +95,7 @@ int command(char *strmove, Board **board) {
     free((*board)->history->list_of_move);
     free((*board)->history);
     board_free(*board);
+    free_tt();
     exit(EXIT_SUCCESS);
   } else {
     Move move;
@@ -177,5 +178,6 @@ int main(int argc, char *argv[]) {
   free(board->history->list_of_move);
   free(board->history);
   board_free(board);
+  free_tt();
   return EXIT_SUCCESS;
 }

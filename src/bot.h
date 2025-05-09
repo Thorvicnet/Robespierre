@@ -15,4 +15,10 @@
 int evaluate(Board *board);
 int iterative_deepening(Board *board, Move *best_move, double max_allowed);
 
+// Transposition table functions
+void init_zobrist();
+uint64_t calculate_hash(Board *board);
+void init_tt();
+void free_tt();
+
 #endif // BOT_H
