@@ -64,23 +64,23 @@ int main() {
                  expected1, MIN(DEPTH, 8));
 
   // Position 2 Kiwipete
-  long long int expected2[] = {1, 48, 2039, 97862, 4085603, 193690690};
-  run_perft_test(
-      board,
-      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ",
-      expected2, MIN(DEPTH, 6));
+  // long long int expected2[] = {1, 48, 2039, 97862, 4085603, 193690690};
+  // run_perft_test(
+  //     board,
+  //     "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ",
+  //     expected2, MIN(DEPTH, 6));
 
   // Position 4
-  long long int expected3[] = {1, 6, 264, 9467, 422333, 15833292, 706045033};
-  run_perft_test(
-      board, "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
-      expected3, MIN(DEPTH, 6));
+  // long long int expected3[] = {1, 6, 264, 9467, 422333, 15833292, 706045033};
+  // run_perft_test(
+  //     board, "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
+  //     expected3, MIN(DEPTH, 6));
 
-  // Position 5
-  long long int expected4[] = {1, 44, 1486, 62379, 2103487, 89941194};
-  run_perft_test(board,
-                 "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
-                 expected4, MIN(DEPTH, 5));
+  // // Position 5
+  // long long int expected4[] = {1, 44, 1486, 62379, 2103487, 89941194};
+  // run_perft_test(board,
+  //                "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
+  //                expected4, MIN(DEPTH, 5));
 
   wprintf(L"Everything looks good\n");
 

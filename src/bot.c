@@ -4,8 +4,8 @@ const int white_bishop_eval[64] = {
     -20, -10, -10, -10, -10, -10, -10, -20, -10, 0,   0,   0,   0,
     0,   0,   -10, -10, 0,   5,   10,  10,  5,   0,   -10, -10, 5,
     5,   10,  10,  5,   5,   -10, -10, 0,   10,  10,  10,  10,  10,
-    0,   -10, -10, 10,  10,  10,  10,  10,  10,  -10, -10, 5,    0,
-    0,   0,   0,   5,   -10, -20, -10, -10, -10, -10, -10, -10, -20};
+    -10, -10, 10,  10,  10,  10,  10,  10,  -10, -10, 5,   0,   0,
+    0,   0,   5,   -10, -20, -10, -10, -10, -10, -10, -10, -20};
 
 const int black_bishop_eval[64] = {
     -20, -10, -10, -10, -10, -10, -10, -20, -10, 5,   0,   0,   0,
@@ -72,19 +72,19 @@ uint64_t zobrist_side;
 uint64_t zobrist_ep[8];
 uint64_t zobrist_castling[16];
 
-void init_zobrist() {
+void init_zobrist(void) {
   for (int piece = 0; piece < 12; piece++) {
     for (int square = 0; square < 64; square++) {
       zobrist_keys[piece][square] = ((uint64_t)rand() << 32) | rand();
     }
   }
-  
+
   zobrist_side = ((uint64_t)rand() << 32) | rand();
-  
+
   for (int i = 0; i < 8; i++) {
     zobrist_ep[i] = ((uint64_t)rand() << 32) | rand();
   }
-  
+
   for (int i = 0; i < 16; i++) {
     zobrist_castling[i] = ((uint64_t)rand() << 32) | rand();
   }
@@ -92,7 +92,7 @@ void init_zobrist() {
 
 uint64_t calculate_hash(Board *board) {
   uint64_t hash = 0;
-  
+
   for (int square = 0; square < 64; square++) {
     int piece = board->squares[square];
     if (piece != EMPTY) {
@@ -100,22 +100,22 @@ uint64_t calculate_hash(Board *board) {
       hash ^= zobrist_keys[piece_index][square];
     }
   }
-  
+
   if (board->color == BLACK) {
     hash ^= zobrist_side;
   }
-  
+
   if (board->ep) {
     int ep_file = __builtin_ctzll(board->ep) & 7;
     hash ^= zobrist_ep[ep_file];
   }
-  
+
   hash ^= zobrist_castling[board->castle & 0xF];
-  
+
   return hash;
 }
 
-void init_tt() {
+void init_tt(void) {
   if (transposition_table == NULL) {
     transposition_table = (TTEntry *)calloc(TT_SIZE, sizeof(TTEntry));
     init_zobrist();
@@ -124,17 +124,18 @@ void init_tt() {
   }
 }
 
-void free_tt() {
+void free_tt(void) {
   if (transposition_table != NULL) {
     free(transposition_table);
     transposition_table = NULL;
   }
 }
 
-void store_tt_entry(uint64_t key, int depth, int score, int flag, Move best_move) {
+void store_tt_entry(uint64_t key, int depth, int score, int flag,
+                    Move best_move) {
   int index = key % TT_SIZE;
   TTEntry *entry = &transposition_table[index];
-  
+
   if (entry->key == 0 || entry->depth <= depth || entry->key == key) {
     entry->key = key;
     entry->depth = depth;
@@ -147,11 +148,11 @@ void store_tt_entry(uint64_t key, int depth, int score, int flag, Move best_move
 TTEntry *probe_tt(uint64_t key) {
   int index = key % TT_SIZE;
   TTEntry *entry = &transposition_table[index];
-  
+
   if (entry->key == key) {
     return entry;
   }
-  
+
   return NULL;
 }
 
@@ -164,31 +165,39 @@ typedef struct {
 const int piece_values[7] = {0, 100, 300, 500, 600, 1100, 10000};
 
 int get_piece_value(int piece) {
-  if (piece == EMPTY) return 0;
-  
+  if (piece == EMPTY)
+    return 0;
+
   switch (PIECE(piece)) {
-  case PAWN: return piece_values[1];
-  case KNIGHT: return piece_values[2];
-  case BISHOP: return piece_values[3];
-  case ROOK: return piece_values[4];
-  case QUEEN: return piece_values[5];
-  case KING: return piece_values[6];
-  default: return 0;
+  case PAWN:
+    return piece_values[1];
+  case KNIGHT:
+    return piece_values[2];
+  case BISHOP:
+    return piece_values[3];
+  case ROOK:
+    return piece_values[4];
+  case QUEEN:
+    return piece_values[5];
+  case KING:
+    return piece_values[6];
+  default:
+    return 0;
   }
 }
 
 int score_capture(Board *board, Move *move) {
   int victim = board_get(board, move->to);
-  
+
   if (victim == EMPTY) {
     // For en passant captures
-    if (PIECE(move->piece) == PAWN && (move->from & 7) != (move->to & 7) && 
+    if (PIECE(move->piece) == PAWN && (move->from & 7) != (move->to & 7) &&
         IS_BIT_SET(board->ep, move->to)) {
       return piece_values[1] * 10;
     }
     return 0;
   }
-  
+
   // MVV-LVA (Most Valuable Victim - Least Valuable Aggressor)
   return get_piece_value(victim) * 10 - get_piece_value(move->piece);
 }
@@ -197,15 +206,16 @@ int see(Board *board, int square, int side, int target_value) {
   int value = 0;
   int piece_value = target_value;
   Bb attackers;
-  
+
   // Find all pieces that attack this square
   if (side == WHITE) {
-    attackers = 
-      (KNIGHT_MASKS[square] & board->black_knights) |
-      (bb_bishop_attacks(board->all, square) & (board->black_bishops | board->black_queens)) |
-      (bb_rook_attacks(board->all, square) & (board->black_rooks | board->black_queens)) |
-      (KING_MASKS[square] & board->black_kings);
-      
+    attackers = (KNIGHT_MASKS[square] & board->black_knights) |
+                (bb_bishop_attacks(board->all, square) &
+                 (board->black_bishops | board->black_queens)) |
+                (bb_rook_attacks(board->all, square) &
+                 (board->black_rooks | board->black_queens)) |
+                (KING_MASKS[square] & board->black_kings);
+
     // Add pawn attackers
     if (square > 7) {
       if ((square & 7) > 0 && IS_BIT_SET(board->black_pawns, square - 9)) {
@@ -216,12 +226,13 @@ int see(Board *board, int square, int side, int target_value) {
       }
     }
   } else {
-    attackers = 
-      (KNIGHT_MASKS[square] & board->white_knights) |
-      (bb_bishop_attacks(board->all, square) & (board->white_bishops | board->white_queens)) |
-      (bb_rook_attacks(board->all, square) & (board->white_rooks | board->white_queens)) |
-      (KING_MASKS[square] & board->white_kings);
-      
+    attackers = (KNIGHT_MASKS[square] & board->white_knights) |
+                (bb_bishop_attacks(board->all, square) &
+                 (board->white_bishops | board->white_queens)) |
+                (bb_rook_attacks(board->all, square) &
+                 (board->white_rooks | board->white_queens)) |
+                (KING_MASKS[square] & board->white_kings);
+
     // Add pawn attackers
     if (square < 56) {
       if ((square & 7) > 0 && IS_BIT_SET(board->white_pawns, square + 7)) {
@@ -232,88 +243,80 @@ int see(Board *board, int square, int side, int target_value) {
       }
     }
   }
-  
+
   if (attackers == 0) {
     return value;
   }
-  
+
   // Find the least valuable attacker
   int lva = 6;
-  int lva_square = -1;
-  
   Bb piece_bb;
-  
+
   // Check pawns first
   piece_bb = side == WHITE ? board->black_pawns : board->white_pawns;
   if (piece_bb & attackers) {
     lva = 1;
-    lva_square = __builtin_ctzll(piece_bb & attackers);
   } else {
     // Check knights
     piece_bb = side == WHITE ? board->black_knights : board->white_knights;
     if (piece_bb & attackers) {
       lva = 2;
-      lva_square = __builtin_ctzll(piece_bb & attackers);
     } else {
       // Check bishops
       piece_bb = side == WHITE ? board->black_bishops : board->white_bishops;
       if (piece_bb & attackers) {
         lva = 3;
-        lva_square = __builtin_ctzll(piece_bb & attackers);
       } else {
         // Check rooks
         piece_bb = side == WHITE ? board->black_rooks : board->white_rooks;
         if (piece_bb & attackers) {
           lva = 4;
-          lva_square = __builtin_ctzll(piece_bb & attackers);
         } else {
           // Check queens
           piece_bb = side == WHITE ? board->black_queens : board->white_queens;
           if (piece_bb & attackers) {
             lva = 5;
-            lva_square = __builtin_ctzll(piece_bb & attackers);
           } else {
             // Must be king
             lva = 6;
-            lva_square = __builtin_ctzll(side == WHITE ? board->black_kings : board->white_kings);
           }
         }
       }
     }
   }
-  
+
   value = piece_value - piece_values[lva];
-  
+
   if (value < 0) {
     return value;
   }
-  
+
   // Recursive evaluation
   int see_value = -see(board, square, side ^ BLACK, piece_values[lva]);
-  
+
   return value > see_value ? value : see_value;
 }
 
 int is_good_capture(Board *board, Move *move) {
   int victim = board_get(board, move->to);
-  
+
   if (victim == EMPTY) {
     // Check for en passant
-    if (PIECE(move->piece) == PAWN && (move->from & 7) != (move->to & 7) && 
+    if (PIECE(move->piece) == PAWN && (move->from & 7) != (move->to & 7) &&
         IS_BIT_SET(board->ep, move->to)) {
       return 1;
     }
     return 0;
   }
-  
+
   // Quick check for obviously good captures
   int aggressor_value = get_piece_value(move->piece);
   int victim_value = get_piece_value(victim);
-  
+
   if (victim_value > aggressor_value) {
     return 1;
   }
-  
+
   // For equal or lower value captures, use SEE
   int see_score = see(board, move->to, board->color ^ BLACK, victim_value);
   return see_score >= 0;
@@ -327,7 +330,7 @@ void sort_captures(Move *moves, int *scores, int count) {
         Move temp_move = moves[i];
         moves[i] = moves[j];
         moves[j] = temp_move;
-        
+
         // Swap scores
         int temp_score = scores[i];
         scores[i] = scores[j];
@@ -405,9 +408,10 @@ int evaluate(Board *board) {
   return score;
 }
 
-int quiescence_search(Board *board, int alpha, int beta, time_t start_time, double max_allowed) {
+int quiescence_search(Board *board, int alpha, int beta, time_t start_time,
+                      double max_allowed) {
   int stand_pat = evaluate(board);
-  
+
   if (board->color == WHITE) {
     if (stand_pat >= beta)
       return beta;
@@ -419,60 +423,62 @@ int quiescence_search(Board *board, int alpha, int beta, time_t start_time, doub
     if (stand_pat < beta)
       beta = stand_pat;
   }
-  
+
   // Generate moves
   Move moves[MAX_MOVES];
   int move_count = move_possible(board, moves);
-  
+
   // Time check
   time_t current_time;
   time(&current_time);
   if (difftime(current_time, start_time) > max_allowed) {
     return stand_pat;
   }
-  
+
   // Score and filter capture moves
   Move captures[MAX_MOVES];
   int scores[MAX_MOVES];
   int capture_count = 0;
-  
+
   for (int i = 0; i < move_count; i++) {
     // Skip non-captures
-    if (board_get(board, moves[i].to) == EMPTY && 
-        !(PIECE(moves[i].piece) == PAWN && (moves[i].from & 7) != (moves[i].to & 7) && 
+    if (board_get(board, moves[i].to) == EMPTY &&
+        !(PIECE(moves[i].piece) == PAWN &&
+          (moves[i].from & 7) != (moves[i].to & 7) &&
           IS_BIT_SET(board->ep, moves[i].to))) {
       continue;
     }
-    
+
     // Skip bad captures using SEE pruning
     if (!is_good_capture(board, &moves[i])) {
       continue;
     }
-    
+
     captures[capture_count] = moves[i];
     scores[capture_count] = score_capture(board, &moves[i]);
     capture_count++;
   }
-  
+
   // Sort captures by score
   sort_captures(captures, scores, capture_count);
-  
+
   // Search the captures
   for (int i = 0; i < capture_count; i++) {
     Undo undo;
     if (move_make(board, &captures[i], &undo)) {
       continue;
     }
-    
-    int score = -quiescence_search(board, -beta, -alpha, start_time, max_allowed);
+
+    int score =
+        -quiescence_search(board, -beta, -alpha, start_time, max_allowed);
     move_undo(board, &captures[i], &undo);
-    
+
     if (score >= beta)
       return beta;
     if (score > alpha)
       alpha = score;
   }
-  
+
   return alpha;
 }
 
@@ -481,17 +487,17 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
   if (depth == 0) {
     return quiescence_search(board, alpha, beta, start_time, max_allowed);
   }
-  
+
   // Check for time
   time_t current_time;
   time(&current_time);
   if (difftime(current_time, start_time) > max_allowed) {
     return board->color == WHITE ? alpha : beta;
   }
-  
+
   // Calculate position hash
   uint64_t pos_key = calculate_hash(board);
-  
+
   // Probe transposition table
   TTEntry *tt_entry = probe_tt(pos_key);
   if (tt_entry != NULL && tt_entry->depth >= depth) {
@@ -511,11 +517,11 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
 
   MoveBranch branch;
   branch.move_count = move_possible(board, branch.moves);
-  
+
   // Move ordering: try TT move first
   if (tt_entry != NULL) {
     for (int i = 0; i < branch.move_count; i++) {
-      if (branch.moves[i].from == tt_entry->best_move.from && 
+      if (branch.moves[i].from == tt_entry->best_move.from &&
           branch.moves[i].to == tt_entry->best_move.to &&
           branch.moves[i].promote == tt_entry->best_move.promote) {
         // Swap to put the best move first
@@ -542,14 +548,14 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
 
     Move line[MAX_DEPTH];
     int eval = -alpha_beta(board, depth - 1, -beta, -alpha, line, start_time,
-                          max_allowed);
+                           max_allowed);
     move_undo(board, &branch.moves[i], &undo);
 
     if ((board->color == WHITE && eval > best_eval) ||
         (board->color == BLACK && eval < best_eval)) {
       best_eval = eval;
       best_move = branch.moves[i];
-      
+
       if (pv) {
         pv[0] = branch.moves[i];
         memcpy(&pv[1], line, (depth - 1) * sizeof(Move));
@@ -589,7 +595,7 @@ int alpha_beta(Board *board, int depth, int alpha, int beta, Move *pv,
     } else {
       flag = TT_EXACT;
     }
-    
+
     store_tt_entry(pos_key, depth, best_eval, flag, best_move);
   }
 
@@ -602,7 +608,7 @@ int iterative_deepening(Board *board, Move *best_move, double max_allowed) {
   time_t start_time;
   time(&start_time);
   srand(time(NULL));
-  
+
   // Initialize or clear the transposition table
   init_tt();
 
