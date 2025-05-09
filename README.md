@@ -14,21 +14,9 @@ When you threaten an opponent's piece, you can choose to control it instead of y
 
 Under the rules of Menace, the bot, when its king was threatened, would prioritize capturing its own king to avoid check. The game would then continue without a king—a truly revolutionary act. (This bug has since been resolved.)
 
-### TODO
+### In the future? (Missing features)
 
-- [ ] draw
-- [x] UCI
-- [ ] Search management
-  - [x] Minimax
-  - [x] Alpha-beta
-  - [x] Iterative deepening
-  - [x] Quiescence search
-  - [ ] Apiration window
-- [x] eval
-  - [x] by position on board
-  - [x] threat
-  - [x] checkmate
-  - [ ] check
-  - [x] 0.1 of random eval (to make it more interesting)
-  - [ ] passed pawn
-  - [ ] pawn structure
+- Draw detection
+- Aspiration window
+- Evaluation can be improved with pawn structure, passed pawn, ...
+
