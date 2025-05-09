@@ -22,13 +22,13 @@ Under the rules of Menace, the bot, when its king was threatened, would prioriti
   - [x] Minimax
   - [x] Alpha-beta
   - [x] Iterative deepening
-  - [ ] Quiescence search
+  - [x] Quiescence search
   - [ ] Apiration window
-- [ ] eval
-  - [ ] by position on board
-  - [ ] threat
-  - [ ] checkmate -inf
+- [x] eval
+  - [x] by position on board
+  - [x] threat
+  - [x] checkmate
   - [ ] check
-  - [ ] 0.1 of random eval (to make it more interesting)
+  - [x] 0.1 of random eval (to make it more interesting)
   - [ ] passed pawn
   - [ ] pawn structure
