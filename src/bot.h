@@ -10,10 +10,15 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define MAX_DEPTH 64
 
 int evaluate(Board *board);
-Move choose(MoveTree *tree, Board *board);
+int iterative_deepening(Board *board, Move *best_move, double max_allowed);
+
+// Transposition table functions
+void init_zobrist(void);
+uint64_t calculate_hash(Board *board);
+void init_tt(void);
+void free_tt(void);
 
 #endif // BOT_H

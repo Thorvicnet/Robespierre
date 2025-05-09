@@ -1,5 +1,4 @@
 #include "move.h"
-#include "board.h"
 
 // The first part of this file is for move validation and should only be used
 // when playing locally against a player, the second part is for possible move
@@ -199,8 +198,8 @@ int move_make(Board *board, Move *move, Undo *undo) {
   // En passant and castling
   if (PIECE(piece) == PAWN && capture == EMPTY &&
       (orig_pos & 7) != (dest_pos & 7)) {
-    int captured_rank = orig_pos >> 3;
-    board_set_empty(board, (dest_pos & 7) + captured_rank * 8, piece ^ 0xF0);
+    board_set_empty(board, (dest_pos & 7) + (orig_pos >> 3) * 8,
+                    COLOR(piece) == WHITE ? BLACK_PAWN : WHITE_PAWN);
   } else if (PIECE(piece) == KING &&
              abs((orig_pos & 7) - (dest_pos & 7)) == 2) {
     int rook_orig, rook_dest;
@@ -317,6 +316,8 @@ int move_undo(Board *board, Move *move, Undo *undo) {
 
   // Restore en passant flags
   board->ep = undo->ep;
+
+  threat_board_update(board);
 
   return 0;
 }
@@ -436,6 +437,14 @@ int pawn_possible_move(Board *board, int pos, Move *list) {
                         COLOR(piece) == WHITE ? WHITE_KNIGHT : BLACK_KNIGHT};
           list[count++] = moveq;
           list[count++] = moven;
+#ifdef ALLPROMOTION
+          Move moveb = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_BISHOP : BLACK_BISHOP};
+          Move mover = {piece, pos, capture,
+                        COLOR(piece) == WHITE ? WHITE_ROOK : BLACK_ROOK};
+          list[count++] = moveb;
+          list[count++] = mover;
+#endif
         } else {
           Move move = {piece, pos, capture, EMPTY};
           list[count++] = move;
@@ -484,7 +493,8 @@ int king_possible_move(Board *board, int pos, Move *list) {
     if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_KINGSIDE
                                                  : BLACK_CASTLE_KINGSIDE))) {
       Bb kingside_path = ((3ULL) << (rank * 8 + 1));
-      if (!(board->all & kingside_path) && !(threats & kingside_path)) {
+      Bb kingside_threat_path = ((7ULL) << (rank * 8 + 1));
+      if (!(board->all & kingside_path) && !(threats & kingside_threat_path)) {
         Move move = {board_get(board, pos), pos, pos - 2, EMPTY};
         list[count++] = move;
       }
@@ -493,9 +503,10 @@ int king_possible_move(Board *board, int pos, Move *list) {
     // Queenside castle
     if (!(board->castle & (board->color == WHITE ? WHITE_CASTLE_QUEENSIDE
                                                  : BLACK_CASTLE_QUEENSIDE))) {
-      Bb queenside_path = ((7ULL) << (rank * 8 + 4));
+      Bb queenside_path = (7ULL << (rank * 8 + 4));
+      Bb queenside_threat_path = (7ULL << (rank * 8 + 3));
       if (!(board->all & queenside_path) &&
-          !(threats & (queenside_path >> 1))) {
+          !(threats & queenside_threat_path)) {
         Move move = {board_get(board, pos), pos, pos + 2, EMPTY};
         list[count++] = move;
       }

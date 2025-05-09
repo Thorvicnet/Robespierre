@@ -2,8 +2,8 @@
 CFILES := main.c board.c move.c history.c bb.c threat.c uci.c bot.c tree.c
 PROG := main
 DEBUG_PROG := main
-CFLAGS := -Wall -Wextra -pedantic -O3#-DMENACE
-LDFLAGS := -lm -O3
+CFLAGS := -Wall -Wextra -pedantic -O3 -flto -march=native -DALLPROMOTION#-DMENACE
+LDFLAGS := -lm -O3 -flto
 
 SRC_DIR := src
 OBJ_DIR := obj
