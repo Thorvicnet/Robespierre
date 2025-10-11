@@ -6,6 +6,8 @@
 
 Robespierre is a chess engine designed to support both standard chess gameplay and, when the MENACE flag is activated, a "Menace Mode".
 
+Watch it play: [lichess](https://lichess.org/@/R0bspierre).
+
 ### Rules of menace
 
 When you threaten an opponent's piece, you can choose to control it instead of your own. While controlling the opponent's piece, you can even capture other pieces belonging to your opponent. Pawns still move in their original direction.
